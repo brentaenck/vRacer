@@ -1,6 +1,7 @@
 import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove, canUndo } from './game'
 import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled } from './features'
+import { performanceTracker } from './performance'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -16,7 +17,17 @@ let state = createDefaultGame()
 logEnabledFeatures()
 
 function render() {
+  // Track frame performance if enabled
+  if (isFeatureEnabled('performanceMetrics')) {
+    performanceTracker.startFrame()
+  }
+  
   draw(ctx, state, canvas)
+  
+  // End frame tracking
+  if (isFeatureEnabled('performanceMetrics')) {
+    performanceTracker.endFrame()
+  }
   
   // Enhanced status display when debugMode is enabled
   if (isFeatureEnabled('debugMode')) {

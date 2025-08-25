@@ -1,5 +1,6 @@
 import { add, clamp, Segment, segmentInsidePolygon, segmentsIntersect, Vec } from './geometry'
 import { isFeatureEnabled } from './features'
+import { performanceTracker } from './performance'
 
 type GameState = {
   grid: number
@@ -169,6 +170,12 @@ export function canUndo(state: GameState): boolean {
 export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HTMLCanvasElement) {
   const g = state.grid
   const W = canvas.width, H = canvas.height
+  
+  // Track render performance if enabled
+  if (isFeatureEnabled('performanceMetrics')) {
+    performanceTracker.startRender()
+  }
+  
   ctx.clearRect(0, 0, W, H)
 
   // Background
@@ -265,10 +272,21 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   
   // Feature-flagged performance metrics
   if (isFeatureEnabled('performanceMetrics')) {
-    const now = performance.now()
-    const fps = Math.round(1000 / (now - (window as any).lastFrameTime || 16))
-    drawHudLine(`FPS: ${fps}`)
-    ;(window as any).lastFrameTime = now
+    // End render tracking
+    performanceTracker.endRender()
+    
+    // Display comprehensive performance metrics
+    const performanceLines = performanceTracker.getSummary()
+    for (const line of performanceLines) {
+      if (line.includes('⚠️')) {
+        // Performance warnings in red
+        ctx.fillStyle = '#f66'
+        drawHudLine(line)
+        ctx.fillStyle = '#ddd' // Reset color
+      } else {
+        drawHudLine(line)
+      }
+    }
   }
   
   if (state.crashed) drawHudLine('CRASHED — press R to reset')

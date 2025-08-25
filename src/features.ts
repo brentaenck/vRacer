@@ -59,7 +59,7 @@ export const FEATURES: FeatureFlags = {
   
   // Development and debugging - always useful
   debugMode: true,            // Show extra info for development
-  performanceMetrics: false,  // FPS counter, render time
+  performanceMetrics: true,   // FPS counter, render time
   aiPlayers: false,           // Computer-controlled cars
 };
 
