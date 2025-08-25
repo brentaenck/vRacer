@@ -53,7 +53,7 @@ export const FEATURES: FeatureFlags = {
   customTrackFormats: false,  // Advanced track features
   
   // UI and UX improvements - polish features
-  improvedControls: false,    // Keyboard support, better mouse handling
+  improvedControls: true,     // Keyboard support, better mouse handling
   soundEffects: false,        // Audio feedback
   animations: false,          // Smooth movement, particle effects
   
