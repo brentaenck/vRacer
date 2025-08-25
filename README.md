@@ -1,4 +1,9 @@
-vRacer - Graph Paper Vector Race (Vector Racetrack)
+# vRacer - Graph Paper Vector Race (Vector Racetrack)
+
+[![CI](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml)
+[![Deploy](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml)
+
+🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)**
 
 Quick start
 - Ensure you have Node via nvm
