@@ -42,46 +42,35 @@ Track
 - A simple rectangular track with inner and outer boundaries and a start/finish line
 - You can tweak the points in src/game.ts to design new tracks
 
-## Development Workflow
+## Development
 
-This project uses **trunk-based development** with feature flags for rapid iteration:
+This project uses **trunk-based development with feature flags** for rapid iteration.
 
-### Feature Flags
-- All new features are controlled by flags in `src/features.ts`
-- Features start disabled and are incrementally enabled as they're completed
-- No long-lived feature branches - all work goes directly to `main`
-- See enabled features in browser console when `debugMode` is on
-
-### Trunk-Based Development Process
-1. **Small, frequent commits** directly to `main` branch
-2. **Feature flags** to hide incomplete features from users
-3. **Always deployable** - every commit should keep the game working
-4. **Continuous integration** ready (build and test on every push)
-
-### Making Changes
+### Quick Start for Developers
 ```bash
-# Make small, incremental changes
-git add .
-git commit -m "Add velocity display to debug HUD"
-git push origin main
-
-# Enable/disable features in src/features.ts
-# No branching needed for experiments!
+npm run dev         # Start development
+npm run ci          # Validate before commits
+git commit -m "..." # Commit frequently to main
 ```
 
-### Current Feature Flags
-Check `src/features.ts` for the full list. Currently enabled:
-- `debugMode: true` - Enhanced debug information and console logs
-- `stopOnCrash: true` - Stop immediately when hitting walls (current behavior)
+### Feature Flags
+- All new features controlled in `src/features.ts`
+- Features start disabled, enabled when ready
+- No feature branches - all work on `main`
+- Currently enabled: `debugMode`, `stopOnCrash`
 
-Next ideas (disabled until implementation)
+### Documentation
+- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Complete development guide
+- **[WORKFLOW.md](./WORKFLOW.md)** - Quick reference
+
+### Planned Features
+*All controlled by feature flags:*
 - Multi-car support and blocking
-- Damage model and pit lane
-- Wall bounce or stop-on-crash variants
+- Damage model and pit lane  
+- Wall bounce variants
 - Track editor mode
 - Save/load tracks as JSON
-- Performance metrics and FPS counter
-- Sound effects and animations
+- Performance metrics and animations
 
 License
 - MIT
