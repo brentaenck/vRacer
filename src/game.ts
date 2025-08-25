@@ -260,10 +260,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   drawPoly(ctx, state.outer, g, '#555', '#111')
   drawPoly(ctx, state.inner, g, '#555', '#0b0b0b', true)
 
-  // Start line
-  ctx.strokeStyle = '#0ff'
-  ctx.lineWidth = 3
-  line(ctx, state.start.a.x * g, state.start.a.y * g, state.start.b.x * g, state.start.b.y * g)
+  // Start/Finish line - checkered flag pattern
+  drawCheckeredStartLine(ctx, state.start, g)
 
   // Trail
   ctx.strokeStyle = '#9cf'
@@ -387,6 +385,67 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       }
     }
   }
+}
+
+function drawCheckeredStartLine(ctx: CanvasRenderingContext2D, startLine: Segment, g: number) {
+  const x1 = startLine.a.x * g
+  const y1 = startLine.a.y * g
+  const x2 = startLine.b.x * g
+  const y2 = startLine.b.y * g
+  
+  // Calculate line dimensions
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const length = Math.sqrt(dx * dx + dy * dy)
+  
+  // Checkered pattern dimensions
+  const checkerSize = 8 // pixels per checker square
+  const lineWidth = 6 // width of the checkered strip
+  
+  // Calculate perpendicular offset for line width
+  const perpX = (-dy / length) * (lineWidth / 2)
+  const perpY = (dx / length) * (lineWidth / 2)
+  
+  ctx.save()
+  
+  // Draw checkered pattern
+  const numCheckers = Math.ceil(length / checkerSize)
+  
+  for (let i = 0; i < numCheckers; i++) {
+    const t1 = i / numCheckers
+    const t2 = (i + 1) / numCheckers
+    
+    // Calculate checker rectangle corners
+    const x1_checker = x1 + dx * t1
+    const y1_checker = y1 + dy * t1
+    const x2_checker = x1 + dx * t2
+    const y2_checker = y1 + dy * t2
+    
+    // Alternate between black and white
+    const isBlack = i % 2 === 0
+    ctx.fillStyle = isBlack ? '#000' : '#fff'
+    
+    // Draw the checker rectangle
+    ctx.beginPath()
+    ctx.moveTo(x1_checker + perpX, y1_checker + perpY)
+    ctx.lineTo(x2_checker + perpX, y2_checker + perpY)
+    ctx.lineTo(x2_checker - perpX, y2_checker - perpY)
+    ctx.lineTo(x1_checker - perpX, y1_checker - perpY)
+    ctx.closePath()
+    ctx.fill()
+  }
+  
+  // Add a subtle border
+  ctx.strokeStyle = '#333'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(x1 + perpX, y1 + perpY)
+  ctx.lineTo(x2 + perpX, y2 + perpY)
+  ctx.moveTo(x1 - perpX, y1 - perpY)
+  ctx.lineTo(x2 - perpX, y2 - perpY)
+  ctx.stroke()
+  
+  ctx.restore()
 }
 
 function drawPoly(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string, fill: string, hole = false) {
