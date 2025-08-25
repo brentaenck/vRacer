@@ -1,5 +1,5 @@
-import { applyMove, createDefaultGame, draw, screenToGrid } from './game'
-import { clamp } from './geometry'
+import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove, canUndo } from './game'
+import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled } from './features'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
@@ -35,6 +35,42 @@ function render() {
 
 render()
 
+// Mouse hover for improved controls
+if (isFeatureEnabled('improvedControls')) {
+  canvas.addEventListener('mousemove', (e) => {
+    if (state.crashed || state.finished) return
+    const g = state.grid
+    const p = screenToGrid(canvas, g, e.clientX, e.clientY)
+    const gx = Math.round(p.x)
+    const gy = Math.round(p.y)
+    
+    // Find if mouse is near a valid candidate position
+    const opts = stepOptions(state)
+    let hoveredPos: Vec | undefined = undefined
+    
+    for (const { nextPos } of opts) {
+      const dx = Math.abs(nextPos.x - gx)
+      const dy = Math.abs(nextPos.y - gy)
+      if (dx <= 0.5 && dy <= 0.5) {
+        hoveredPos = nextPos
+        break
+      }
+    }
+    
+    if (hoveredPos?.x !== state.hoveredPosition?.x || hoveredPos?.y !== state.hoveredPosition?.y) {
+      state = { ...state, hoveredPosition: hoveredPos }
+      render()
+    }
+  })
+  
+  canvas.addEventListener('mouseleave', () => {
+    if (state.hoveredPosition) {
+      state = { ...state, hoveredPosition: undefined }
+      render()
+    }
+  })
+}
+
 canvas.addEventListener('click', (e) => {
   if (state.crashed || state.finished) return
   const g = state.grid
@@ -63,6 +99,14 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'h' || e.key === 'H') { helpToggle.checked = !helpToggle.checked; helpToggle.dispatchEvent(new Event('change')) }
+  
+  // Improved controls: Undo functionality
+  if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {
+    state = undoMove(state)
+    render()
+    e.preventDefault()
+    return
+  }
   
   // Improved controls: Keyboard movement
   if (isFeatureEnabled('improvedControls') && !state.crashed && !state.finished) {

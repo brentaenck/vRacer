@@ -15,6 +15,10 @@ type GameState = {
   showGrid: boolean
   showCandidates: boolean
   showHelp: boolean
+  // Improved controls state
+  hoveredPosition?: Vec
+  // Undo/redo system
+  previousStates?: GameState[]
 }
 
 export function createDefaultGame(): GameState {
@@ -123,8 +127,43 @@ export function applyMove(state: GameState, acc: Vec): GameState {
   }
 
   const trail = [...state.trail, nextPos]
+  
+  // Save previous state for undo (when improvedControls is enabled)
+  let previousStates = state.previousStates || []
+  if (isFeatureEnabled('improvedControls')) {
+    // Save current state before applying move (without circular reference)
+    const stateToSave = {
+      ...state,
+      hoveredPosition: undefined,
+      previousStates: undefined
+    }
+    previousStates = [...previousStates, stateToSave].slice(-10) // Keep last 10 moves
+  }
 
-  return { ...state, pos: nextPos, vel, trail, crashed, finished }
+  return { ...state, pos: nextPos, vel, trail, crashed, finished, previousStates }
+}
+
+// Undo function for improved controls
+export function undoMove(state: GameState): GameState {
+  if (!isFeatureEnabled('improvedControls') || !state.previousStates || state.previousStates.length === 0) {
+    return state
+  }
+  
+  const previousState = state.previousStates[state.previousStates.length - 1]!
+  const newPreviousStates = state.previousStates.slice(0, -1)
+  
+  return {
+    ...previousState,
+    previousStates: newPreviousStates,
+    hoveredPosition: state.hoveredPosition // Keep current hover state
+  }
+}
+
+// Check if undo is available
+export function canUndo(state: GameState): boolean {
+  return isFeatureEnabled('improvedControls') && 
+         state.previousStates !== undefined && 
+         state.previousStates.length > 0
 }
 
 export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HTMLCanvasElement) {
@@ -165,12 +204,39 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   }
   ctx.stroke()
 
-  // Candidates
+  // Candidates with improved controls visual feedback
   if (state.showCandidates && !state.crashed && !state.finished) {
     const opts = stepOptions(state)
     for (const { nextPos } of opts) {
       const legal = pathLegal(state.pos, nextPos, state)
-      drawNode(ctx, nextPos, g, legal ? '#0f0' : '#f33')
+      const isHovered = isFeatureEnabled('improvedControls') && 
+                       state.hoveredPosition && 
+                       nextPos.x === state.hoveredPosition.x && 
+                       nextPos.y === state.hoveredPosition.y
+      
+      if (isHovered) {
+        // Draw hover effects
+        ctx.save()
+        ctx.globalAlpha = 0.3
+        drawNode(ctx, nextPos, g, legal ? '#0f0' : '#f33', 8) // Larger hover ring
+        ctx.restore()
+        
+        // Draw preview trail line
+        if (legal && isFeatureEnabled('improvedControls')) {
+          ctx.save()
+          ctx.strokeStyle = '#ff0'
+          ctx.lineWidth = 2
+          ctx.globalAlpha = 0.6
+          ctx.setLineDash([5, 5])
+          line(ctx, state.pos.x * g, state.pos.y * g, nextPos.x * g, nextPos.y * g)
+          ctx.restore()
+        }
+      }
+      
+      // Draw normal candidate
+      const radius = isHovered ? 6 : 4
+      const color = legal ? (isHovered ? '#5f5' : '#0f0') : (isHovered ? '#f55' : '#f33')
+      drawNode(ctx, nextPos, g, color, radius)
     }
   }
 
@@ -218,6 +284,9 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     if (isFeatureEnabled('improvedControls')) {
       ctx.fillText('⌨️  Keyboard controls: WASD/arrows, Q/E/Z/X (diagonals), Space/Enter (coast)', 12, helpY + 30)
+      if (canUndo(state)) {
+        ctx.fillText('↶  Undo: U or Ctrl+Z', 12, helpY + 45)
+      }
     }
   }
 }
