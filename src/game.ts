@@ -17,6 +17,10 @@ type GameState = {
   showGrid: boolean
   showCandidates: boolean
   showHelp: boolean
+  // Lap tracking system
+  currentLap: number
+  targetLaps: number
+  lastCrossDirection?: 'forward' | 'backward'
   // Improved controls state
   hoveredPosition?: Vec
   // Undo/redo system
@@ -57,6 +61,10 @@ export function createDefaultGame(): GameState {
     showGrid: true,
     showCandidates: true,
     showHelp: true,
+    // Initialize lap tracking
+    currentLap: 0,
+    targetLaps: 3,
+    lastCrossDirection: undefined,
   }
 }
 
@@ -112,6 +120,29 @@ function pathLegal(a: Vec, b: Vec, state: GameState): boolean {
   return true
 }
 
+// Determine if crossing the start line is in the correct direction (forward/backward)
+function determineCrossDirection(fromPos: Vec, toPos: Vec, startLine: Segment): 'forward' | 'backward' {
+  // For our track layout, the start line is vertical at x=12
+  // Forward direction is left-to-right (negative x to positive x relative to the line)
+  // This assumes counter-clockwise racing direction
+  
+  const lineX = startLine.a.x // Start line is vertical, so both points have same x
+  const fromSide = fromPos.x < lineX ? 'left' : 'right'
+  const toSide = toPos.x < lineX ? 'left' : 'right'
+  
+  // Forward crossing: from left side to right side
+  if (fromSide === 'left' && toSide === 'right') {
+    return 'forward'
+  }
+  // Backward crossing: from right side to left side
+  else if (fromSide === 'right' && toSide === 'left') {
+    return 'backward'
+  }
+  
+  // This shouldn't happen if we're truly crossing, but default to forward
+  return 'forward'
+}
+
 export function applyMove(state: GameState, acc: Vec): GameState {
   if (state.crashed || state.finished) return state
   const vel = { x: state.vel.x + acc.x, y: state.vel.y + acc.y }
@@ -120,10 +151,13 @@ export function applyMove(state: GameState, acc: Vec): GameState {
   const legal = pathLegal(state.pos, nextPos, state)
   let crashed: boolean = state.crashed
   let finished: boolean = state.finished
+  let currentLap = state.currentLap
+  let lastCrossDirection = state.lastCrossDirection
 
-  // Finish detection: segment crosses start line from outer->inner side
+  // Lap detection: check if car crosses start line
   const moveSeg: Segment = { a: state.pos, b: nextPos }
   const crossedStart = segmentsIntersect(moveSeg, state.start)
+  
   if (!legal) {
     crashed = true
     // Create explosion particles when crashing (if animations enabled)
@@ -131,11 +165,31 @@ export function applyMove(state: GameState, acc: Vec): GameState {
       AnimationUtils.createExplosion(nextPos, '#f66', 8)
     }
   } else if (crossedStart) {
-    // Determine direction: crossing from outside to inside relative to inner polygon near the line
-    finished = true
-    // Create celebration particles when finishing (if animations enabled)
-    if (isFeatureEnabled('animations')) {
-      AnimationUtils.createCelebration(nextPos, '#0f0', 12)
+    // Determine crossing direction based on car position relative to start line
+    // Start line is vertical at x=12, so check if moving left-to-right (forward) or right-to-left (backward)
+    const crossDirection = determineCrossDirection(state.pos, nextPos, state.start)
+    
+    // Only count forward crossings as valid lap completions
+    if (crossDirection === 'forward') {
+      currentLap += 1
+      lastCrossDirection = 'forward'
+      
+      // Check if race is complete
+      if (currentLap >= state.targetLaps) {
+        finished = true
+        // Create celebration particles when finishing the race
+        if (isFeatureEnabled('animations')) {
+          AnimationUtils.createCelebration(nextPos, '#0f0', 12)
+        }
+      } else {
+        // Lap completed but race continues - smaller celebration
+        if (isFeatureEnabled('animations')) {
+          AnimationUtils.createCelebration(nextPos, '#4f4', 6)
+        }
+      }
+    } else {
+      lastCrossDirection = 'backward'
+      // Could implement penalty for wrong direction if desired
     }
   }
 
@@ -153,7 +207,7 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     previousStates = [...previousStates, stateToSave].slice(-10) // Keep last 10 moves
   }
 
-  return { ...state, pos: nextPos, vel, trail, crashed, finished, previousStates }
+  return { ...state, pos: nextPos, vel, trail, crashed, finished, currentLap, lastCrossDirection, previousStates }
 }
 
 // Undo function for improved controls
@@ -280,6 +334,9 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   
   drawHudLine(`pos=(${state.pos.x},${state.pos.y}) vel=(${state.vel.x},${state.vel.y})`)
   
+  // Lap counter - always visible
+  drawHudLine(`lap: ${state.currentLap}/${state.targetLaps}`)
+  
   // Feature-flagged debug information
   if (isFeatureEnabled('debugMode')) {
     drawHudLine(`trail: ${state.trail.length} points`)
@@ -307,7 +364,13 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   }
   
   if (state.crashed) drawHudLine('CRASHED — press R to reset')
-  if (state.finished) drawHudLine('FINISHED! — press R to race again')
+  if (state.finished) {
+    // Show victory message with race details
+    ctx.fillStyle = '#0f0' // Green for victory
+    drawHudLine('🏁 RACE COMPLETE! 🏁')
+    ctx.fillStyle = '#ddd' // Reset color
+    drawHudLine(`Completed ${state.currentLap}/${state.targetLaps} laps — press R to race again`)
+  }
   
   // Feature-flagged development help
   if (isFeatureEnabled('debugMode') && state.showHelp) {
