@@ -27,7 +27,7 @@ export function createDefaultGame(): GameState {
     { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
   ]
   // Walls: edges of inner and outer polygons
-  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] }))
+  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
   const walls = [...wallSegments(outer), ...wallSegments(inner)]
 
   const start: Segment = { a: { x: 12, y: 10 }, b: { x: 12, y: 25 } }
@@ -65,7 +65,7 @@ export function stepOptions(state: GameState): { acc: Vec; nextPos: Vec }[] {
 }
 
 function polyToSegments(poly: Vec[]): Segment[] {
-  return poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] }))
+  return poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
 }
 
 function insideTrack(p: Vec, state: GameState): boolean {
@@ -79,7 +79,8 @@ function pointInPoly(p: Vec, poly: Vec[]): boolean {
   // ray casting
   let inside = false
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const pi = poly[i], pj = poly[j]
+    const pi = poly[i]!
+    const pj = poly[j]!
     const intersect = (pi.y > p.y) !== (pj.y > p.y) &&
       p.x < ((pj.x - pi.x) * (p.y - pi.y)) / (pj.y - pi.y + 1e-12) + pi.x
     if (intersect) inside = !inside
@@ -108,8 +109,8 @@ export function applyMove(state: GameState, acc: Vec): GameState {
   const nextPos = { x: state.pos.x + vel.x, y: state.pos.y + vel.y }
 
   const legal = pathLegal(state.pos, nextPos, state)
-  let crashed = state.crashed
-  let finished = state.finished
+  let crashed: boolean = state.crashed
+  let finished: boolean = state.finished
 
   // Finish detection: segment crosses start line from outer->inner side
   const moveSeg: Segment = { a: state.pos, b: nextPos }
@@ -156,10 +157,10 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   ctx.strokeStyle = '#9cf'
   ctx.lineWidth = 2
   ctx.beginPath()
-  const t0 = state.trail[0]
+  const t0 = state.trail[0]!
   ctx.moveTo(t0.x * g, t0.y * g)
   for (let i = 1; i < state.trail.length; i++) {
-    const p = state.trail[i]
+    const p = state.trail[i]!
     ctx.lineTo(p.x * g, p.y * g)
   }
   ctx.stroke()
@@ -224,7 +225,7 @@ function drawPoly(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke:
   ctx.fillStyle = fill
   ctx.beginPath()
   for (let i = 0; i < poly.length; i++) {
-    const p = poly[i]
+    const p = poly[i]!
     const x = p.x * g, y = p.y * g
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
   }
