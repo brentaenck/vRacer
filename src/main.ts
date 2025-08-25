@@ -2,6 +2,7 @@ import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove
 import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
+import { animationManager, AnimationUtils } from './animations'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -20,6 +21,11 @@ function render() {
   // Track frame performance if enabled
   if (isFeatureEnabled('performanceMetrics')) {
     performanceTracker.startFrame()
+  }
+  
+  // Update animations if enabled
+  if (isFeatureEnabled('animations')) {
+    animationManager.update()
   }
   
   draw(ctx, state, canvas)
@@ -42,6 +48,17 @@ function render() {
   } else {
     statusEl.textContent = JSON.stringify({ pos: state.pos, vel: state.vel, crashed: state.crashed, finished: state.finished }, null, 2)
   }
+}
+
+// Animation loop for smooth rendering
+function animationLoop() {
+  render()
+  requestAnimationFrame(animationLoop)
+}
+
+// Start animation loop if animations are enabled
+if (isFeatureEnabled('animations')) {
+  animationLoop()
 }
 
 render()

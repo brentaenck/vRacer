@@ -1,6 +1,7 @@
 import { add, clamp, Segment, segmentInsidePolygon, segmentsIntersect, Vec } from './geometry'
 import { isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
+import { animationManager, AnimationUtils } from './animations'
 
 type GameState = {
   grid: number
@@ -20,6 +21,9 @@ type GameState = {
   hoveredPosition?: Vec
   // Undo/redo system
   previousStates?: GameState[]
+  // Animation state
+  animatedPos?: Vec
+  isAnimating?: boolean
 }
 
 export function createDefaultGame(): GameState {
@@ -122,9 +126,17 @@ export function applyMove(state: GameState, acc: Vec): GameState {
   const crossedStart = segmentsIntersect(moveSeg, state.start)
   if (!legal) {
     crashed = true
+    // Create explosion particles when crashing (if animations enabled)
+    if (isFeatureEnabled('animations')) {
+      AnimationUtils.createExplosion(nextPos, '#f66', 8)
+    }
   } else if (crossedStart) {
     // Determine direction: crossing from outside to inside relative to inner polygon near the line
     finished = true
+    // Create celebration particles when finishing (if animations enabled)
+    if (isFeatureEnabled('animations')) {
+      AnimationUtils.createCelebration(nextPos, '#0f0', 12)
+    }
   }
 
   const trail = [...state.trail, nextPos]
@@ -249,6 +261,11 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
 
   // Car
   drawNode(ctx, state.pos, g, state.crashed ? '#f66' : '#ff0', 6)
+  
+  // Particles (if animations are enabled)
+  if (isFeatureEnabled('animations')) {
+    animationManager.renderParticles(ctx, g)
+  }
 
   // HUD text
   ctx.fillStyle = '#ddd'
