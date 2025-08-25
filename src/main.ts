@@ -58,10 +58,70 @@ candToggle.addEventListener('change', () => { state = { ...state, showCandidates
 helpToggle.addEventListener('change', () => { state = { ...state, showHelp: helpToggle.checked }; render() })
 
 window.addEventListener('keydown', (e) => {
+  // Existing toggle controls
   if (e.key === 'r' || e.key === 'R') { state = createDefaultGame(); syncToggles(); render() }
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'h' || e.key === 'H') { helpToggle.checked = !helpToggle.checked; helpToggle.dispatchEvent(new Event('change')) }
+  
+  // Improved controls: Keyboard movement
+  if (isFeatureEnabled('improvedControls') && !state.crashed && !state.finished) {
+    let acc: { x: number, y: number } | null = null
+    
+    // Arrow keys and WASD for acceleration selection
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'w':
+      case 'W':
+        acc = { x: 0, y: -1 }
+        break
+      case 'ArrowDown':
+      case 's':
+      case 'S':
+        acc = { x: 0, y: 1 }
+        break
+      case 'ArrowLeft':
+      case 'a':
+      case 'A':
+        acc = { x: -1, y: 0 }
+        break
+      case 'ArrowRight':
+      case 'd':
+      case 'D':
+        acc = { x: 1, y: 0 }
+        break
+      // Diagonal movements
+      case 'q':
+      case 'Q':
+        acc = { x: -1, y: -1 }
+        break
+      case 'e':
+      case 'E':
+        acc = { x: 1, y: -1 }
+        break
+      case 'z':
+      case 'Z':
+        acc = { x: -1, y: 1 }
+        break
+      case 'x':
+      case 'X':
+        acc = { x: 1, y: 1 }
+        break
+      case ' ': // Space for no acceleration (coast)
+      case 'Enter':
+        acc = { x: 0, y: 0 }
+        e.preventDefault() // Prevent default space/enter behavior
+        break
+    }
+    
+    if (acc !== null) {
+      const newState = applyMove(state, acc)
+      if (newState !== state) {
+        state = newState
+        render()
+      }
+    }
+  }
 })
 
 function syncToggles() {

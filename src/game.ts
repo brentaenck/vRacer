@@ -212,9 +212,13 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   if (isFeatureEnabled('debugMode') && state.showHelp) {
     ctx.fillStyle = '#888'
     ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-    const helpY = H - 60
+    const helpY = H - 90
     ctx.fillText('🚩 Debug mode enabled', 12, helpY)
     ctx.fillText('Features can be toggled in src/features.ts', 12, helpY + 15)
+    
+    if (isFeatureEnabled('improvedControls')) {
+      ctx.fillText('⌨️  Keyboard controls: WASD/arrows, Q/E/Z/X (diagonals), Space/Enter (coast)', 12, helpY + 30)
+    }
   }
 }
 
