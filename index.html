@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vRacer - Vector Racetrack</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>vRacer</h1>
+        <div class="controls">
+          <button id="resetBtn" title="Reset (R)">Reset</button>
+          <label><input id="gridToggle" type="checkbox" checked /> Grid</label>
+          <label><input id="candToggle" type="checkbox" checked /> Candidates</label>
+          <label><input id="helpToggle" type="checkbox" checked /> Help</label>
+        </div>
+      </header>
+      <main>
+        <canvas id="canvas" width="1000" height="700" aria-label="vRacer canvas"></canvas>
+        <aside id="sidebar">
+          <h2>Status</h2>
+          <div id="status"></div>
+          <h2>Help</h2>
+          <ul>
+            <li>Click a highlighted node to choose acceleration.</li>
+            <li>You may change vx and vy by -1, 0, or +1 each turn.</li>
+            <li>Stay within the track boundaries; crossing walls crashes.</li>
+            <li>Cross the finish line in the correct direction to win.</li>
+            <li>Keys: R reset, G grid, C candidates, H help panel.</li>
+          </ul>
+        </aside>
+      </main>
+      <footer>
+        <small>vRacer • MIT License</small>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
