@@ -43,9 +43,11 @@ export function createDefaultGame(): GameState {
   const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
   const walls = [...wallSegments(outer), ...wallSegments(inner)]
 
-  const start: Segment = { a: { x: 12, y: 10 }, b: { x: 12, y: 25 } }
+  // Start/finish line spans across the track width at the left side
+  const start: Segment = { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
 
-  const startCell = { x: 9, y: 18 }
+  // Start the car below the finish line (higher y value = lower on screen)
+  const startCell = { x: 7, y: 20 }
 
   return {
     grid,
@@ -122,20 +124,20 @@ function pathLegal(a: Vec, b: Vec, state: GameState): boolean {
 
 // Determine if crossing the start line is in the correct direction (forward/backward)
 function determineCrossDirection(fromPos: Vec, toPos: Vec, startLine: Segment): 'forward' | 'backward' {
-  // For our track layout, the start line is vertical at x=12
-  // Forward direction is left-to-right (negative x to positive x relative to the line)
-  // This assumes counter-clockwise racing direction
+  // For our track layout, the start line is now horizontal at y=18
+  // Counter-clockwise racing: car comes from top (around the track) and crosses downward
+  // Forward direction is top-to-bottom (lower y to higher y values)
   
-  const lineX = startLine.a.x // Start line is vertical, so both points have same x
-  const fromSide = fromPos.x < lineX ? 'left' : 'right'
-  const toSide = toPos.x < lineX ? 'left' : 'right'
+  const lineY = startLine.a.y // Start line is horizontal, so both points have same y
+  const fromSide = fromPos.y < lineY ? 'top' : 'bottom'
+  const toSide = toPos.y < lineY ? 'top' : 'bottom'
   
-  // Forward crossing: from left side to right side
-  if (fromSide === 'left' && toSide === 'right') {
+  // Forward crossing: from top side to bottom side (completing counter-clockwise lap)
+  if (fromSide === 'top' && toSide === 'bottom') {
     return 'forward'
   }
-  // Backward crossing: from right side to left side
-  else if (fromSide === 'right' && toSide === 'left') {
+  // Backward crossing: from bottom side to top side
+  else if (fromSide === 'bottom' && toSide === 'top') {
     return 'backward'
   }
   
@@ -166,7 +168,7 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     }
   } else if (crossedStart) {
     // Determine crossing direction based on car position relative to start line
-    // Start line is vertical at x=12, so check if moving left-to-right (forward) or right-to-left (backward)
+    // Start line is horizontal at y=18, so check if moving top-to-bottom (forward) or bottom-to-top (backward)
     const crossDirection = determineCrossDirection(state.pos, nextPos, state.start)
     
     // Only count forward crossings as valid lap completions
@@ -262,6 +264,9 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
 
   // Start/Finish line - checkered flag pattern
   drawCheckeredStartLine(ctx, state.start, g)
+
+  // Directional arrows to show racing direction
+  drawDirectionalArrows(ctx, state, g)
 
   // Trail
   ctx.strokeStyle = '#9cf'
@@ -387,6 +392,56 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   }
 }
 
+function drawDirectionalArrows(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
+  ctx.save()
+  ctx.fillStyle = '#888'
+  ctx.strokeStyle = '#bbb'
+  ctx.lineWidth = 2
+  
+  // Arrow positions around the track showing counter-clockwise direction
+  const arrows = [
+    // Bottom side (going left to right)
+    { pos: { x: 25, y: 30 }, angle: 0 }, // →
+    
+    // Right side (going bottom to top)
+    { pos: { x: 45, y: 17.5 }, angle: -Math.PI / 2 }, // ↑
+    
+    // Top side (going right to left)
+    { pos: { x: 25, y: 5 }, angle: Math.PI }, // ←
+    
+    // Left side near start/finish (going top to bottom)
+    { pos: { x: 7, y: 12 }, angle: Math.PI / 2 }, // ↓
+  ]
+  
+  for (const arrow of arrows) {
+    drawArrow(ctx, arrow.pos.x * g, arrow.pos.y * g, arrow.angle, 10, g)
+  }
+  
+  ctx.restore()
+}
+
+function drawArrow(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, size: number, g: number) {
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.rotate(angle)
+  
+  // Draw arrow shaft
+  ctx.beginPath()
+  ctx.moveTo(-size, 0)
+  ctx.lineTo(size * 0.5, 0)
+  ctx.stroke()
+  
+  // Draw arrow head
+  ctx.beginPath()
+  ctx.moveTo(size * 0.5, 0)
+  ctx.lineTo(size * 0.2, -size * 0.4)
+  ctx.lineTo(size * 0.2, size * 0.4)
+  ctx.closePath()
+  ctx.fill()
+  
+  ctx.restore()
+}
+
 function drawCheckeredStartLine(ctx: CanvasRenderingContext2D, startLine: Segment, g: number) {
   const x1 = startLine.a.x * g
   const y1 = startLine.a.y * g
@@ -400,7 +455,7 @@ function drawCheckeredStartLine(ctx: CanvasRenderingContext2D, startLine: Segmen
   
   // Checkered pattern dimensions
   const checkerSize = 8 // pixels per checker square
-  const lineWidth = 6 // width of the checkered strip
+  const lineWidth = 16 // width of the checkered strip (increased for better visibility)
   
   // Calculate perpendicular offset for line width
   const perpX = (-dy / length) * (lineWidth / 2)
@@ -408,41 +463,59 @@ function drawCheckeredStartLine(ctx: CanvasRenderingContext2D, startLine: Segmen
   
   ctx.save()
   
-  // Draw checkered pattern
-  const numCheckers = Math.ceil(length / checkerSize)
+  // Draw checkered pattern - proper 2D grid
+  const numCheckersAlong = Math.ceil(length / checkerSize)
+  const numCheckersAcross = Math.ceil(lineWidth / checkerSize)
   
-  for (let i = 0; i < numCheckers; i++) {
-    const t1 = i / numCheckers
-    const t2 = (i + 1) / numCheckers
-    
-    // Calculate checker rectangle corners
-    const x1_checker = x1 + dx * t1
-    const y1_checker = y1 + dy * t1
-    const x2_checker = x1 + dx * t2
-    const y2_checker = y1 + dy * t2
-    
-    // Alternate between black and white
-    const isBlack = i % 2 === 0
-    ctx.fillStyle = isBlack ? '#000' : '#fff'
-    
-    // Draw the checker rectangle
-    ctx.beginPath()
-    ctx.moveTo(x1_checker + perpX, y1_checker + perpY)
-    ctx.lineTo(x2_checker + perpX, y2_checker + perpY)
-    ctx.lineTo(x2_checker - perpX, y2_checker - perpY)
-    ctx.lineTo(x1_checker - perpX, y1_checker - perpY)
-    ctx.closePath()
-    ctx.fill()
+  for (let i = 0; i < numCheckersAlong; i++) {
+    for (let j = 0; j < numCheckersAcross; j++) {
+      // Calculate position along the line
+      const t1 = i / numCheckersAlong
+      const t2 = (i + 1) / numCheckersAlong
+      
+      // Calculate position across the line width
+      const s1 = (j - numCheckersAcross / 2) / numCheckersAcross
+      const s2 = (j + 1 - numCheckersAcross / 2) / numCheckersAcross
+      
+      // Calculate the four corners of this checker square
+      const centerX1 = x1 + dx * t1
+      const centerY1 = y1 + dy * t1
+      const centerX2 = x1 + dx * t2
+      const centerY2 = y1 + dy * t2
+      
+      const corner1X = centerX1 + perpX * s1 * 2
+      const corner1Y = centerY1 + perpY * s1 * 2
+      const corner2X = centerX2 + perpX * s1 * 2
+      const corner2Y = centerY2 + perpY * s1 * 2
+      const corner3X = centerX2 + perpX * s2 * 2
+      const corner3Y = centerY2 + perpY * s2 * 2
+      const corner4X = centerX1 + perpX * s2 * 2
+      const corner4Y = centerY1 + perpY * s2 * 2
+      
+      // Checkered pattern: alternate based on both i and j
+      const isBlack = (i + j) % 2 === 0
+      ctx.fillStyle = isBlack ? '#000' : '#fff'
+      
+      // Draw the checker square
+      ctx.beginPath()
+      ctx.moveTo(corner1X, corner1Y)
+      ctx.lineTo(corner2X, corner2Y)
+      ctx.lineTo(corner3X, corner3Y)
+      ctx.lineTo(corner4X, corner4Y)
+      ctx.closePath()
+      ctx.fill()
+    }
   }
   
-  // Add a subtle border
+  // Add a subtle border around the entire checkered area
   ctx.strokeStyle = '#333'
   ctx.lineWidth = 1
   ctx.beginPath()
   ctx.moveTo(x1 + perpX, y1 + perpY)
   ctx.lineTo(x2 + perpX, y2 + perpY)
-  ctx.moveTo(x1 - perpX, y1 - perpY)
   ctx.lineTo(x2 - perpX, y2 - perpY)
+  ctx.lineTo(x1 - perpX, y1 - perpY)
+  ctx.closePath()
   ctx.stroke()
   
   ctx.restore()
