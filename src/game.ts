@@ -2,7 +2,6 @@ import { add, clamp, Segment, segmentInsidePolygon, segmentsIntersect, Vec } fro
 import { isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
-import { AudioUtils } from './audio'
 
 // Individual car state
 export interface Car {
@@ -389,7 +388,6 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     let currentLap = legacyState.currentLap
     let lastCrossDirection = legacyState.lastCrossDirection
 
-    // Calculate speed for engine sound (before any state changes)
     const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
     
     // Lap detection: check if car crosses start line
@@ -411,11 +409,6 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     
     if (!legal) {
       crashed = true
-      // Stop engine and play crash sound effect
-      if (isFeatureEnabled('soundEffects')) {
-        AudioUtils.stopEngine()
-        AudioUtils.playCrash()
-      }
       // Create explosion particles when crashing (if animations enabled)
       if (isFeatureEnabled('animations')) {
         AnimationUtils.createExplosion(nextPos, '#f66', 8)
@@ -437,20 +430,11 @@ export function applyMove(state: GameState, acc: Vec): GameState {
           if (currentLap >= legacyState.targetLaps) {
             finished = true
             console.log('🏆 Race finished!')
-            // Stop engine sound and play victory fanfare
-            if (isFeatureEnabled('soundEffects')) {
-              AudioUtils.stopEngine()
-              AudioUtils.playVictoryFanfare()
-            }
             // Create celebration particles when finishing the race
             if (isFeatureEnabled('animations')) {
               AnimationUtils.createCelebration(nextPos, '#0f0', 12)
             }
           } else {
-            // Play lap completion sound
-            if (isFeatureEnabled('soundEffects')) {
-              AudioUtils.playLapComplete()
-            }
             // Lap completed but race continues - smaller celebration
             if (isFeatureEnabled('animations')) {
               AnimationUtils.createCelebration(nextPos, '#4f4', 6)
@@ -460,11 +444,6 @@ export function applyMove(state: GameState, acc: Vec): GameState {
           lastCrossDirection = 'backward'
           console.log('⚠️ Wrong direction crossing!')
         }
-      }
-      
-      // Play engine sound based on speed (only when moving legally and race isn't finished)
-      if (isFeatureEnabled('soundEffects') && speed > 0 && !finished) {
-        AudioUtils.updateEngineSound(speed)
       }
     }
 
@@ -505,7 +484,6 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     let lastCrossDirection: 'forward' | 'backward' | undefined = currentCar.lastCrossDirection
     let finishTime: number | undefined = currentCar.finishTime
     
-    // Calculate speed for engine sound
     const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
     
     // Lap detection: check if car crosses start line
@@ -526,11 +504,6 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     
     if (!legal) {
       crashed = true
-      // Stop engine and play crash sound effect
-      if (isFeatureEnabled('soundEffects')) {
-        AudioUtils.stopEngine()
-        AudioUtils.playCrash()
-      }
       // Create explosion particles when crashing
       if (isFeatureEnabled('animations')) {
         AnimationUtils.createExplosion(nextPos, currentCar.color, 8)
@@ -551,19 +524,11 @@ export function applyMove(state: GameState, acc: Vec): GameState {
             finishTime = Date.now() - multiCarState.raceStartTime
             console.log(`🏆 ${currentCar.name} finished the race! Time: ${(finishTime / 1000).toFixed(1)}s`)
             
-            // Play victory fanfare for race completion
-            if (isFeatureEnabled('soundEffects')) {
-              AudioUtils.stopEngine()
-              AudioUtils.playVictoryFanfare()
-            }
             if (isFeatureEnabled('animations')) {
               AnimationUtils.createCelebration(nextPos, currentCar.color, 12)
             }
           } else {
             // Lap completed but race continues
-            if (isFeatureEnabled('soundEffects')) {
-              AudioUtils.playLapComplete()
-            }
             if (isFeatureEnabled('animations')) {
               AnimationUtils.createCelebration(nextPos, currentCar.color, 6)
             }
@@ -572,11 +537,6 @@ export function applyMove(state: GameState, acc: Vec): GameState {
           lastCrossDirection = 'backward'
           console.log(`⚠️ ${currentCar.name} wrong direction crossing!`)
         }
-      }
-      
-      // Play engine sound based on speed
-      if (isFeatureEnabled('soundEffects') && speed > 0 && !finished) {
-        AudioUtils.updateEngineSound(speed)
       }
     }
     
@@ -839,9 +799,6 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
         }
       }
       
-      if (isFeatureEnabled('soundEffects')) {
-        ctx.fillText('🔊 Audio controls: M (mute), +/- (volume)', 12, helpY + 60)
-      }
     }
   } else {
     // Handle multi-car rendering
@@ -1060,9 +1017,6 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
         }
       }
       
-      if (isFeatureEnabled('soundEffects')) {
-        ctx.fillText('🔊 Audio controls: M (mute), +/- (volume)', 12, helpY + 75)
-      }
       
       ctx.fillText(`👥 Players: ${multiCarState.players.length}`, 12, helpY + 90)
     }

@@ -3,7 +3,6 @@ import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
-import { AudioUtils } from './audio'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -13,33 +12,12 @@ const gridToggle = document.getElementById('gridToggle') as HTMLInputElement
 const candToggle = document.getElementById('candToggle') as HTMLInputElement
 const helpToggle = document.getElementById('helpToggle') as HTMLInputElement
 
-// Audio control elements
-const audioControls = document.getElementById('audioControls') as HTMLDivElement
-const muteBtn = document.getElementById('muteBtn') as HTMLButtonElement
-const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement
-const volumeDisplay = document.getElementById('volumeDisplay') as HTMLSpanElement
 
 let state = createDefaultGame()
 
 // Initialize feature flags and log enabled features
 logEnabledFeatures()
 
-// Initialize audio system if soundEffects are enabled
-if (isFeatureEnabled('soundEffects')) {
-  // Initialize audio on first user interaction to comply with browser autoplay policies
-  let audioInitialized = false
-  const initializeAudio = () => {
-    if (!audioInitialized) {
-      AudioUtils.initialize()
-      audioInitialized = true
-      console.log('🎵 Audio system initialized')
-    }
-  }
-  
-  // Initialize on first click or key press
-  document.addEventListener('click', initializeAudio, { once: true })
-  document.addEventListener('keydown', initializeAudio, { once: true })
-}
 
 function render() {
   // Track frame performance if enabled
@@ -234,10 +212,6 @@ canvas.addEventListener('click', (e) => {
 })
 
 resetBtn.addEventListener('click', () => { 
-  // Stop any playing engine sounds when resetting
-  if (isFeatureEnabled('soundEffects')) {
-    AudioUtils.stopEngine()
-  }
   state = createDefaultGame(); 
   syncToggles(); 
   render() 
@@ -250,10 +224,6 @@ helpToggle.addEventListener('change', () => { state = { ...state, showHelp: help
 window.addEventListener('keydown', (e) => {
   // Existing toggle controls
   if (e.key === 'r' || e.key === 'R') { 
-    // Stop any playing engine sounds when resetting
-    if (isFeatureEnabled('soundEffects')) {
-      AudioUtils.stopEngine()
-    }
     state = createDefaultGame(); 
     syncToggles(); 
     render() 
@@ -261,23 +231,6 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'h' || e.key === 'H') { helpToggle.checked = !helpToggle.checked; helpToggle.dispatchEvent(new Event('change')) }
-  
-  // Audio controls (when soundEffects feature is enabled)
-  if (isFeatureEnabled('soundEffects')) {
-    if (e.key === 'm' || e.key === 'M') {
-      AudioUtils.toggleMute()
-      e.preventDefault()
-    }
-    // Volume controls with +/- keys
-    if (e.key === '=' || e.key === '+') {
-      AudioUtils.setVolume(Math.min(1.0, AudioUtils.getVolume() + 0.1))
-      e.preventDefault()
-    }
-    if (e.key === '-' || e.key === '_') {
-      AudioUtils.setVolume(Math.max(0.0, AudioUtils.getVolume() - 0.1))
-      e.preventDefault()
-    }
-  }
   
   // Improved controls: Undo functionality
   if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {
@@ -420,52 +373,4 @@ function syncToggles() {
   helpToggle.checked = state.showHelp
 }
 
-// Initialize audio controls if soundEffects feature is enabled
-if (isFeatureEnabled('soundEffects')) {
-  // Show audio controls
-  audioControls.style.display = 'flex'
-  
-  // Initialize UI with current audio settings
-  const settings = AudioUtils.getSettings()
-  volumeSlider.value = String(Math.round(settings.masterVolume * 100))
-  volumeDisplay.textContent = `${Math.round(settings.masterVolume * 100)}%`
-  updateMuteButton(settings.muted)
-  
-  // Mute button click handler
-  muteBtn.addEventListener('click', () => {
-    AudioUtils.toggleMute()
-    const settings = AudioUtils.getSettings()
-    updateMuteButton(settings.muted)
-  })
-  
-  // Volume slider handler
-  volumeSlider.addEventListener('input', () => {
-    const volume = parseInt(volumeSlider.value) / 100
-    AudioUtils.setVolume(volume)
-    volumeDisplay.textContent = `${volumeSlider.value}%`
-  })
-  
-  // Update existing keyboard handlers to sync with UI
-  const originalKeyHandler = window.addEventListener
-  window.addEventListener('keydown', (e) => {
-    if (isFeatureEnabled('soundEffects')) {
-      if (e.key === 'm' || e.key === 'M') {
-        const settings = AudioUtils.getSettings()
-        updateMuteButton(settings.muted)
-      }
-      if (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '_') {
-        const settings = AudioUtils.getSettings()
-        const volume = Math.round(settings.masterVolume * 100)
-        volumeSlider.value = String(volume)
-        volumeDisplay.textContent = `${volume}%`
-      }
-    }
-  })
-  
-  // Helper function to update mute button appearance
-  function updateMuteButton(muted: boolean) {
-    muteBtn.textContent = muted ? '🔇' : '🔊'
-    muteBtn.title = muted ? 'Unmute (M)' : 'Mute (M)'
-  }
-}
 
