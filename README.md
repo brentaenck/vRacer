@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml)
 [![Deploy](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/brentaenck/vRacer/releases/tag/v1.0.0)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)**
+🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)** | 🏁 **[Latest Release v1.0.0](https://github.com/brentaenck/vRacer/releases/tag/v1.0.0)**
 
 Quick start
 - Ensure you have Node via nvm
@@ -66,16 +68,22 @@ git commit -m "..." # Commit frequently to main
 
 ### Documentation
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Complete development guide
+- **[RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md)** - Versioning and release planning
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
 - **[WORKFLOW.md](./WORKFLOW.md)** - Quick reference
 
+### Current Features (v1.0.0)
+✅ **Complete multi-car racing with 2-player support**  
+✅ **Enhanced controls** (keyboard, mouse, undo system)  
+✅ **Visual polish** (60 FPS animations, particle effects)  
+✅ **Developer tools** (performance metrics, debug mode)  
+✅ **Professional racing** (3 laps, checkered finish line)  
+
 ### Planned Features
-*All controlled by feature flags:*
-- Multi-car support and blocking
-- Damage model and pit lane  
-- Wall bounce variants
-- Track editor mode
-- Save/load tracks as JSON
-- Performance metrics and animations
+*See [RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md) for detailed roadmap:*
+- **v1.1.0:** Car collisions and competitive racing
+- **v1.2.0:** Visual track editor and custom tracks
+- **v2.0.0:** AI opponents and advanced physics
 
 License
 - MIT
