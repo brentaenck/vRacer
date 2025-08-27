@@ -54,7 +54,7 @@ export const FEATURES: FeatureFlags = {
   
   // UI and UX improvements - polish features
   improvedControls: true,     // Keyboard support, better mouse handling
-  soundEffects: false,        // Audio feedback
+  soundEffects: true,         // Audio feedback - engine sounds, crashes, celebrations
   animations: true,           // Smooth movement, particle effects
   
   // Development and debugging - always useful

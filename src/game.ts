@@ -2,6 +2,7 @@ import { add, clamp, Segment, segmentInsidePolygon, segmentsIntersect, Vec } fro
 import { isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
+import { AudioUtils } from './audio'
 
 type GameState = {
   grid: number
@@ -156,42 +157,82 @@ export function applyMove(state: GameState, acc: Vec): GameState {
   let currentLap = state.currentLap
   let lastCrossDirection = state.lastCrossDirection
 
+  // Calculate speed for engine sound (before any state changes)
+  const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
+  
   // Lap detection: check if car crosses start line
   const moveSeg: Segment = { a: state.pos, b: nextPos }
   const crossedStart = segmentsIntersect(moveSeg, state.start)
   
+  // Debug logging for finish line detection (when debug mode is enabled)
+  if (isFeatureEnabled('debugMode') && crossedStart) {
+    const crossDirection = determineCrossDirection(state.pos, nextPos, state.start)
+    console.log('🏁 Finish line crossed!', {
+      from: state.pos,
+      to: nextPos,
+      direction: crossDirection,
+      currentLap: currentLap,
+      targetLaps: state.targetLaps,
+      startLine: state.start
+    })
+  }
+  
   if (!legal) {
     crashed = true
+    // Stop engine and play crash sound effect
+    if (isFeatureEnabled('soundEffects')) {
+      AudioUtils.stopEngine()
+      AudioUtils.playCrash()
+    }
     // Create explosion particles when crashing (if animations enabled)
     if (isFeatureEnabled('animations')) {
       AnimationUtils.createExplosion(nextPos, '#f66', 8)
     }
-  } else if (crossedStart) {
-    // Determine crossing direction based on car position relative to start line
-    // Start line is horizontal at y=18, so check if moving top-to-bottom (forward) or bottom-to-top (backward)
-    const crossDirection = determineCrossDirection(state.pos, nextPos, state.start)
-    
-    // Only count forward crossings as valid lap completions
-    if (crossDirection === 'forward') {
-      currentLap += 1
-      lastCrossDirection = 'forward'
+  } else {
+    if (crossedStart) {
+      // Determine crossing direction based on car position relative to start line
+      // Start line is horizontal at y=18, so check if moving top-to-bottom (forward) or bottom-to-top (backward)
+      const crossDirection = determineCrossDirection(state.pos, nextPos, state.start)
       
-      // Check if race is complete
-      if (currentLap >= state.targetLaps) {
-        finished = true
-        // Create celebration particles when finishing the race
-        if (isFeatureEnabled('animations')) {
-          AnimationUtils.createCelebration(nextPos, '#0f0', 12)
+      // Only count forward crossings as valid lap completions
+      if (crossDirection === 'forward') {
+        currentLap += 1
+        lastCrossDirection = 'forward'
+        
+        console.log('✅ Lap completed! Now on lap', currentLap, 'of', state.targetLaps)
+        
+        // Check if race is complete
+        if (currentLap >= state.targetLaps) {
+          finished = true
+          console.log('🏆 Race finished!')
+          // Stop engine sound and play victory fanfare
+          if (isFeatureEnabled('soundEffects')) {
+            AudioUtils.stopEngine()
+            AudioUtils.playVictoryFanfare()
+          }
+          // Create celebration particles when finishing the race
+          if (isFeatureEnabled('animations')) {
+            AnimationUtils.createCelebration(nextPos, '#0f0', 12)
+          }
+        } else {
+          // Play lap completion sound
+          if (isFeatureEnabled('soundEffects')) {
+            AudioUtils.playLapComplete()
+          }
+          // Lap completed but race continues - smaller celebration
+          if (isFeatureEnabled('animations')) {
+            AnimationUtils.createCelebration(nextPos, '#4f4', 6)
+          }
         }
       } else {
-        // Lap completed but race continues - smaller celebration
-        if (isFeatureEnabled('animations')) {
-          AnimationUtils.createCelebration(nextPos, '#4f4', 6)
-        }
+        lastCrossDirection = 'backward'
+        console.log('⚠️ Wrong direction crossing!')
       }
-    } else {
-      lastCrossDirection = 'backward'
-      // Could implement penalty for wrong direction if desired
+    }
+    
+    // Play engine sound based on speed (only when moving legally and race isn't finished)
+    if (isFeatureEnabled('soundEffects') && speed > 0 && !finished) {
+      AudioUtils.updateEngineSound(speed)
     }
   }
 
@@ -379,7 +420,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   if (isFeatureEnabled('debugMode') && state.showHelp) {
     ctx.fillStyle = '#888'
     ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-    const helpY = H - 90
+    const helpY = H - 110
     ctx.fillText('🚩 Debug mode enabled', 12, helpY)
     ctx.fillText('Features can be toggled in src/features.ts', 12, helpY + 15)
     
@@ -388,6 +429,10 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       if (canUndo(state)) {
         ctx.fillText('↶  Undo: U or Ctrl+Z', 12, helpY + 45)
       }
+    }
+    
+    if (isFeatureEnabled('soundEffects')) {
+      ctx.fillText('🔊 Audio controls: M (mute), +/- (volume)', 12, helpY + 60)
     }
   }
 }

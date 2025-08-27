@@ -3,6 +3,7 @@ import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
+import { AudioUtils } from './audio'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -16,6 +17,23 @@ let state = createDefaultGame()
 
 // Initialize feature flags and log enabled features
 logEnabledFeatures()
+
+// Initialize audio system if soundEffects are enabled
+if (isFeatureEnabled('soundEffects')) {
+  // Initialize audio on first user interaction to comply with browser autoplay policies
+  let audioInitialized = false
+  const initializeAudio = () => {
+    if (!audioInitialized) {
+      AudioUtils.initialize()
+      audioInitialized = true
+      console.log('🎵 Audio system initialized')
+    }
+  }
+  
+  // Initialize on first click or key press
+  document.addEventListener('click', initializeAudio, { once: true })
+  document.addEventListener('keydown', initializeAudio, { once: true })
+}
 
 function render() {
   // Track frame performance if enabled
@@ -115,7 +133,15 @@ canvas.addEventListener('click', (e) => {
   }
 })
 
-resetBtn.addEventListener('click', () => { state = createDefaultGame(); syncToggles(); render() })
+resetBtn.addEventListener('click', () => { 
+  // Stop any playing engine sounds when resetting
+  if (isFeatureEnabled('soundEffects')) {
+    AudioUtils.stopEngine()
+  }
+  state = createDefaultGame(); 
+  syncToggles(); 
+  render() 
+})
 
 gridToggle.addEventListener('change', () => { state = { ...state, showGrid: gridToggle.checked }; render() })
 candToggle.addEventListener('change', () => { state = { ...state, showCandidates: candToggle.checked }; render() })
@@ -123,10 +149,35 @@ helpToggle.addEventListener('change', () => { state = { ...state, showHelp: help
 
 window.addEventListener('keydown', (e) => {
   // Existing toggle controls
-  if (e.key === 'r' || e.key === 'R') { state = createDefaultGame(); syncToggles(); render() }
+  if (e.key === 'r' || e.key === 'R') { 
+    // Stop any playing engine sounds when resetting
+    if (isFeatureEnabled('soundEffects')) {
+      AudioUtils.stopEngine()
+    }
+    state = createDefaultGame(); 
+    syncToggles(); 
+    render() 
+  }
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'h' || e.key === 'H') { helpToggle.checked = !helpToggle.checked; helpToggle.dispatchEvent(new Event('change')) }
+  
+  // Audio controls (when soundEffects feature is enabled)
+  if (isFeatureEnabled('soundEffects')) {
+    if (e.key === 'm' || e.key === 'M') {
+      AudioUtils.toggleMute()
+      e.preventDefault()
+    }
+    // Volume controls with +/- keys
+    if (e.key === '=' || e.key === '+') {
+      AudioUtils.setVolume(Math.min(1.0, AudioUtils.getVolume() + 0.1))
+      e.preventDefault()
+    }
+    if (e.key === '-' || e.key === '_') {
+      AudioUtils.setVolume(Math.max(0.0, AudioUtils.getVolume() - 0.1))
+      e.preventDefault()
+    }
+  }
   
   // Improved controls: Undo functionality
   if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {
