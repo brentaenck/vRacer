@@ -39,7 +39,7 @@ export interface FeatureFlags {
 // Current feature flag configuration
 export const FEATURES: FeatureFlags = {
   // Core game features - these are planned from README
-  multiCarSupport: false,     // Next major feature to implement
+  multiCarSupport: false,     // WIP: Implementing multiplayer racing - disabled while refactoring
   carCollisions: false,       // Depends on multiCarSupport
   
   // Damage and physics - experimental features

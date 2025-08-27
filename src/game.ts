@@ -4,7 +4,70 @@ import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { AudioUtils } from './audio'
 
-type GameState = {
+// Individual car state
+export interface Car {
+  id: string
+  playerId: string
+  name: string
+  pos: Vec
+  vel: Vec
+  trail: Vec[]
+  crashed: boolean
+  finished: boolean
+  // Lap tracking
+  currentLap: number
+  lastCrossDirection?: 'forward' | 'backward'
+  finishTime?: number
+  // Car appearance
+  color: string
+  // Undo history (only for current player's car)
+  previousStates?: Car[]
+}
+
+// Player information
+export interface Player {
+  id: string
+  name: string
+  color: string
+  isLocal: boolean // Whether this player is controlled locally
+}
+
+// Multi-car game state
+type MultiCarGameState = {
+  // Track definition (shared)
+  grid: number
+  outer: Vec[]
+  inner: Vec[]
+  walls: Segment[]
+  start: Segment
+  targetLaps: number
+  
+  // Multi-car state
+  cars: Car[]
+  players: Player[]
+  currentPlayerIndex: number // Whose turn it is
+  
+  // Game session state
+  gameStarted: boolean
+  gameFinished: boolean
+  raceStartTime: number
+  
+  // UI state
+  showGrid: boolean
+  showCandidates: boolean
+  showHelp: boolean
+  hoveredPosition?: Vec // For current player only
+  
+  // Undo/redo system for the entire game state
+  previousGameStates?: MultiCarGameState[]
+  
+  // Animation state
+  animatedPos?: Vec
+  isAnimating?: boolean
+}
+
+// Legacy single-car state for backwards compatibility
+type LegacyGameState = {
   grid: number
   outer: Vec[]
   inner: Vec[]
@@ -18,20 +81,148 @@ type GameState = {
   showGrid: boolean
   showCandidates: boolean
   showHelp: boolean
-  // Lap tracking system
   currentLap: number
   targetLaps: number
   lastCrossDirection?: 'forward' | 'backward'
-  // Improved controls state
   hoveredPosition?: Vec
-  // Undo/redo system
-  previousStates?: GameState[]
-  // Animation state
+  previousStates?: LegacyGameState[]
   animatedPos?: Vec
   isAnimating?: boolean
 }
 
-export function createDefaultGame(): GameState {
+// Union type for GameState to handle both modes
+type GameState = LegacyGameState | MultiCarGameState
+
+// Car colors for multiplayer
+const CAR_COLORS = [
+  '#ff4444', // Red
+  '#44ff44', // Green  
+  '#4444ff', // Blue
+  '#ffff44', // Yellow
+  '#ff44ff', // Magenta
+  '#44ffff', // Cyan
+  '#ff8844', // Orange
+  '#8844ff', // Purple
+]
+
+// Create a new car instance
+export function createCar(id: string, playerId: string, name: string, startPos: Vec, color: string): Car {
+  return {
+    id,
+    playerId,
+    name,
+    pos: { ...startPos },
+    vel: { x: 0, y: 0 },
+    trail: [{ ...startPos }],
+    crashed: false,
+    finished: false,
+    currentLap: 0,
+    lastCrossDirection: undefined,
+    finishTime: undefined,
+    color,
+    previousStates: []
+  }
+}
+
+// Create a new player
+export function createPlayer(id: string, name: string, color: string, isLocal = true): Player {
+  return {
+    id,
+    name,
+    color,
+    isLocal
+  }
+}
+
+// Create multi-car game state
+export function createMultiCarGame(numPlayers = 2): GameState {
+  if (!isFeatureEnabled('multiCarSupport')) {
+    // Fall back to single-player mode
+    return createLegacyGame()
+  }
+  
+  const grid = 20 // pixels per grid unit
+  // Simple rounded rectangle track
+  const outer: Vec[] = [
+    { x: 2, y: 2 }, { x: 48, y: 2 }, { x: 48, y: 33 }, { x: 2, y: 33 }
+  ]
+  const inner: Vec[] = [
+    { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
+  ]
+  // Walls: edges of inner and outer polygons
+  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
+  const walls = [...wallSegments(outer), ...wallSegments(inner)]
+
+  // Start/finish line spans across the track width at the left side
+  const start: Segment = { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
+
+  // Starting positions for multiple cars (staggered)
+  const startPositions: Vec[] = [
+    { x: 7, y: 20 },   // Player 1: center
+    { x: 5, y: 21 },   // Player 2: left & back
+    { x: 9, y: 21 },   // Player 3: right & back  
+    { x: 6, y: 22 },   // Player 4: left & further back
+    { x: 8, y: 22 },   // Player 5: right & further back
+    { x: 7, y: 23 },   // Player 6: center & way back
+    { x: 5, y: 23 },   // Player 7: left & way back
+    { x: 9, y: 23 },   // Player 8: right & way back
+  ]
+
+  // Create players and cars
+  const players: Player[] = []
+  const cars: Car[] = []
+  
+  const clampedNumPlayers = Math.max(1, Math.min(numPlayers, 8)) // Support 1-8 players
+  
+  for (let i = 0; i < clampedNumPlayers; i++) {
+    const playerId = `player-${i + 1}`
+    const playerName = `Player ${i + 1}`
+    const color = CAR_COLORS[i % CAR_COLORS.length]!
+    const startPos = startPositions[i] || { x: 7, y: 20 + i } // Fallback positioning
+    
+    const player = createPlayer(playerId, playerName, color, true) // All local for now
+    const car = createCar(`car-${i + 1}`, playerId, `${playerName}'s Car`, startPos, color)
+    
+    players.push(player)
+    cars.push(car)
+  }
+
+  return {
+    // Track definition
+    grid,
+    outer,
+    inner,
+    walls,
+    start,
+    targetLaps: 3,
+    
+    // Multi-car state
+    cars,
+    players,
+    currentPlayerIndex: 0, // Start with first player
+    
+    // Game session
+    gameStarted: true,
+    gameFinished: false,
+    raceStartTime: Date.now(),
+    
+    // UI state
+    showGrid: true,
+    showCandidates: true,
+    showHelp: true,
+    hoveredPosition: undefined,
+    
+    // Undo system
+    previousGameStates: [],
+    
+    // Animation state
+    animatedPos: undefined,
+    isAnimating: false
+  }
+}
+
+// Legacy single-car game creation for backwards compatibility
+export function createLegacyGame(): LegacyGameState {
   const grid = 20 // pixels per grid unit
   // Simple rounded rectangle track
   const outer: Vec[] = [
@@ -71,17 +262,45 @@ export function createDefaultGame(): GameState {
   }
 }
 
-export function stepOptions(state: GameState): { acc: Vec; nextPos: Vec }[] {
-  const opts: { acc: Vec; nextPos: Vec }[] = []
-  for (let ax = -1; ax <= 1; ax++) {
-    for (let ay = -1; ay <= 1; ay++) {
-      const acc = { x: ax, y: ay }
-      const vel = { x: state.vel.x + ax, y: state.vel.y + ay }
-      const nextPos = { x: state.pos.x + vel.x, y: state.pos.y + vel.y }
-      opts.push({ acc, nextPos })
-    }
+// Main game creation function - chooses between multi-car and legacy based on feature flag
+export function createDefaultGame(): GameState {
+  if (isFeatureEnabled('multiCarSupport')) {
+    return createMultiCarGame(2) // Default to 2 players
+  } else {
+    return createLegacyGame() as any // Type cast for backwards compatibility
   }
-  return opts
+}
+
+// Multi-car aware step options - for the current player's car
+export function stepOptions(state: GameState): { acc: Vec; nextPos: Vec }[] {
+  if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+    const currentCar = state.cars[state.currentPlayerIndex]
+    if (!currentCar) return []
+    
+    const opts: { acc: Vec; nextPos: Vec }[] = []
+    for (let ax = -1; ax <= 1; ax++) {
+      for (let ay = -1; ay <= 1; ay++) {
+        const acc = { x: ax, y: ay }
+        const vel = { x: currentCar.vel.x + ax, y: currentCar.vel.y + ay }
+        const nextPos = { x: currentCar.pos.x + vel.x, y: currentCar.pos.y + vel.y }
+        opts.push({ acc, nextPos })
+      }
+    }
+    return opts
+  } else {
+    // Legacy single-car mode
+    const legacyState = state as any
+    const opts: { acc: Vec; nextPos: Vec }[] = []
+    for (let ax = -1; ax <= 1; ax++) {
+      for (let ay = -1; ay <= 1; ay++) {
+        const acc = { x: ax, y: ay }
+        const vel = { x: legacyState.vel.x + ax, y: legacyState.vel.y + ay }
+        const nextPos = { x: legacyState.pos.x + vel.x, y: legacyState.pos.y + vel.y }
+        opts.push({ acc, nextPos })
+      }
+    }
+    return opts
+  }
 }
 
 function polyToSegments(poly: Vec[]): Segment[] {
