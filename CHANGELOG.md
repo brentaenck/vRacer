@@ -2,9 +2,29 @@
 
 All notable changes to vRacer will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.1.0] - 2025-08-27
+
+### Added
+- **Car-to-car collision detection system** for multi-player racing
+  - Realistic collision detection with 0.6 grid unit collision radius
+  - Cars stop when attempting to collide with other cars
+  - Visual particle effects on collision (when animations enabled)
+  - Debug console logging for collision events
+  - Smart collision logic that respects crashed/finished car states
+- Extensible collision handling framework supporting future collision types
+- Geometric collision detection using path-to-point distance calculations
+- Integration with turn-based multi-car gameplay mechanics
+
+### Technical
+- Added `checkCarCollision()`, `carPathIntersectsPosition()`, `positionsOverlap()` functions
+- Added `closestPointOnSegment()` geometric helper function
+- Added `handleCollision()` system for collision consequence management
+- Enabled `carCollisions` feature flag for production use
+- Maintained full backward compatibility with single-car mode
 ## [1.0.0] - 2025-08-27
 
 ### 🎉 **PHASE 1 COMPLETE - INITIAL STABLE RELEASE**
