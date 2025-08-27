@@ -40,7 +40,7 @@ export interface FeatureFlags {
 export const FEATURES: FeatureFlags = {
   // Core game features - these are planned from README
   multiCarSupport: true,      // ✅ Multi-player racing support enabled
-  carCollisions: false,       // Depends on multiCarSupport
+  carCollisions: true,        // ✅ Car-to-car collision detection enabled
   
   // Damage and physics - experimental features
   damageModel: false,         // Alternative game modes

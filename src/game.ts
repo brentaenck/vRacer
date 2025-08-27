@@ -373,6 +373,114 @@ function determineCrossDirection(fromPos: Vec, toPos: Vec, startLine: Segment): 
   return 'forward'
 }
 
+// Car collision detection functions (carCollisions feature)
+function checkCarCollision(movingCar: Car, fromPos: Vec, toPos: Vec, otherCars: Car[]): Car | null {
+  if (!isFeatureEnabled('carCollisions')) {
+    return null // Collisions disabled
+  }
+  
+  const movingCarId = movingCar.id
+  const movePath: Segment = { a: fromPos, b: toPos }
+  
+  for (const otherCar of otherCars) {
+    // Don't check collision with self
+    if (otherCar.id === movingCarId) continue
+    
+    // Skip crashed or finished cars for collision purposes
+    if (otherCar.crashed || otherCar.finished) continue
+    
+    // Check if moving car's path intersects with other car's position
+    if (carPathIntersectsPosition(movePath, otherCar.pos)) {
+      return otherCar
+    }
+    
+    // Check if destination position conflicts with other car's position
+    if (positionsOverlap(toPos, otherCar.pos)) {
+      return otherCar
+    }
+  }
+  
+  return null // No collision detected
+}
+
+function carPathIntersectsPosition(path: Segment, carPos: Vec): boolean {
+  // Check if the car's movement path passes through another car's position
+  // We'll use a small radius around the car position for more realistic collision
+  const collisionRadius = 0.6 // Grid units - slightly more than half a grid cell
+  
+  // Find the closest point on the path to the car position
+  const closestPoint = closestPointOnSegment(path, carPos)
+  
+  // Calculate distance from closest point to car position
+  const distance = Math.sqrt(
+    Math.pow(closestPoint.x - carPos.x, 2) + 
+    Math.pow(closestPoint.y - carPos.y, 2)
+  )
+  
+  return distance <= collisionRadius
+}
+
+function positionsOverlap(pos1: Vec, pos2: Vec): boolean {
+  // Check if two car positions are too close (overlapping)
+  const minDistance = 1.0 // Minimum distance between cars in grid units
+  
+  const distance = Math.sqrt(
+    Math.pow(pos1.x - pos2.x, 2) + 
+    Math.pow(pos1.y - pos2.y, 2)
+  )
+  
+  return distance < minDistance
+}
+
+function closestPointOnSegment(segment: Segment, point: Vec): Vec {
+  // Find the closest point on a line segment to a given point
+  const { a, b } = segment
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  
+  if (dx === 0 && dy === 0) {
+    // Segment is actually a point
+    return { x: a.x, y: a.y }
+  }
+  
+  // Calculate parameter t for the closest point
+  const t = Math.max(0, Math.min(1, 
+    ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy)
+  ))
+  
+  return {
+    x: a.x + t * dx,
+    y: a.y + t * dy
+  }
+}
+
+// Collision consequences and handling
+type CollisionResult = {
+  type: 'none' | 'stop' | 'bounce' | 'crash'
+  newVelocity?: Vec
+  damage?: number
+}
+
+function handleCollision(movingCar: Car, collidedCar: Car): CollisionResult {
+  if (!isFeatureEnabled('carCollisions')) {
+    return { type: 'none' }
+  }
+  
+  // For now, implement simple "stop" collision - cars just stop when they hit
+  // Future: could implement bounce physics, damage, different collision types
+  
+  if (isFeatureEnabled('debugMode')) {
+    console.log(`💥 Car collision: ${movingCar.name} hits ${collidedCar.name}!`)
+  }
+  
+  // Simple collision: moving car stops at the point just before collision
+  return {
+    type: 'stop',
+    newVelocity: { x: 0, y: 0 }, // Stop the car
+    damage: 0 // No damage for now
+  }
+}
+
 export function applyMove(state: GameState, acc: Vec): GameState {
   // Multi-car support is disabled, so we can safely cast to legacy state
   if (!isFeatureEnabled('multiCarSupport')) {
@@ -474,8 +582,8 @@ export function applyMove(state: GameState, acc: Vec): GameState {
       return switchToNextPlayer(multiCarState)
     }
     
-    const vel = { x: currentCar.vel.x + acc.x, y: currentCar.vel.y + acc.y }
-    const nextPos = { x: currentCar.pos.x + vel.x, y: currentCar.pos.y + vel.y }
+    let vel = { x: currentCar.vel.x + acc.x, y: currentCar.vel.y + acc.y }
+    let nextPos = { x: currentCar.pos.x + vel.x, y: currentCar.pos.y + vel.y }
     
     const legal = pathLegal(currentCar.pos, nextPos, multiCarState)
     let crashed: boolean = currentCar.crashed
@@ -509,6 +617,22 @@ export function applyMove(state: GameState, acc: Vec): GameState {
         AnimationUtils.createExplosion(nextPos, currentCar.color, 8)
       }
     } else {
+      // Check for car-to-car collisions (carCollisions feature)
+      const collidedCar = checkCarCollision(currentCar, currentCar.pos, nextPos, multiCarState.cars)
+      if (collidedCar) {
+        const collisionResult = handleCollision(currentCar, collidedCar)
+        
+        if (collisionResult.type === 'stop') {
+          // Car stops at current position due to collision
+          vel = collisionResult.newVelocity || { x: 0, y: 0 }
+          nextPos = { ...currentCar.pos } // Stay at current position
+          
+          if (isFeatureEnabled('animations')) {
+            AnimationUtils.createExplosion(nextPos, currentCar.color, 6)
+          }
+        }
+        // Future: handle other collision types like 'bounce' or 'crash'
+      }
       if (crossedStart) {
         const crossDirection = determineCrossDirection(currentCar.pos, nextPos, multiCarState.start)
         
