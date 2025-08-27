@@ -484,8 +484,148 @@ export function applyMove(state: GameState, acc: Vec): GameState {
 
     return { ...legacyState, pos: nextPos, vel, trail, crashed, finished, currentLap, lastCrossDirection, previousStates }
   } else {
-    // TODO: Implement multi-car applyMove logic
-    throw new Error('Multi-car applyMove not yet implemented')
+    // Multi-car mode implementation
+    const multiCarState = state as MultiCarGameState
+    
+    if (multiCarState.gameFinished) return multiCarState
+    
+    const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
+    if (!currentCar || currentCar.crashed || currentCar.finished) {
+      // Switch to next player if current player can't move
+      return switchToNextPlayer(multiCarState)
+    }
+    
+    const vel = { x: currentCar.vel.x + acc.x, y: currentCar.vel.y + acc.y }
+    const nextPos = { x: currentCar.pos.x + vel.x, y: currentCar.pos.y + vel.y }
+    
+    const legal = pathLegal(currentCar.pos, nextPos, multiCarState)
+    let crashed: boolean = currentCar.crashed
+    let finished: boolean = currentCar.finished
+    let currentLap: number = currentCar.currentLap
+    let lastCrossDirection: 'forward' | 'backward' | undefined = currentCar.lastCrossDirection
+    let finishTime: number | undefined = currentCar.finishTime
+    
+    // Calculate speed for engine sound
+    const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
+    
+    // Lap detection: check if car crosses start line
+    const moveSeg: Segment = { a: currentCar.pos, b: nextPos }
+    const crossedStart = segmentsIntersect(moveSeg, multiCarState.start)
+    
+    if (isFeatureEnabled('debugMode') && crossedStart) {
+      const crossDirection = determineCrossDirection(currentCar.pos, nextPos, multiCarState.start)
+      console.log(`🏁 ${currentCar.name} crossed finish line!`, {
+        player: multiCarState.players[multiCarState.currentPlayerIndex]?.name,
+        from: currentCar.pos,
+        to: nextPos,
+        direction: crossDirection,
+        currentLap: currentLap,
+        targetLaps: multiCarState.targetLaps
+      })
+    }
+    
+    if (!legal) {
+      crashed = true
+      // Stop engine and play crash sound effect
+      if (isFeatureEnabled('soundEffects')) {
+        AudioUtils.stopEngine()
+        AudioUtils.playCrash()
+      }
+      // Create explosion particles when crashing
+      if (isFeatureEnabled('animations')) {
+        AnimationUtils.createExplosion(nextPos, currentCar.color, 8)
+      }
+    } else {
+      if (crossedStart) {
+        const crossDirection = determineCrossDirection(currentCar.pos, nextPos, multiCarState.start)
+        
+        if (crossDirection === 'forward') {
+          currentLap += 1
+          lastCrossDirection = 'forward'
+          
+          console.log(`✅ ${currentCar.name} completed lap ${currentLap}!`)
+          
+          // Check if this car finished the race
+          if (currentLap >= multiCarState.targetLaps) {
+            finished = true
+            finishTime = Date.now() - multiCarState.raceStartTime
+            console.log(`🏆 ${currentCar.name} finished the race! Time: ${(finishTime / 1000).toFixed(1)}s`)
+            
+            // Play victory fanfare for race completion
+            if (isFeatureEnabled('soundEffects')) {
+              AudioUtils.stopEngine()
+              AudioUtils.playVictoryFanfare()
+            }
+            if (isFeatureEnabled('animations')) {
+              AnimationUtils.createCelebration(nextPos, currentCar.color, 12)
+            }
+          } else {
+            // Lap completed but race continues
+            if (isFeatureEnabled('soundEffects')) {
+              AudioUtils.playLapComplete()
+            }
+            if (isFeatureEnabled('animations')) {
+              AnimationUtils.createCelebration(nextPos, currentCar.color, 6)
+            }
+          }
+        } else {
+          lastCrossDirection = 'backward'
+          console.log(`⚠️ ${currentCar.name} wrong direction crossing!`)
+        }
+      }
+      
+      // Play engine sound based on speed
+      if (isFeatureEnabled('soundEffects') && speed > 0 && !finished) {
+        AudioUtils.updateEngineSound(speed)
+      }
+    }
+    
+    const trail = [...currentCar.trail, nextPos]
+    
+    // Update current car with new state
+    const updatedCar: Car = {
+      ...currentCar,
+      pos: nextPos,
+      vel,
+      trail,
+      crashed,
+      finished,
+      currentLap,
+      lastCrossDirection,
+      finishTime
+    }
+    
+    // Save game state for undo (full game state)
+    let previousGameStates = multiCarState.previousGameStates || []
+    if (isFeatureEnabled('improvedControls')) {
+      const stateToSave = {
+        ...multiCarState,
+        hoveredPosition: undefined,
+        previousGameStates: undefined
+      }
+      previousGameStates = [...previousGameStates, stateToSave].slice(-10) // Keep last 10 moves
+    }
+    
+    // Update cars array
+    const updatedCars = [...multiCarState.cars]
+    updatedCars[multiCarState.currentPlayerIndex] = updatedCar
+    
+    // Check if all cars have finished or crashed
+    const gameFinished = checkGameFinished(updatedCars)
+    
+    const newState: MultiCarGameState = {
+      ...multiCarState,
+      cars: updatedCars,
+      gameFinished,
+      previousGameStates
+    }
+    
+    // Switch to next player after move (unless game is finished)
+    if (!gameFinished && !crashed) {
+      return switchToNextPlayer(newState)
+    }
+    
+    return newState
   }
 }
 
@@ -506,8 +646,22 @@ export function undoMove(state: GameState): GameState {
       hoveredPosition: legacyState.hoveredPosition // Keep current hover state
     }
   } else {
-    // TODO: Implement multi-car undoMove logic
-    throw new Error('Multi-car undoMove not yet implemented')
+    // Multi-car undo implementation
+    const multiCarState = state as MultiCarGameState
+    if (!isFeatureEnabled('improvedControls') || 
+        !multiCarState.previousGameStates || 
+        multiCarState.previousGameStates.length === 0) {
+      return multiCarState
+    }
+    
+    const previousState = multiCarState.previousGameStates[multiCarState.previousGameStates.length - 1]!
+    const newPreviousGameStates = multiCarState.previousGameStates.slice(0, -1)
+    
+    return {
+      ...previousState,
+      previousGameStates: newPreviousGameStates,
+      hoveredPosition: multiCarState.hoveredPosition // Keep current hover state
+    }
   }
 }
 
@@ -519,8 +673,11 @@ export function canUndo(state: GameState): boolean {
            legacyState.previousStates !== undefined && 
            legacyState.previousStates.length > 0
   } else {
-    // TODO: Implement multi-car canUndo logic
-    return false
+    // Multi-car canUndo implementation
+    const multiCarState = state as MultiCarGameState
+    return isFeatureEnabled('improvedControls') && 
+           multiCarState.previousGameStates !== undefined && 
+           multiCarState.previousGameStates.length > 0
   }
 }
 
@@ -687,8 +844,228 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       }
     }
   } else {
-    // TODO: Implement multi-car draw logic
-    throw new Error('Multi-car draw not yet implemented')
+    // Handle multi-car rendering
+    const multiCarState = state as MultiCarGameState
+    const g = multiCarState.grid
+    const W = canvas.width, H = canvas.height
+    
+    // Track render performance if enabled
+    if (isFeatureEnabled('performanceMetrics')) {
+      performanceTracker.startRender()
+    }
+    
+    ctx.clearRect(0, 0, W, H)
+
+    // Background
+    ctx.fillStyle = '#0b0b0b'
+    ctx.fillRect(0, 0, W, H)
+
+    // Grid
+    if (multiCarState.showGrid) {
+      ctx.strokeStyle = '#222'
+      ctx.lineWidth = 1
+      for (let x = 0; x <= W; x += g) { line(ctx, x, 0, x, H) }
+      for (let y = 0; y <= H; y += g) { line(ctx, 0, y, W, y) }
+    }
+
+    // Track polygons
+    drawPoly(ctx, multiCarState.outer, g, '#555', '#111')
+    drawPoly(ctx, multiCarState.inner, g, '#555', '#0b0b0b', true)
+
+    // Start/Finish line - checkered flag pattern
+    drawCheckeredStartLine(ctx, multiCarState.start, g)
+
+    // Directional arrows to show racing direction
+    drawDirectionalArrows(ctx, multiCarState, g)
+
+    // Draw all car trails
+    for (let i = 0; i < multiCarState.cars.length; i++) {
+      const car = multiCarState.cars[i]!
+      const isCurrentPlayer = i === multiCarState.currentPlayerIndex
+      
+      // Trail style varies based on current player
+      ctx.strokeStyle = isCurrentPlayer ? car.color : fadeColor(car.color, 0.5)
+      ctx.lineWidth = isCurrentPlayer ? 3 : 2
+      ctx.globalAlpha = isCurrentPlayer ? 1.0 : 0.6
+      
+      if (car.trail.length > 0) {
+        ctx.beginPath()
+        const t0 = car.trail[0]!
+        ctx.moveTo(t0.x * g, t0.y * g)
+        for (let j = 1; j < car.trail.length; j++) {
+          const p = car.trail[j]!
+          ctx.lineTo(p.x * g, p.y * g)
+        }
+        ctx.stroke()
+      }
+    }
+    
+    // Reset alpha for subsequent drawing
+    ctx.globalAlpha = 1.0
+
+    // Current player's move candidates
+    const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
+    if (currentCar && multiCarState.showCandidates && !currentCar.crashed && !currentCar.finished && !multiCarState.gameFinished) {
+      const opts = stepOptions(multiCarState)
+      for (const { nextPos } of opts) {
+        const legal = pathLegal(currentCar.pos, nextPos, multiCarState)
+        const isHovered = isFeatureEnabled('improvedControls') && 
+                         multiCarState.hoveredPosition && 
+                         nextPos.x === multiCarState.hoveredPosition.x && 
+                         nextPos.y === multiCarState.hoveredPosition.y
+        
+        if (isHovered) {
+          // Draw hover effects
+          ctx.save()
+          ctx.globalAlpha = 0.3
+          drawNode(ctx, nextPos, g, legal ? '#0f0' : '#f33', 8) // Larger hover ring
+          ctx.restore()
+          
+          // Draw preview trail line
+          if (legal && isFeatureEnabled('improvedControls')) {
+            ctx.save()
+            ctx.strokeStyle = currentCar.color
+            ctx.lineWidth = 2
+            ctx.globalAlpha = 0.6
+            ctx.setLineDash([5, 5])
+            line(ctx, currentCar.pos.x * g, currentCar.pos.y * g, nextPos.x * g, nextPos.y * g)
+            ctx.restore()
+          }
+        }
+        
+        // Draw normal candidate
+        const radius = isHovered ? 6 : 4
+        const color = legal ? (isHovered ? '#5f5' : '#0f0') : (isHovered ? '#f55' : '#f33')
+        drawNode(ctx, nextPos, g, color, radius)
+      }
+    }
+
+    // Draw all cars
+    for (let i = 0; i < multiCarState.cars.length; i++) {
+      const car = multiCarState.cars[i]!
+      const isCurrentPlayer = i === multiCarState.currentPlayerIndex
+      
+      // Car appearance based on status
+      let carColor = car.color
+      let carSize = 6
+      
+      if (car.crashed) {
+        carColor = fadeColor(car.color, 0.3) // Very faded for crashed cars
+      } else if (car.finished) {
+        // Winner effects for finished cars
+        carColor = lightenColor(car.color, 0.3)
+        carSize = 8
+      } else if (isCurrentPlayer) {
+        // Current player gets a subtle glow/highlight
+        ctx.save()
+        ctx.shadowColor = car.color
+        ctx.shadowBlur = 10
+        drawNode(ctx, car.pos, g, carColor, carSize)
+        ctx.restore()
+        continue // Skip the normal draw below
+      }
+      
+      drawNode(ctx, car.pos, g, carColor, carSize)
+    }
+    
+    // Particles (if animations are enabled)
+    if (isFeatureEnabled('animations')) {
+      animationManager.renderParticles(ctx, g)
+    }
+
+    // HUD text - Multi-player information
+    ctx.fillStyle = '#ddd'
+    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+    
+    let hudLine = 1
+    const lineHeight = 16
+    const drawHudLine = (text: string, color = '#ddd') => {
+      ctx.fillStyle = color
+      ctx.fillText(text, 12, hudLine * lineHeight + 4)
+      hudLine++
+      ctx.fillStyle = '#ddd' // Reset
+    }
+    
+    // Current player info
+    const currentPlayer = getCurrentPlayer(multiCarState)
+    if (currentPlayer && currentCar) {
+      drawHudLine(`${currentPlayer.name}'s Turn`, currentPlayer.color)
+      drawHudLine(`pos=(${currentCar.pos.x},${currentCar.pos.y}) vel=(${currentCar.vel.x},${currentCar.vel.y})`)
+      drawHudLine(`lap: ${currentCar.currentLap}/${multiCarState.targetLaps}`)
+      
+      if (isFeatureEnabled('debugMode')) {
+        const speed = Math.sqrt(currentCar.vel.x * currentCar.vel.x + currentCar.vel.y * currentCar.vel.y)
+        drawHudLine(`speed: ${speed.toFixed(1)}`)
+      }
+    }
+    
+    // Leaderboard
+    const leaderboard = getLeaderboard(multiCarState)
+    if (leaderboard.length > 1) {
+      drawHudLine('') // Empty line
+      drawHudLine('🏁 Leaderboard:')
+      
+      leaderboard.slice(0, 4).forEach(({ car, player, position }) => { // Show top 4
+        const status = car.finished ? 
+          `🏆 ${(car.finishTime! / 1000).toFixed(1)}s` :
+          car.crashed ? '💥 Crashed' : `Lap ${car.currentLap}/${multiCarState.targetLaps}`
+        
+        drawHudLine(`${position}. ${player.name}: ${status}`, player.color)
+      })
+    }
+    
+    // Game status
+    if (multiCarState.gameFinished) {
+      drawHudLine('') // Empty line
+      const winner = leaderboard[0]
+      if (winner && winner.car.finished) {
+        drawHudLine('🏁 RACE COMPLETE! 🏁', '#0f0')
+        drawHudLine(`🥇 Winner: ${winner.player.name} (${(winner.car.finishTime! / 1000).toFixed(1)}s)`, winner.player.color)
+      } else {
+        drawHudLine('🏁 Race ended - All players crashed', '#f66')
+      }
+      drawHudLine('Press R to start a new race')
+    }
+    
+    // Feature-flagged performance metrics
+    if (isFeatureEnabled('performanceMetrics')) {
+      // End render tracking
+      performanceTracker.endRender()
+      
+      // Display comprehensive performance metrics
+      const performanceLines = performanceTracker.getSummary()
+      for (const line of performanceLines) {
+        if (line.includes('⚠️')) {
+          drawHudLine(line, '#f66')
+        } else {
+          drawHudLine(line)
+        }
+      }
+    }
+    
+    // Feature-flagged development help
+    if (isFeatureEnabled('debugMode') && multiCarState.showHelp) {
+      ctx.fillStyle = '#888'
+      ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+      const helpY = H - 140
+      
+      ctx.fillText('🚩 Multi-car mode enabled', 12, helpY)
+      ctx.fillText('Features can be toggled in src/features.ts', 12, helpY + 15)
+      
+      if (isFeatureEnabled('improvedControls')) {
+        ctx.fillText('⌨️  Keyboard controls: WASD/arrows, Q/E/Z/X (diagonals), Space/Enter (coast)', 12, helpY + 30)
+        ctx.fillText('🔄 Players take turns automatically after each move', 12, helpY + 45)
+        if (canUndo(multiCarState)) {
+          ctx.fillText('↶  Undo: U or Ctrl+Z', 12, helpY + 60)
+        }
+      }
+      
+      if (isFeatureEnabled('soundEffects')) {
+        ctx.fillText('🔊 Audio controls: M (mute), +/- (volume)', 12, helpY + 75)
+      }
+      
+      ctx.fillText(`👥 Players: ${multiCarState.players.length}`, 12, helpY + 90)
+    }
   }
 }
 
@@ -847,6 +1224,111 @@ function drawNode(ctx: CanvasRenderingContext2D, p: Vec, g: number, color: strin
 
 function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+}
+
+// Helper functions for multi-car gameplay
+export function switchToNextPlayer(state: MultiCarGameState): MultiCarGameState {
+  // Find next player that can still play (not crashed and not finished)
+  let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length
+  let iterations = 0
+  
+  // Avoid infinite loop - check all players once
+  while (iterations < state.players.length) {
+    const nextCar = state.cars[nextPlayerIndex]
+    if (nextCar && !nextCar.crashed && !nextCar.finished) {
+      return {
+        ...state,
+        currentPlayerIndex: nextPlayerIndex
+      }
+    }
+    nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length
+    iterations++
+  }
+  
+  // If no player can play, end the game
+  return {
+    ...state,
+    gameFinished: true
+  }
+}
+
+export function checkGameFinished(cars: Car[]): boolean {
+  // Game is finished if all cars are either finished or crashed
+  return cars.every(car => car.finished || car.crashed)
+}
+
+export function getCurrentPlayer(state: GameState): Player | null {
+  if (isMultiCarGame(state)) {
+    return state.players[state.currentPlayerIndex] || null
+  }
+  return null
+}
+
+export function getCurrentCar(state: GameState): Car | null {
+  if (isMultiCarGame(state)) {
+    return state.cars[state.currentPlayerIndex] || null
+  }
+  return null
+}
+
+export function getLeaderboard(state: GameState): Array<{car: Car, player: Player, position: number}> {
+  if (!isMultiCarGame(state)) return []
+  
+  // Sort cars by: finished (first), then by finish time (fastest first), then by laps (most first), then by trail length (progress)
+  const sortedData = state.cars.map((car, index) => ({
+    car,
+    player: state.players[index]!,
+    position: 0 // Will be set below
+  }))
+  .sort((a, b) => {
+    // Finished cars come first
+    if (a.car.finished && !b.car.finished) return -1
+    if (!a.car.finished && b.car.finished) return 1
+    
+    // Both finished - sort by finish time
+    if (a.car.finished && b.car.finished) {
+      return (a.car.finishTime || 0) - (b.car.finishTime || 0)
+    }
+    
+    // Neither finished - sort by laps completed
+    if (a.car.currentLap !== b.car.currentLap) {
+      return b.car.currentLap - a.car.currentLap
+    }
+    
+    // Same lap - sort by progress (trail length as rough estimate)
+    return b.car.trail.length - a.car.trail.length
+  })
+  
+  // Assign positions
+  sortedData.forEach((data, index) => {
+    data.position = index + 1
+  })
+  
+  return sortedData
+}
+
+// Color utility functions for multi-car rendering
+function fadeColor(color: string, alpha: number): string {
+  // Convert hex to rgba with alpha
+  const hex = color.replace('#', '')
+  const r = parseInt(hex.substr(0, 2), 16)
+  const g = parseInt(hex.substr(2, 2), 16)
+  const b = parseInt(hex.substr(4, 2), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+function lightenColor(color: string, amount: number): string {
+  // Lighten a hex color by mixing with white
+  const hex = color.replace('#', '')
+  const r = parseInt(hex.substr(0, 2), 16)
+  const g = parseInt(hex.substr(2, 2), 16)
+  const b = parseInt(hex.substr(4, 2), 16)
+  
+  const newR = Math.min(255, Math.round(r + (255 - r) * amount))
+  const newG = Math.min(255, Math.round(g + (255 - g) * amount))
+  const newB = Math.min(255, Math.round(b + (255 - b) * amount))
+  
+  return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
 }
 
 export function screenToGrid(canvas: HTMLCanvasElement, g: number, x: number, y: number): Vec {

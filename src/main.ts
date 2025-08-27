@@ -62,8 +62,24 @@ function render() {
   // Enhanced status display when debugMode is enabled
   if (isFeatureEnabled('debugMode')) {
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
-      // Multi-car debug info (TODO: implement when multi-car is ready)
-      statusEl.textContent = 'Multi-car mode (not yet implemented)'
+      // Multi-car debug info
+      const multiCarState = state as any
+      const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
+      const currentPlayer = multiCarState.players[multiCarState.currentPlayerIndex]
+      const debugInfo = {
+        currentPlayer: currentPlayer?.name,
+        playerIndex: multiCarState.currentPlayerIndex,
+        currentCar: currentCar ? {
+          pos: currentCar.pos,
+          vel: currentCar.vel,
+          crashed: currentCar.crashed,
+          finished: currentCar.finished,
+          trail_length: currentCar.trail.length
+        } : null,
+        totalCars: multiCarState.cars.length,
+        gameFinished: multiCarState.gameFinished
+      }
+      statusEl.textContent = JSON.stringify(debugInfo, null, 2)
     } else {
       const legacyState = state as any
       const debugInfo = { 
@@ -77,8 +93,10 @@ function render() {
     }
   } else {
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
-      // Multi-car status (TODO: implement when multi-car is ready)
-      statusEl.textContent = 'Multi-car mode'
+      // Multi-car status
+      const multiCarState = state as any
+      const currentPlayer = multiCarState.players[multiCarState.currentPlayerIndex]
+      statusEl.textContent = `Multi-car Racing - ${currentPlayer?.name || 'Unknown'}'s Turn`
     } else {
       const legacyState = state as any
       statusEl.textContent = JSON.stringify({ pos: legacyState.pos, vel: legacyState.vel, crashed: legacyState.crashed, finished: legacyState.finished }, null, 2)
@@ -102,8 +120,36 @@ render()
 // Mouse hover for improved controls
 if (isFeatureEnabled('improvedControls')) {
   canvas.addEventListener('mousemove', (e) => {
-    // Legacy mode handling
-    if (!isFeatureEnabled('multiCarSupport')) {
+    if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+      // Multi-car mode handling
+      const multiCarState = state as any
+      const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
+      if (!currentCar || currentCar.crashed || currentCar.finished || multiCarState.gameFinished) return
+      
+      const g = multiCarState.grid
+      const p = screenToGrid(canvas, g, e.clientX, e.clientY)
+      const gx = Math.round(p.x)
+      const gy = Math.round(p.y)
+      
+      // Find if mouse is near a valid candidate position
+      const opts = stepOptions(multiCarState)
+      let hoveredPos: Vec | undefined = undefined
+      
+      for (const { nextPos } of opts) {
+        const dx = Math.abs(nextPos.x - gx)
+        const dy = Math.abs(nextPos.y - gy)
+        if (dx <= 0.5 && dy <= 0.5) {
+          hoveredPos = nextPos
+          break
+        }
+      }
+      
+      if (hoveredPos?.x !== multiCarState.hoveredPosition?.x || hoveredPos?.y !== multiCarState.hoveredPosition?.y) {
+        state = { ...multiCarState, hoveredPosition: hoveredPos }
+        render()
+      }
+    } else {
+      // Legacy mode handling
       const legacyState = state as any
       if (legacyState.crashed || legacyState.finished) return
       const g = legacyState.grid
@@ -132,7 +178,15 @@ if (isFeatureEnabled('improvedControls')) {
   })
   
   canvas.addEventListener('mouseleave', () => {
-    if (!isFeatureEnabled('multiCarSupport')) {
+    if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+      // Multi-car mode
+      const multiCarState = state as any
+      if (multiCarState.hoveredPosition) {
+        state = { ...multiCarState, hoveredPosition: undefined }
+        render()
+      }
+    } else {
+      // Legacy mode
       const legacyState = state as any
       if (legacyState.hoveredPosition) {
         state = { ...legacyState, hoveredPosition: undefined }
@@ -143,7 +197,25 @@ if (isFeatureEnabled('improvedControls')) {
 }
 
 canvas.addEventListener('click', (e) => {
-  if (!isFeatureEnabled('multiCarSupport')) {
+  if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+    // Multi-car mode handling
+    const multiCarState = state as any
+    const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
+    if (!currentCar || currentCar.crashed || currentCar.finished || multiCarState.gameFinished) return
+    
+    const g = multiCarState.grid
+    const p = screenToGrid(canvas, g, e.clientX, e.clientY)
+    const gx = Math.round(p.x)
+    const gy = Math.round(p.y)
+    const ax = clamp(gx - currentCar.pos.x - currentCar.vel.x, -1, 1)
+    const ay = clamp(gy - currentCar.pos.y - currentCar.vel.y, -1, 1)
+    const newState = applyMove(multiCarState, { x: ax, y: ay })
+    if (newState !== multiCarState) {
+      state = newState
+      render()
+    }
+  } else {
+    // Legacy mode handling
     const legacyState = state as any
     if (legacyState.crashed || legacyState.finished) return
     const g = legacyState.grid
@@ -217,7 +289,69 @@ window.addEventListener('keydown', (e) => {
   
   // Improved controls: Keyboard movement
   if (isFeatureEnabled('improvedControls')) {
-    if (!isFeatureEnabled('multiCarSupport')) {
+    if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+      // Multi-car mode handling
+      const multiCarState = state as any
+      const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
+      if (currentCar && !currentCar.crashed && !currentCar.finished && !multiCarState.gameFinished) {
+        let acc: { x: number, y: number } | null = null
+        
+        // Arrow keys and WASD for acceleration selection
+        switch (e.key) {
+          case 'ArrowUp':
+          case 'w':
+          case 'W':
+            acc = { x: 0, y: -1 }
+            break
+          case 'ArrowDown':
+          case 's':
+          case 'S':
+            acc = { x: 0, y: 1 }
+            break
+          case 'ArrowLeft':
+          case 'a':
+          case 'A':
+            acc = { x: -1, y: 0 }
+            break
+          case 'ArrowRight':
+          case 'd':
+          case 'D':
+            acc = { x: 1, y: 0 }
+            break
+          // Diagonal movements
+          case 'q':
+          case 'Q':
+            acc = { x: -1, y: -1 }
+            break
+          case 'e':
+          case 'E':
+            acc = { x: 1, y: -1 }
+            break
+          case 'z':
+          case 'Z':
+            acc = { x: -1, y: 1 }
+            break
+          case 'x':
+          case 'X':
+            acc = { x: 1, y: 1 }
+            break
+          case ' ': // Space for no acceleration (coast)
+          case 'Enter':
+            acc = { x: 0, y: 0 }
+            e.preventDefault() // Prevent default space/enter behavior
+            break
+        }
+        
+        if (acc !== null) {
+          const newState = applyMove(multiCarState, acc)
+          if (newState !== multiCarState) {
+            state = newState
+            render()
+          }
+        }
+      }
+    } else {
+      // Legacy mode handling
       const legacyState = state as any
       if (!legacyState.crashed && !legacyState.finished) {
         let acc: { x: number, y: number } | null = null
