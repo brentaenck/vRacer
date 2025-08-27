@@ -36,6 +36,13 @@ class AudioSystem {
   
   private initialized = false
   private currentEngineOscillator: OscillatorNode | null = null
+  
+  // Performance optimizations: node pools and caching
+  private oscillatorPool: OscillatorNode[] = []
+  private gainPool: GainNode[] = []
+  private filterPool: BiquadFilterNode[] = []
+  private noiseBufferCache: AudioBuffer | null = null
+  private activeNodes: Set<AudioNode> = new Set()
 
   /**
    * Initialize the audio system
@@ -46,18 +53,44 @@ class AudioSystem {
       return this.initialized
     }
 
+    // Check Web Audio API support
+    if (!this.isWebAudioSupported()) {
+      console.warn('🔇 Web Audio API not supported in this browser')
+      return false
+    }
+
     try {
-      // Create audio context
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      // Create audio context with cross-browser compatibility
+      const AudioContextClass = window.AudioContext || 
+                               (window as any).webkitAudioContext || 
+                               (window as any).mozAudioContext || 
+                               (window as any).msAudioContext
       
+      if (!AudioContextClass) {
+        throw new Error('No AudioContext constructor available')
+      }
+      
+      this.audioContext = new AudioContextClass()
+      
+      // Handle suspended state (required by browsers for user interaction)
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume()
+      }
+      
+      // Verify context is running
+      if (this.audioContext.state !== 'running') {
+        throw new Error('AudioContext failed to start')
       }
 
       // Create gain nodes for volume control
       this.masterGain = this.audioContext.createGain()
       this.engineGain = this.audioContext.createGain()
       this.effectsGain = this.audioContext.createGain()
+      
+      // Verify nodes were created successfully
+      if (!this.masterGain || !this.engineGain || !this.effectsGain) {
+        throw new Error('Failed to create audio gain nodes')
+      }
       
       // Connect gain nodes
       this.engineGain.connect(this.masterGain)
@@ -68,13 +101,24 @@ class AudioSystem {
       this.updateVolumes()
       
       this.initialized = true
-      console.log('🔊 Audio system initialized')
+      console.log('🔊 Audio system initialized successfully')
       return true
       
     } catch (error) {
       console.warn('🔇 Failed to initialize audio system:', error)
+      this.initialized = false
       return false
     }
+  }
+  
+  /**
+   * Check if Web Audio API is supported
+   */
+  private isWebAudioSupported(): boolean {
+    return !!(window.AudioContext || 
+             (window as any).webkitAudioContext || 
+             (window as any).mozAudioContext || 
+             (window as any).msAudioContext)
   }
 
   /**

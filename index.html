@@ -15,6 +15,15 @@
           <label><input id="gridToggle" type="checkbox" checked /> Grid</label>
           <label><input id="candToggle" type="checkbox" checked /> Candidates</label>
           <label><input id="helpToggle" type="checkbox" checked /> Help</label>
+          
+          <!-- Audio Controls (only shown when soundEffects feature is enabled) -->
+          <div id="audioControls" class="audio-controls" style="display: none;">
+            <button id="muteBtn" class="audio-btn" title="Mute/Unmute (M)">🔊</button>
+            <div class="volume-control">
+              <input id="volumeSlider" type="range" min="0" max="100" value="70" class="volume-slider" title="Volume (+/-)" />
+              <span id="volumeDisplay" class="volume-display">70%</span>
+            </div>
+          </div>
         </div>
       </header>
       <main>
@@ -29,6 +38,7 @@
             <li>Stay within the track boundaries; crossing walls crashes.</li>
             <li>Cross the finish line in the correct direction to win.</li>
             <li>Keys: R reset, G grid, C candidates, H help panel.</li>
+            <li>Audio: M mute/unmute, +/- volume control.</li>
           </ul>
         </aside>
       </main>

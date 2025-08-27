@@ -13,6 +13,12 @@ const gridToggle = document.getElementById('gridToggle') as HTMLInputElement
 const candToggle = document.getElementById('candToggle') as HTMLInputElement
 const helpToggle = document.getElementById('helpToggle') as HTMLInputElement
 
+// Audio control elements
+const audioControls = document.getElementById('audioControls') as HTMLDivElement
+const muteBtn = document.getElementById('muteBtn') as HTMLButtonElement
+const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement
+const volumeDisplay = document.getElementById('volumeDisplay') as HTMLSpanElement
+
 let state = createDefaultGame()
 
 // Initialize feature flags and log enabled features
@@ -251,5 +257,54 @@ function syncToggles() {
   gridToggle.checked = state.showGrid
   candToggle.checked = state.showCandidates
   helpToggle.checked = state.showHelp
+}
+
+// Initialize audio controls if soundEffects feature is enabled
+if (isFeatureEnabled('soundEffects')) {
+  // Show audio controls
+  audioControls.style.display = 'flex'
+  
+  // Initialize UI with current audio settings
+  const settings = AudioUtils.getSettings()
+  volumeSlider.value = String(Math.round(settings.masterVolume * 100))
+  volumeDisplay.textContent = `${Math.round(settings.masterVolume * 100)}%`
+  updateMuteButton(settings.muted)
+  
+  // Mute button click handler
+  muteBtn.addEventListener('click', () => {
+    AudioUtils.toggleMute()
+    const settings = AudioUtils.getSettings()
+    updateMuteButton(settings.muted)
+  })
+  
+  // Volume slider handler
+  volumeSlider.addEventListener('input', () => {
+    const volume = parseInt(volumeSlider.value) / 100
+    AudioUtils.setVolume(volume)
+    volumeDisplay.textContent = `${volumeSlider.value}%`
+  })
+  
+  // Update existing keyboard handlers to sync with UI
+  const originalKeyHandler = window.addEventListener
+  window.addEventListener('keydown', (e) => {
+    if (isFeatureEnabled('soundEffects')) {
+      if (e.key === 'm' || e.key === 'M') {
+        const settings = AudioUtils.getSettings()
+        updateMuteButton(settings.muted)
+      }
+      if (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '_') {
+        const settings = AudioUtils.getSettings()
+        const volume = Math.round(settings.masterVolume * 100)
+        volumeSlider.value = String(volume)
+        volumeDisplay.textContent = `${volume}%`
+      }
+    }
+  })
+  
+  // Helper function to update mute button appearance
+  function updateMuteButton(muted: boolean) {
+    muteBtn.textContent = muted ? '🔇' : '🔊'
+    muteBtn.title = muted ? 'Unmute (M)' : 'Mute (M)'
+  }
 }
 

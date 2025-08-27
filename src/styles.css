@@ -15,3 +15,10 @@ footer { padding: 6px 12px; border-top: 1px solid #ccc3; text-align: right; }
 /* Status */
 #status { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; background: #0008; padding: 8px; border-radius: 6px; }
 
+/* Audio controls */
+.audio-controls { display: flex; gap: 8px; align-items: center; padding-left: 8px; border-left: 1px solid #ccc3; }
+.audio-btn { border: 1px solid #555; background: #222; color: #fff; border-radius: 4px; padding: 6px 8px; cursor: pointer; }
+.audio-btn:hover { background: #2a2a2a; }
+.volume-control { display: flex; gap: 6px; align-items: center; }
+.volume-slider { width: 120px; }
+.volume-display { min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
