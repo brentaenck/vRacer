@@ -93,6 +93,15 @@ type LegacyGameState = {
 // Union type for GameState to handle both modes
 type GameState = LegacyGameState | MultiCarGameState
 
+// Type guard functions
+export function isMultiCarGame(state: GameState): state is MultiCarGameState {
+  return 'cars' in state && Array.isArray((state as MultiCarGameState).cars)
+}
+
+export function isLegacyGame(state: GameState): state is LegacyGameState {
+  return 'pos' in state && 'vel' in state && 'crashed' in state
+}
+
 // Car colors for multiplayer
 const CAR_COLORS = [
   '#ff4444', // Red
@@ -366,293 +375,320 @@ function determineCrossDirection(fromPos: Vec, toPos: Vec, startLine: Segment): 
 }
 
 export function applyMove(state: GameState, acc: Vec): GameState {
-  if (state.crashed || state.finished) return state
-  const vel = { x: state.vel.x + acc.x, y: state.vel.y + acc.y }
-  const nextPos = { x: state.pos.x + vel.x, y: state.pos.y + vel.y }
+  // Multi-car support is disabled, so we can safely cast to legacy state
+  if (!isFeatureEnabled('multiCarSupport')) {
+    const legacyState = state as LegacyGameState
+    
+    if (legacyState.crashed || legacyState.finished) return legacyState
+    const vel = { x: legacyState.vel.x + acc.x, y: legacyState.vel.y + acc.y }
+    const nextPos = { x: legacyState.pos.x + vel.x, y: legacyState.pos.y + vel.y }
 
-  const legal = pathLegal(state.pos, nextPos, state)
-  let crashed: boolean = state.crashed
-  let finished: boolean = state.finished
-  let currentLap = state.currentLap
-  let lastCrossDirection = state.lastCrossDirection
+    const legal = pathLegal(legacyState.pos, nextPos, legacyState)
+    let crashed: boolean = legacyState.crashed
+    let finished: boolean = legacyState.finished
+    let currentLap = legacyState.currentLap
+    let lastCrossDirection = legacyState.lastCrossDirection
 
-  // Calculate speed for engine sound (before any state changes)
-  const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
-  
-  // Lap detection: check if car crosses start line
-  const moveSeg: Segment = { a: state.pos, b: nextPos }
-  const crossedStart = segmentsIntersect(moveSeg, state.start)
-  
-  // Debug logging for finish line detection (when debug mode is enabled)
-  if (isFeatureEnabled('debugMode') && crossedStart) {
-    const crossDirection = determineCrossDirection(state.pos, nextPos, state.start)
-    console.log('🏁 Finish line crossed!', {
-      from: state.pos,
-      to: nextPos,
-      direction: crossDirection,
-      currentLap: currentLap,
-      targetLaps: state.targetLaps,
-      startLine: state.start
-    })
-  }
-  
-  if (!legal) {
-    crashed = true
-    // Stop engine and play crash sound effect
-    if (isFeatureEnabled('soundEffects')) {
-      AudioUtils.stopEngine()
-      AudioUtils.playCrash()
-    }
-    // Create explosion particles when crashing (if animations enabled)
-    if (isFeatureEnabled('animations')) {
-      AnimationUtils.createExplosion(nextPos, '#f66', 8)
-    }
-  } else {
-    if (crossedStart) {
-      // Determine crossing direction based on car position relative to start line
-      // Start line is horizontal at y=18, so check if moving top-to-bottom (forward) or bottom-to-top (backward)
-      const crossDirection = determineCrossDirection(state.pos, nextPos, state.start)
-      
-      // Only count forward crossings as valid lap completions
-      if (crossDirection === 'forward') {
-        currentLap += 1
-        lastCrossDirection = 'forward'
-        
-        console.log('✅ Lap completed! Now on lap', currentLap, 'of', state.targetLaps)
-        
-        // Check if race is complete
-        if (currentLap >= state.targetLaps) {
-          finished = true
-          console.log('🏆 Race finished!')
-          // Stop engine sound and play victory fanfare
-          if (isFeatureEnabled('soundEffects')) {
-            AudioUtils.stopEngine()
-            AudioUtils.playVictoryFanfare()
-          }
-          // Create celebration particles when finishing the race
-          if (isFeatureEnabled('animations')) {
-            AnimationUtils.createCelebration(nextPos, '#0f0', 12)
-          }
-        } else {
-          // Play lap completion sound
-          if (isFeatureEnabled('soundEffects')) {
-            AudioUtils.playLapComplete()
-          }
-          // Lap completed but race continues - smaller celebration
-          if (isFeatureEnabled('animations')) {
-            AnimationUtils.createCelebration(nextPos, '#4f4', 6)
-          }
-        }
-      } else {
-        lastCrossDirection = 'backward'
-        console.log('⚠️ Wrong direction crossing!')
-      }
+    // Calculate speed for engine sound (before any state changes)
+    const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
+    
+    // Lap detection: check if car crosses start line
+    const moveSeg: Segment = { a: legacyState.pos, b: nextPos }
+    const crossedStart = segmentsIntersect(moveSeg, legacyState.start)
+    
+    // Debug logging for finish line detection (when debug mode is enabled)
+    if (isFeatureEnabled('debugMode') && crossedStart) {
+      const crossDirection = determineCrossDirection(legacyState.pos, nextPos, legacyState.start)
+      console.log('🏁 Finish line crossed!', {
+        from: legacyState.pos,
+        to: nextPos,
+        direction: crossDirection,
+        currentLap: currentLap,
+        targetLaps: legacyState.targetLaps,
+        startLine: legacyState.start
+      })
     }
     
-    // Play engine sound based on speed (only when moving legally and race isn't finished)
-    if (isFeatureEnabled('soundEffects') && speed > 0 && !finished) {
-      AudioUtils.updateEngineSound(speed)
+    if (!legal) {
+      crashed = true
+      // Stop engine and play crash sound effect
+      if (isFeatureEnabled('soundEffects')) {
+        AudioUtils.stopEngine()
+        AudioUtils.playCrash()
+      }
+      // Create explosion particles when crashing (if animations enabled)
+      if (isFeatureEnabled('animations')) {
+        AnimationUtils.createExplosion(nextPos, '#f66', 8)
+      }
+    } else {
+      if (crossedStart) {
+        // Determine crossing direction based on car position relative to start line
+        // Start line is horizontal at y=18, so check if moving top-to-bottom (forward) or bottom-to-top (backward)
+        const crossDirection = determineCrossDirection(legacyState.pos, nextPos, legacyState.start)
+        
+        // Only count forward crossings as valid lap completions
+        if (crossDirection === 'forward') {
+          currentLap += 1
+          lastCrossDirection = 'forward'
+          
+          console.log('✅ Lap completed! Now on lap', currentLap, 'of', legacyState.targetLaps)
+          
+          // Check if race is complete
+          if (currentLap >= legacyState.targetLaps) {
+            finished = true
+            console.log('🏆 Race finished!')
+            // Stop engine sound and play victory fanfare
+            if (isFeatureEnabled('soundEffects')) {
+              AudioUtils.stopEngine()
+              AudioUtils.playVictoryFanfare()
+            }
+            // Create celebration particles when finishing the race
+            if (isFeatureEnabled('animations')) {
+              AnimationUtils.createCelebration(nextPos, '#0f0', 12)
+            }
+          } else {
+            // Play lap completion sound
+            if (isFeatureEnabled('soundEffects')) {
+              AudioUtils.playLapComplete()
+            }
+            // Lap completed but race continues - smaller celebration
+            if (isFeatureEnabled('animations')) {
+              AnimationUtils.createCelebration(nextPos, '#4f4', 6)
+            }
+          }
+        } else {
+          lastCrossDirection = 'backward'
+          console.log('⚠️ Wrong direction crossing!')
+        }
+      }
+      
+      // Play engine sound based on speed (only when moving legally and race isn't finished)
+      if (isFeatureEnabled('soundEffects') && speed > 0 && !finished) {
+        AudioUtils.updateEngineSound(speed)
+      }
     }
-  }
 
-  const trail = [...state.trail, nextPos]
-  
-  // Save previous state for undo (when improvedControls is enabled)
-  let previousStates = state.previousStates || []
-  if (isFeatureEnabled('improvedControls')) {
-    // Save current state before applying move (without circular reference)
-    const stateToSave = {
-      ...state,
-      hoveredPosition: undefined,
-      previousStates: undefined
+    const trail = [...legacyState.trail, nextPos]
+    
+    // Save previous state for undo (when improvedControls is enabled)
+    let previousStates = legacyState.previousStates || []
+    if (isFeatureEnabled('improvedControls')) {
+      // Save current state before applying move (without circular reference)
+      const stateToSave = {
+        ...legacyState,
+        hoveredPosition: undefined,
+        previousStates: undefined
+      }
+      previousStates = [...previousStates, stateToSave].slice(-10) // Keep last 10 moves
     }
-    previousStates = [...previousStates, stateToSave].slice(-10) // Keep last 10 moves
-  }
 
-  return { ...state, pos: nextPos, vel, trail, crashed, finished, currentLap, lastCrossDirection, previousStates }
+    return { ...legacyState, pos: nextPos, vel, trail, crashed, finished, currentLap, lastCrossDirection, previousStates }
+  } else {
+    // TODO: Implement multi-car applyMove logic
+    throw new Error('Multi-car applyMove not yet implemented')
+  }
 }
 
 // Undo function for improved controls
 export function undoMove(state: GameState): GameState {
-  if (!isFeatureEnabled('improvedControls') || !state.previousStates || state.previousStates.length === 0) {
-    return state
-  }
-  
-  const previousState = state.previousStates[state.previousStates.length - 1]!
-  const newPreviousStates = state.previousStates.slice(0, -1)
-  
-  return {
-    ...previousState,
-    previousStates: newPreviousStates,
-    hoveredPosition: state.hoveredPosition // Keep current hover state
+  if (!isFeatureEnabled('multiCarSupport')) {
+    const legacyState = state as LegacyGameState
+    if (!isFeatureEnabled('improvedControls') || !legacyState.previousStates || legacyState.previousStates.length === 0) {
+      return legacyState
+    }
+    
+    const previousState = legacyState.previousStates[legacyState.previousStates.length - 1]!
+    const newPreviousStates = legacyState.previousStates.slice(0, -1)
+    
+    return {
+      ...previousState,
+      previousStates: newPreviousStates,
+      hoveredPosition: legacyState.hoveredPosition // Keep current hover state
+    }
+  } else {
+    // TODO: Implement multi-car undoMove logic
+    throw new Error('Multi-car undoMove not yet implemented')
   }
 }
 
 // Check if undo is available
 export function canUndo(state: GameState): boolean {
-  return isFeatureEnabled('improvedControls') && 
-         state.previousStates !== undefined && 
-         state.previousStates.length > 0
+  if (!isFeatureEnabled('multiCarSupport')) {
+    const legacyState = state as LegacyGameState
+    return isFeatureEnabled('improvedControls') && 
+           legacyState.previousStates !== undefined && 
+           legacyState.previousStates.length > 0
+  } else {
+    // TODO: Implement multi-car canUndo logic
+    return false
+  }
 }
 
 export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HTMLCanvasElement) {
-  const g = state.grid
-  const W = canvas.width, H = canvas.height
-  
-  // Track render performance if enabled
-  if (isFeatureEnabled('performanceMetrics')) {
-    performanceTracker.startRender()
-  }
-  
-  ctx.clearRect(0, 0, W, H)
+  if (!isFeatureEnabled('multiCarSupport')) {
+    // Handle legacy single-car rendering
+    const legacyState = state as LegacyGameState
+    const g = legacyState.grid
+    const W = canvas.width, H = canvas.height
+    
+    // Track render performance if enabled
+    if (isFeatureEnabled('performanceMetrics')) {
+      performanceTracker.startRender()
+    }
+    
+    ctx.clearRect(0, 0, W, H)
 
-  // Background
-  ctx.fillStyle = '#0b0b0b'
-  ctx.fillRect(0, 0, W, H)
+    // Background
+    ctx.fillStyle = '#0b0b0b'
+    ctx.fillRect(0, 0, W, H)
 
-  // Grid
-  if (state.showGrid) {
-    ctx.strokeStyle = '#222'
-    ctx.lineWidth = 1
-    for (let x = 0; x <= W; x += g) { line(ctx, x, 0, x, H) }
-    for (let y = 0; y <= H; y += g) { line(ctx, 0, y, W, y) }
-  }
+    // Grid
+    if (legacyState.showGrid) {
+      ctx.strokeStyle = '#222'
+      ctx.lineWidth = 1
+      for (let x = 0; x <= W; x += g) { line(ctx, x, 0, x, H) }
+      for (let y = 0; y <= H; y += g) { line(ctx, 0, y, W, y) }
+    }
 
-  // Track polygons
-  drawPoly(ctx, state.outer, g, '#555', '#111')
-  drawPoly(ctx, state.inner, g, '#555', '#0b0b0b', true)
+    // Track polygons
+    drawPoly(ctx, legacyState.outer, g, '#555', '#111')
+    drawPoly(ctx, legacyState.inner, g, '#555', '#0b0b0b', true)
 
-  // Start/Finish line - checkered flag pattern
-  drawCheckeredStartLine(ctx, state.start, g)
+    // Start/Finish line - checkered flag pattern
+    drawCheckeredStartLine(ctx, legacyState.start, g)
 
-  // Directional arrows to show racing direction
-  drawDirectionalArrows(ctx, state, g)
+    // Directional arrows to show racing direction
+    drawDirectionalArrows(ctx, legacyState, g)
 
-  // Trail
-  ctx.strokeStyle = '#9cf'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  const t0 = state.trail[0]!
-  ctx.moveTo(t0.x * g, t0.y * g)
-  for (let i = 1; i < state.trail.length; i++) {
-    const p = state.trail[i]!
-    ctx.lineTo(p.x * g, p.y * g)
-  }
-  ctx.stroke()
+    // Trail
+    ctx.strokeStyle = '#9cf'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    const t0 = legacyState.trail[0]!
+    ctx.moveTo(t0.x * g, t0.y * g)
+    for (let i = 1; i < legacyState.trail.length; i++) {
+      const p = legacyState.trail[i]!
+      ctx.lineTo(p.x * g, p.y * g)
+    }
+    ctx.stroke()
 
-  // Candidates with improved controls visual feedback
-  if (state.showCandidates && !state.crashed && !state.finished) {
-    const opts = stepOptions(state)
-    for (const { nextPos } of opts) {
-      const legal = pathLegal(state.pos, nextPos, state)
-      const isHovered = isFeatureEnabled('improvedControls') && 
-                       state.hoveredPosition && 
-                       nextPos.x === state.hoveredPosition.x && 
-                       nextPos.y === state.hoveredPosition.y
-      
-      if (isHovered) {
-        // Draw hover effects
-        ctx.save()
-        ctx.globalAlpha = 0.3
-        drawNode(ctx, nextPos, g, legal ? '#0f0' : '#f33', 8) // Larger hover ring
-        ctx.restore()
+    // Candidates with improved controls visual feedback
+    if (legacyState.showCandidates && !legacyState.crashed && !legacyState.finished) {
+      const opts = stepOptions(legacyState)
+      for (const { nextPos } of opts) {
+        const legal = pathLegal(legacyState.pos, nextPos, legacyState)
+        const isHovered = isFeatureEnabled('improvedControls') && 
+                         legacyState.hoveredPosition && 
+                         nextPos.x === legacyState.hoveredPosition.x && 
+                         nextPos.y === legacyState.hoveredPosition.y
         
-        // Draw preview trail line
-        if (legal && isFeatureEnabled('improvedControls')) {
+        if (isHovered) {
+          // Draw hover effects
           ctx.save()
-          ctx.strokeStyle = '#ff0'
-          ctx.lineWidth = 2
-          ctx.globalAlpha = 0.6
-          ctx.setLineDash([5, 5])
-          line(ctx, state.pos.x * g, state.pos.y * g, nextPos.x * g, nextPos.y * g)
+          ctx.globalAlpha = 0.3
+          drawNode(ctx, nextPos, g, legal ? '#0f0' : '#f33', 8) // Larger hover ring
           ctx.restore()
+          
+          // Draw preview trail line
+          if (legal && isFeatureEnabled('improvedControls')) {
+            ctx.save()
+            ctx.strokeStyle = '#ff0'
+            ctx.lineWidth = 2
+            ctx.globalAlpha = 0.6
+            ctx.setLineDash([5, 5])
+            line(ctx, legacyState.pos.x * g, legacyState.pos.y * g, nextPos.x * g, nextPos.y * g)
+            ctx.restore()
+          }
+        }
+        
+        // Draw normal candidate
+        const radius = isHovered ? 6 : 4
+        const color = legal ? (isHovered ? '#5f5' : '#0f0') : (isHovered ? '#f55' : '#f33')
+        drawNode(ctx, nextPos, g, color, radius)
+      }
+    }
+
+    // Car
+    drawNode(ctx, legacyState.pos, g, legacyState.crashed ? '#f66' : '#ff0', 6)
+    
+    // Particles (if animations are enabled)
+    if (isFeatureEnabled('animations')) {
+      animationManager.renderParticles(ctx, g)
+    }
+
+    // HUD text
+    ctx.fillStyle = '#ddd'
+    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+    
+    let hudLine = 1
+    const lineHeight = 16
+    const drawHudLine = (text: string) => {
+      ctx.fillText(text, 12, hudLine * lineHeight + 4)
+      hudLine++
+    }
+    
+    drawHudLine(`pos=(${legacyState.pos.x},${legacyState.pos.y}) vel=(${legacyState.vel.x},${legacyState.vel.y})`)
+    
+    // Lap counter - always visible
+    drawHudLine(`lap: ${legacyState.currentLap}/${legacyState.targetLaps}`)
+    
+    // Feature-flagged debug information
+    if (isFeatureEnabled('debugMode')) {
+      drawHudLine(`trail: ${legacyState.trail.length} points`)
+      const speed = Math.sqrt(legacyState.vel.x * legacyState.vel.x + legacyState.vel.y * legacyState.vel.y)
+      drawHudLine(`speed: ${speed.toFixed(1)}`)
+    }
+    
+    // Feature-flagged performance metrics
+    if (isFeatureEnabled('performanceMetrics')) {
+      // End render tracking
+      performanceTracker.endRender()
+      
+      // Display comprehensive performance metrics
+      const performanceLines = performanceTracker.getSummary()
+      for (const line of performanceLines) {
+        if (line.includes('⚠️')) {
+          // Performance warnings in red
+          ctx.fillStyle = '#f66'
+          drawHudLine(line)
+          ctx.fillStyle = '#ddd' // Reset color
+        } else {
+          drawHudLine(line)
+        }
+      }
+    }
+    
+    if (legacyState.crashed) drawHudLine('CRASHED — press R to reset')
+    if (legacyState.finished) {
+      // Show victory message with race details
+      ctx.fillStyle = '#0f0' // Green for victory
+      drawHudLine('🏁 RACE COMPLETE! 🏁')
+      ctx.fillStyle = '#ddd' // Reset color
+      drawHudLine(`Completed ${legacyState.currentLap}/${legacyState.targetLaps} laps — press R to race again`)
+    }
+    
+    // Feature-flagged development help
+    if (isFeatureEnabled('debugMode') && legacyState.showHelp) {
+      ctx.fillStyle = '#888'
+      ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+      const helpY = H - 110
+      ctx.fillText('🚩 Debug mode enabled', 12, helpY)
+      ctx.fillText('Features can be toggled in src/features.ts', 12, helpY + 15)
+      
+      if (isFeatureEnabled('improvedControls')) {
+        ctx.fillText('⌨️  Keyboard controls: WASD/arrows, Q/E/Z/X (diagonals), Space/Enter (coast)', 12, helpY + 30)
+        if (canUndo(legacyState)) {
+          ctx.fillText('↶  Undo: U or Ctrl+Z', 12, helpY + 45)
         }
       }
       
-      // Draw normal candidate
-      const radius = isHovered ? 6 : 4
-      const color = legal ? (isHovered ? '#5f5' : '#0f0') : (isHovered ? '#f55' : '#f33')
-      drawNode(ctx, nextPos, g, color, radius)
-    }
-  }
-
-  // Car
-  drawNode(ctx, state.pos, g, state.crashed ? '#f66' : '#ff0', 6)
-  
-  // Particles (if animations are enabled)
-  if (isFeatureEnabled('animations')) {
-    animationManager.renderParticles(ctx, g)
-  }
-
-  // HUD text
-  ctx.fillStyle = '#ddd'
-  ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-  
-  let hudLine = 1
-  const lineHeight = 16
-  const drawHudLine = (text: string) => {
-    ctx.fillText(text, 12, hudLine * lineHeight + 4)
-    hudLine++
-  }
-  
-  drawHudLine(`pos=(${state.pos.x},${state.pos.y}) vel=(${state.vel.x},${state.vel.y})`)
-  
-  // Lap counter - always visible
-  drawHudLine(`lap: ${state.currentLap}/${state.targetLaps}`)
-  
-  // Feature-flagged debug information
-  if (isFeatureEnabled('debugMode')) {
-    drawHudLine(`trail: ${state.trail.length} points`)
-    const speed = Math.sqrt(state.vel.x * state.vel.x + state.vel.y * state.vel.y)
-    drawHudLine(`speed: ${speed.toFixed(1)}`)
-  }
-  
-  // Feature-flagged performance metrics
-  if (isFeatureEnabled('performanceMetrics')) {
-    // End render tracking
-    performanceTracker.endRender()
-    
-    // Display comprehensive performance metrics
-    const performanceLines = performanceTracker.getSummary()
-    for (const line of performanceLines) {
-      if (line.includes('⚠️')) {
-        // Performance warnings in red
-        ctx.fillStyle = '#f66'
-        drawHudLine(line)
-        ctx.fillStyle = '#ddd' // Reset color
-      } else {
-        drawHudLine(line)
+      if (isFeatureEnabled('soundEffects')) {
+        ctx.fillText('🔊 Audio controls: M (mute), +/- (volume)', 12, helpY + 60)
       }
     }
-  }
-  
-  if (state.crashed) drawHudLine('CRASHED — press R to reset')
-  if (state.finished) {
-    // Show victory message with race details
-    ctx.fillStyle = '#0f0' // Green for victory
-    drawHudLine('🏁 RACE COMPLETE! 🏁')
-    ctx.fillStyle = '#ddd' // Reset color
-    drawHudLine(`Completed ${state.currentLap}/${state.targetLaps} laps — press R to race again`)
-  }
-  
-  // Feature-flagged development help
-  if (isFeatureEnabled('debugMode') && state.showHelp) {
-    ctx.fillStyle = '#888'
-    ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-    const helpY = H - 110
-    ctx.fillText('🚩 Debug mode enabled', 12, helpY)
-    ctx.fillText('Features can be toggled in src/features.ts', 12, helpY + 15)
-    
-    if (isFeatureEnabled('improvedControls')) {
-      ctx.fillText('⌨️  Keyboard controls: WASD/arrows, Q/E/Z/X (diagonals), Space/Enter (coast)', 12, helpY + 30)
-      if (canUndo(state)) {
-        ctx.fillText('↶  Undo: U or Ctrl+Z', 12, helpY + 45)
-      }
-    }
-    
-    if (isFeatureEnabled('soundEffects')) {
-      ctx.fillText('🔊 Audio controls: M (mute), +/- (volume)', 12, helpY + 60)
-    }
+  } else {
+    // TODO: Implement multi-car draw logic
+    throw new Error('Multi-car draw not yet implemented')
   }
 }
 
