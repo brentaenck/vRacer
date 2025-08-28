@@ -857,14 +857,15 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       animationManager.renderParticles(ctx, g)
     }
 
-    // HUD text
-    ctx.fillStyle = '#ddd'
-    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+    // HUD text with modern styling
+    ctx.fillStyle = '#b0b0b0'  // --text-secondary
+    ctx.font = '600 13px "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
     
     let hudLine = 1
-    const lineHeight = 16
-    const drawHudLine = (text: string) => {
-      ctx.fillText(text, 12, hudLine * lineHeight + 4)
+    const lineHeight = 18
+    const drawHudLine = (text: string, color = '#b0b0b0') => {
+      ctx.fillStyle = color
+      ctx.fillText(text, 16, hudLine * lineHeight + 12)
       hudLine++
     }
     

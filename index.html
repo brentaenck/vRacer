@@ -3,37 +3,148 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vRacer - Vector Racetrack</title>
+    <title>vRacer - Vector Racing Game</title>
+    <meta name="description" content="Professional vector racing game with multi-player support, realistic physics, and competitive gameplay" />
+    <meta name="theme-color" content="#00d4ff" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3e%3ctext y='.9em' font-size='90'%3e🏁%3c/text%3e%3c/svg%3e" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="app">
-      <header>
-        <h1>vRacer</h1>
-        <div class="controls">
-          <button id="resetBtn" title="Reset (R)">Reset</button>
-          <label><input id="gridToggle" type="checkbox" checked /> Grid</label>
-          <label><input id="candToggle" type="checkbox" checked /> Candidates</label>
-          <label><input id="helpToggle" type="checkbox" checked /> Help</label>
+      <header role="banner">
+        <div class="header-brand">
+          <h1>
+            🏁 vRacer
+            <span class="version">v1.1.0</span>
+          </h1>
+          <p class="tagline">Professional Vector Racing</p>
         </div>
+        <nav class="controls" role="navigation" aria-label="Game controls">
+          <button id="resetBtn" title="Reset game (R key)" class="btn-reset">
+            <span class="btn-icon">🔄</span>
+            Reset
+          </button>
+          <div class="control-group">
+            <label class="toggle-label">
+              <input id="gridToggle" type="checkbox" checked aria-describedby="grid-desc" />
+              <span class="toggle-text">Grid</span>
+            </label>
+            <label class="toggle-label">
+              <input id="candToggle" type="checkbox" checked aria-describedby="candidates-desc" />
+              <span class="toggle-text">Moves</span>
+            </label>
+            <label class="toggle-label">
+              <input id="helpToggle" type="checkbox" checked aria-describedby="help-desc" />
+              <span class="toggle-text">Help</span>
+            </label>
+          </div>
+        </nav>
       </header>
-      <main>
-        <canvas id="canvas" width="1000" height="700" aria-label="vRacer canvas"></canvas>
-        <aside id="sidebar">
-          <h2>Status</h2>
-          <div id="status"></div>
-          <h2>Help</h2>
-          <ul>
-            <li>Click a highlighted node to choose acceleration.</li>
-            <li>You may change vx and vy by -1, 0, or +1 each turn.</li>
-            <li>Stay within the track boundaries; crossing walls crashes.</li>
-            <li>Cross the finish line in the correct direction to win.</li>
-            <li>Keys: R reset, G grid, C candidates, H help panel.</li>
-          </ul>
+      
+      <main role="main">
+        <section class="game-area">
+          <canvas 
+            id="canvas" 
+            width="1000" 
+            height="700" 
+            role="application"
+            aria-label="vRacer game canvas - use mouse to select moves or keyboard controls"
+            tabindex="0"
+          ></canvas>
+          <div class="game-overlay" id="gameOverlay">
+            <!-- Dynamic overlay content will be inserted here -->
+          </div>
+        </section>
+        
+        <aside id="sidebar" role="complementary" aria-label="Game information and help">
+          <section class="status-section">
+            <h2>
+              <span class="section-icon">📊</span>
+              Game Status
+            </h2>
+            <div id="status" role="log" aria-live="polite"></div>
+          </section>
+          
+          <section class="help-section">
+            <h2>
+              <span class="section-icon">❓</span>
+              How to Play
+            </h2>
+            <div class="help-content">
+              <div class="help-category">
+                <h3>🎯 Objective</h3>
+                <ul>
+                  <li>Complete <strong>3 laps</strong> around the track</li>
+                  <li>Cross the <strong>checkered finish line</strong> in the correct direction</li>
+                  <li>Beat other players in multi-car races!</li>
+                </ul>
+              </div>
+              
+              <div class="help-category">
+                <h3>🕹️ Controls</h3>
+                <ul>
+                  <li><strong>Mouse:</strong> Click highlighted nodes to move</li>
+                  <li><strong>Keyboard:</strong> WASD or arrow keys</li>
+                  <li><strong>Diagonals:</strong> Q/E/Z/X keys</li>
+                  <li><strong>Coast:</strong> Space or Enter (no acceleration)</li>
+                  <li><strong>Undo:</strong> U or Ctrl+Z</li>
+                </ul>
+              </div>
+              
+              <div class="help-category">
+                <h3>⚡ Physics</h3>
+                <ul>
+                  <li>Velocity changes by <strong>-1, 0, or +1</strong> each turn</li>
+                  <li>Cars have <strong>momentum</strong> - plan ahead!</li>
+                  <li>Stay within track boundaries to avoid crashing</li>
+                  <li>Cars can <strong>collide</strong> with each other</li>
+                </ul>
+              </div>
+              
+              <div class="help-category">
+                <h3>⌨️ Shortcuts</h3>
+                <ul>
+                  <li><kbd>R</kbd> - Reset game</li>
+                  <li><kbd>G</kbd> - Toggle grid</li>
+                  <li><kbd>C</kbd> - Toggle move candidates</li>
+                  <li><kbd>H</kbd> - Toggle this help panel</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          
+          <section class="features-section">
+            <h2>
+              <span class="section-icon">🚀</span>
+              Features
+            </h2>
+            <div class="feature-badges">
+              <span class="badge badge-enabled">Multi-Car Racing</span>
+              <span class="badge badge-enabled">Car Collisions</span>
+              <span class="badge badge-enabled">Advanced Controls</span>
+              <span class="badge badge-enabled">Particle Effects</span>
+              <span class="badge badge-enabled">Performance Metrics</span>
+            </div>
+          </section>
         </aside>
       </main>
-      <footer>
-        <small>vRacer • MIT License</small>
+      
+      <footer role="contentinfo">
+        <div class="footer-content">
+          <div class="footer-info">
+            <strong>vRacer v1.1.0</strong> • 
+            <span class="text-accent">Professional Vector Racing Game</span>
+          </div>
+          <div class="footer-links">
+            <span>MIT License</span> • 
+            <a href="https://github.com/brentaenck/vRacer" target="_blank" rel="noopener" class="footer-link">
+              View Source
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>
