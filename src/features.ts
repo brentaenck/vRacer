@@ -57,11 +57,14 @@ export const FEATURES: FeatureFlags = {
   soundEffects: false,        // Audio feedback - DISABLED
   animations: true,           // Smooth movement, particle effects
   
-  // Development and debugging - always useful
-  debugMode: true,            // Show extra info for development
+  // Development and debugging - off by default for users
+  debugMode: false,           // Show extra info for development
   performanceMetrics: true,   // FPS counter, render time
   aiPlayers: false,           // Computer-controlled cars
 };
+
+// Runtime overrides for features that can be toggled dynamically
+const RUNTIME_OVERRIDES: Partial<FeatureFlags> = {};
 
 /**
  * Check if a feature is enabled
@@ -69,7 +72,24 @@ export const FEATURES: FeatureFlags = {
  * (environment-based flags, user preferences, etc.)
  */
 export function isFeatureEnabled(feature: keyof FeatureFlags): boolean {
-  return FEATURES[feature];
+  // Check runtime overrides first, then fall back to static config
+  return RUNTIME_OVERRIDES[feature] ?? FEATURES[feature];
+}
+
+/**
+ * Toggle a feature at runtime (for features that support dynamic toggling)
+ */
+export function toggleFeature(feature: keyof FeatureFlags): boolean {
+  const currentState = isFeatureEnabled(feature);
+  RUNTIME_OVERRIDES[feature] = !currentState;
+  return !currentState;
+}
+
+/**
+ * Set a feature state at runtime
+ */
+export function setFeatureEnabled(feature: keyof FeatureFlags, enabled: boolean): void {
+  RUNTIME_OVERRIDES[feature] = enabled;
 }
 
 /**

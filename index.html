@@ -22,25 +22,23 @@
           </h1>
           <p class="tagline">Professional Vector Racing</p>
         </div>
-        <nav class="controls" role="navigation" aria-label="Game controls">
-          <button id="resetBtn" title="Reset game (R key)" class="btn-reset">
-            <span class="btn-icon">🔄</span>
-            Reset
-          </button>
-          <div class="control-group">
-            <label class="toggle-label">
-              <input id="gridToggle" type="checkbox" checked aria-describedby="grid-desc" />
-              <span class="toggle-text">Grid</span>
-            </label>
-            <label class="toggle-label">
-              <input id="candToggle" type="checkbox" checked aria-describedby="candidates-desc" />
-              <span class="toggle-text">Moves</span>
-            </label>
-            <label class="toggle-label">
-              <input id="helpToggle" type="checkbox" checked aria-describedby="help-desc" />
-              <span class="toggle-text">Help</span>
-            </label>
+        
+        <div id="gameHUD" class="game-hud">
+          <div class="hud-section">
+            <div id="playerInfo" class="hud-info"></div>
+            <div id="gameStatus" class="hud-status"></div>
           </div>
+          <div id="performanceMetrics" class="hud-metrics"></div>
+        </div>
+        
+        <nav class="controls" role="navigation" aria-label="Game controls">
+          <button id="configBtn" title="Game Settings" class="btn-config" aria-label="Open game settings">
+            <span class="hamburger-icon">
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+            </span>
+          </button>
         </nav>
       </header>
       
@@ -110,8 +108,14 @@
                   <li><kbd>R</kbd> - Reset game</li>
                   <li><kbd>G</kbd> - Toggle grid</li>
                   <li><kbd>C</kbd> - Toggle move candidates</li>
-                  <li><kbd>H</kbd> - Toggle this help panel</li>
+                  <li><kbd>D</kbd> - Toggle debug info</li>
+                  <li><kbd>Esc</kbd> - Close settings dialog</li>
                 </ul>
+                
+                <div class="help-category">
+                  <h3>⚙️ Settings</h3>
+                  <p>Click the <strong>hamburger menu</strong> (☰) in the header to access game settings including reset, display options, and developer tools.</p>
+                </div>
               </div>
             </div>
           </section>
@@ -146,6 +150,75 @@
           </div>
         </div>
       </footer>
+      
+      <!-- Configuration Dialog Modal -->
+      <div id="configModal" class="modal-overlay" role="dialog" aria-labelledby="config-title" aria-hidden="true">
+        <div class="modal-content">
+          <header class="modal-header">
+            <h2 id="config-title">⚙️ Game Settings</h2>
+            <button id="closeConfigBtn" class="btn-close" aria-label="Close settings">
+              <span>&times;</span>
+            </button>
+          </header>
+          
+          <div class="modal-body">
+            <section class="config-section">
+              <h3>🎮 Game Controls</h3>
+              <div class="config-group">
+                <button id="resetBtn" title="Reset game (R key)" class="btn-reset btn-full">
+                  <span class="btn-icon">🔄</span>
+                  Reset Game
+                  <span class="shortcut">R</span>
+                </button>
+              </div>
+            </section>
+            
+            <section class="config-section">
+              <h3>👁️ Display Options</h3>
+              <div class="config-group">
+                <label class="config-toggle">
+                  <input id="gridToggle" type="checkbox" checked />
+                  <span class="toggle-slider"></span>
+                  <div class="toggle-info">
+                    <span class="toggle-label">Show Grid</span>
+                    <span class="toggle-desc">Display grid lines on the track</span>
+                  </div>
+                  <span class="shortcut">G</span>
+                </label>
+                
+                <label class="config-toggle">
+                  <input id="candToggle" type="checkbox" checked />
+                  <span class="toggle-slider"></span>
+                  <div class="toggle-info">
+                    <span class="toggle-label">Show Moves</span>
+                    <span class="toggle-desc">Highlight possible move candidates</span>
+                  </div>
+                  <span class="shortcut">C</span>
+                </label>
+              </div>
+            </section>
+            
+            <section class="config-section">
+              <h3>🐛 Developer Options</h3>
+              <div class="config-group">
+                <label class="config-toggle">
+                  <input id="debugToggle" type="checkbox" />
+                  <span class="toggle-slider"></span>
+                  <div class="toggle-info">
+                    <span class="toggle-label">Debug Mode</span>
+                    <span class="toggle-desc">Show performance metrics and debug info</span>
+                  </div>
+                  <span class="shortcut">D</span>
+                </label>
+              </div>
+            </section>
+          </div>
+          
+          <footer class="modal-footer">
+            <p class="modal-hint">Press <kbd>Esc</kbd> to close this dialog</p>
+          </footer>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

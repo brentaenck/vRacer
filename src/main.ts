@@ -1,16 +1,23 @@
 import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove, canUndo } from './game'
 import { clamp, Vec } from './geometry'
-import { logEnabledFeatures, isFeatureEnabled } from './features'
+import { logEnabledFeatures, isFeatureEnabled, toggleFeature } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
 const statusEl = document.getElementById('status')!
+
+// Configuration modal elements
+const configBtn = document.getElementById('configBtn') as HTMLButtonElement
+const configModal = document.getElementById('configModal') as HTMLDivElement
+const closeConfigBtn = document.getElementById('closeConfigBtn') as HTMLButtonElement
+
+// Control elements (now inside modal)
 const resetBtn = document.getElementById('resetBtn') as HTMLButtonElement
 const gridToggle = document.getElementById('gridToggle') as HTMLInputElement
 const candToggle = document.getElementById('candToggle') as HTMLInputElement
-const helpToggle = document.getElementById('helpToggle') as HTMLInputElement
+const debugToggle = document.getElementById('debugToggle') as HTMLInputElement
 
 
 let state = createDefaultGame()
@@ -93,6 +100,8 @@ if (isFeatureEnabled('animations')) {
   animationLoop()
 }
 
+// Initialize toggle states
+syncToggles()
 render()
 
 // Mouse hover for improved controls
@@ -219,9 +228,45 @@ resetBtn.addEventListener('click', () => {
 
 gridToggle.addEventListener('change', () => { state = { ...state, showGrid: gridToggle.checked }; render() })
 candToggle.addEventListener('change', () => { state = { ...state, showCandidates: candToggle.checked }; render() })
-helpToggle.addEventListener('change', () => { state = { ...state, showHelp: helpToggle.checked }; render() })
+debugToggle.addEventListener('change', () => { 
+  toggleFeature('debugMode'); 
+  render(); 
+})
+
+// Configuration modal functionality
+function openConfigModal() {
+  configModal.classList.add('show')
+  configModal.setAttribute('aria-hidden', 'false')
+  // Focus first interactive element in modal
+  setTimeout(() => resetBtn.focus(), 100)
+}
+
+function closeConfigModal() {
+  configModal.classList.remove('show')
+  configModal.setAttribute('aria-hidden', 'true')
+  // Return focus to hamburger button
+  configBtn.focus()
+}
+
+// Modal event listeners
+configBtn.addEventListener('click', openConfigModal)
+closeConfigBtn.addEventListener('click', closeConfigModal)
+
+// Close modal when clicking outside content
+configModal.addEventListener('click', (e) => {
+  if (e.target === configModal) {
+    closeConfigModal()
+  }
+})
 
 window.addEventListener('keydown', (e) => {
+  // Close configuration modal with Escape key
+  if (e.key === 'Escape' && configModal.classList.contains('show')) {
+    closeConfigModal()
+    e.preventDefault()
+    return
+  }
+  
   // Existing toggle controls
   if (e.key === 'r' || e.key === 'R') { 
     state = createDefaultGame(); 
@@ -230,7 +275,7 @@ window.addEventListener('keydown', (e) => {
   }
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
-  if (e.key === 'h' || e.key === 'H') { helpToggle.checked = !helpToggle.checked; helpToggle.dispatchEvent(new Event('change')) }
+  if (e.key === 'd' || e.key === 'D') { debugToggle.checked = !debugToggle.checked; debugToggle.dispatchEvent(new Event('change')) }
   
   // Improved controls: Undo functionality
   if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {
@@ -370,7 +415,7 @@ window.addEventListener('keydown', (e) => {
 function syncToggles() {
   gridToggle.checked = state.showGrid
   candToggle.checked = state.showCandidates
-  helpToggle.checked = state.showHelp
+  debugToggle.checked = isFeatureEnabled('debugMode')
 }
 
 

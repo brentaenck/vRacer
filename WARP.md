@@ -68,6 +68,13 @@ npm install    # Install dependencies
 - Canvas click handling for move selection
 - Keyboard shortcuts (R-reset, G-grid, C-candidates, H-help)
 - DOM integration and game loop management
+- HUD update coordination with game state
+
+**`src/hud.ts`** - DOM-based HUD system
+- HUD data interface and management
+- Real-time game info display in header
+- Player info, performance metrics, game status
+- Responsive design and mobile optimization
 
 ### Game State Structure
 ```typescript

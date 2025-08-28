@@ -2,6 +2,7 @@ import { add, clamp, Segment, segmentInsidePolygon, segmentsIntersect, Vec } fro
 import { isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
+import { hudManager, HUDData } from './hud'
 
 // Individual car state
 export interface Car {
@@ -772,10 +773,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     const g = legacyState.grid
     const W = canvas.width, H = canvas.height
     
-    // Track render performance if enabled
-    if (isFeatureEnabled('performanceMetrics')) {
-      performanceTracker.startRender()
-    }
+    // Always track render performance (but only display when debugMode is enabled)
+    performanceTracker.startRender()
     
     ctx.clearRect(0, 0, W, H)
 
@@ -857,84 +856,36 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       animationManager.renderParticles(ctx, g)
     }
 
-    // HUD text with modern styling
-    ctx.fillStyle = '#b0b0b0'  // --text-secondary
-    ctx.font = '600 13px "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+    // End render tracking for performance metrics
+    performanceTracker.endRender()
     
-    let hudLine = 1
-    const lineHeight = 18
-    const drawHudLine = (text: string, color = '#b0b0b0') => {
-      ctx.fillStyle = color
-      ctx.fillText(text, 16, hudLine * lineHeight + 12)
-      hudLine++
+    // Update DOM-based HUD instead of drawing on canvas
+    const speed = Math.sqrt(legacyState.vel.x * legacyState.vel.x + legacyState.vel.y * legacyState.vel.y)
+    const hudData: HUDData = {
+      playerInfo: {
+        position: legacyState.pos,
+        velocity: legacyState.vel,
+        lap: legacyState.currentLap,
+        targetLaps: legacyState.targetLaps,
+        speed: speed
+      },
+      gameStatus: {
+        crashed: legacyState.crashed,
+        finished: legacyState.finished,
+        gameFinished: false
+      },
+      performanceMetrics: isFeatureEnabled('debugMode') ? performanceTracker.getSummary() : undefined
     }
     
-    drawHudLine(`pos=(${legacyState.pos.x},${legacyState.pos.y}) vel=(${legacyState.vel.x},${legacyState.vel.y})`)
-    
-    // Lap counter - always visible
-    drawHudLine(`lap: ${legacyState.currentLap}/${legacyState.targetLaps}`)
-    
-    // Feature-flagged debug information
-    if (isFeatureEnabled('debugMode')) {
-      drawHudLine(`trail: ${legacyState.trail.length} points`)
-      const speed = Math.sqrt(legacyState.vel.x * legacyState.vel.x + legacyState.vel.y * legacyState.vel.y)
-      drawHudLine(`speed: ${speed.toFixed(1)}`)
-    }
-    
-    // Feature-flagged performance metrics
-    if (isFeatureEnabled('performanceMetrics')) {
-      // End render tracking
-      performanceTracker.endRender()
-      
-      // Display comprehensive performance metrics
-      const performanceLines = performanceTracker.getSummary()
-      for (const line of performanceLines) {
-        if (line.includes('⚠️')) {
-          // Performance warnings in red
-          ctx.fillStyle = '#f66'
-          drawHudLine(line)
-          ctx.fillStyle = '#ddd' // Reset color
-        } else {
-          drawHudLine(line)
-        }
-      }
-    }
-    
-    if (legacyState.crashed) drawHudLine('CRASHED — press R to reset')
-    if (legacyState.finished) {
-      // Show victory message with race details
-      ctx.fillStyle = '#0f0' // Green for victory
-      drawHudLine('🏁 RACE COMPLETE! 🏁')
-      ctx.fillStyle = '#ddd' // Reset color
-      drawHudLine(`Completed ${legacyState.currentLap}/${legacyState.targetLaps} laps — press R to race again`)
-    }
-    
-    // Feature-flagged development help
-    if (isFeatureEnabled('debugMode') && legacyState.showHelp) {
-      ctx.fillStyle = '#888'
-      ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-      const helpY = H - 110
-      ctx.fillText('🚩 Debug mode enabled', 12, helpY)
-      ctx.fillText('Features can be toggled in src/features.ts', 12, helpY + 15)
-      
-      if (isFeatureEnabled('improvedControls')) {
-        ctx.fillText('⌨️  Keyboard controls: WASD/arrows, Q/E/Z/X (diagonals), Space/Enter (coast)', 12, helpY + 30)
-        if (canUndo(legacyState)) {
-          ctx.fillText('↶  Undo: U or Ctrl+Z', 12, helpY + 45)
-        }
-      }
-      
-    }
+    hudManager.update(hudData)
   } else {
     // Handle multi-car rendering
     const multiCarState = state as MultiCarGameState
     const g = multiCarState.grid
     const W = canvas.width, H = canvas.height
     
-    // Track render performance if enabled
-    if (isFeatureEnabled('performanceMetrics')) {
-      performanceTracker.startRender()
-    }
+    // Always track render performance (but only display when debugMode is enabled)
+    performanceTracker.startRender()
     
     ctx.clearRect(0, 0, W, H)
 
@@ -1055,96 +1006,79 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       animationManager.renderParticles(ctx, g)
     }
 
-    // HUD text - Multi-player information
-    ctx.fillStyle = '#ddd'
-    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+    // End render tracking for performance metrics
+    performanceTracker.endRender()
     
-    let hudLine = 1
-    const lineHeight = 16
-    const drawHudLine = (text: string, color = '#ddd') => {
-      ctx.fillStyle = color
-      ctx.fillText(text, 12, hudLine * lineHeight + 4)
-      hudLine++
-      ctx.fillStyle = '#ddd' // Reset
-    }
-    
-    // Current player info
+    // Update DOM-based HUD for multi-car mode
     const currentPlayer = getCurrentPlayer(multiCarState)
-    if (currentPlayer && currentCar) {
-      drawHudLine(`${currentPlayer.name}'s Turn`, currentPlayer.color)
-      drawHudLine(`pos=(${currentCar.pos.x},${currentCar.pos.y}) vel=(${currentCar.vel.x},${currentCar.vel.y})`)
-      drawHudLine(`lap: ${currentCar.currentLap}/${multiCarState.targetLaps}`)
-      
-      if (isFeatureEnabled('debugMode')) {
-        const speed = Math.sqrt(currentCar.vel.x * currentCar.vel.x + currentCar.vel.y * currentCar.vel.y)
-        drawHudLine(`speed: ${speed.toFixed(1)}`)
-      }
-    }
-    
-    // Leaderboard
     const leaderboard = getLeaderboard(multiCarState)
-    if (leaderboard.length > 1) {
-      drawHudLine('') // Empty line
-      drawHudLine('🏁 Leaderboard:')
+    
+    let hudData: HUDData
+    
+    if (currentPlayer && currentCar) {
+      const speed = Math.sqrt(currentCar.vel.x * currentCar.vel.x + currentCar.vel.y * currentCar.vel.y)
       
-      leaderboard.slice(0, 4).forEach(({ car, player, position }) => { // Show top 4
-        const status = car.finished ? 
+      // Build leaderboard data
+      const hudLeaderboard = leaderboard.map(({ car, player, position }) => ({
+        position,
+        playerName: player.name,
+        playerColor: player.color,
+        status: car.finished ? 
           `🏆 ${(car.finishTime! / 1000).toFixed(1)}s` :
-          car.crashed ? '💥 Crashed' : `Lap ${car.currentLap}/${multiCarState.targetLaps}`
-        
-        drawHudLine(`${position}. ${player.name}: ${status}`, player.color)
-      })
-    }
-    
-    // Game status
-    if (multiCarState.gameFinished) {
-      drawHudLine('') // Empty line
+          car.crashed ? '💥 Crashed' : `Lap ${car.currentLap}/${multiCarState.targetLaps}`,
+        isCurrentPlayer: player.id === currentPlayer.id
+      }))
+      
+      // Determine winner info for game completion
       const winner = leaderboard[0]
-      if (winner && winner.car.finished) {
-        drawHudLine('🏁 RACE COMPLETE! 🏁', '#0f0')
-        drawHudLine(`🥇 Winner: ${winner.player.name} (${(winner.car.finishTime! / 1000).toFixed(1)}s)`, winner.player.color)
-      } else {
-        drawHudLine('🏁 Race ended - All players crashed', '#f66')
+      let winnerName: string | undefined
+      let winnerTime: number | undefined
+      
+      if (multiCarState.gameFinished && winner && winner.car.finished) {
+        winnerName = winner.player.name
+        winnerTime = winner.car.finishTime
       }
-      drawHudLine('Press R to start a new race')
+      
+      hudData = {
+        playerInfo: {
+          playerName: currentPlayer.name,
+          playerColor: currentPlayer.color,
+          position: currentCar.pos,
+          velocity: currentCar.vel,
+          lap: currentCar.currentLap,
+          targetLaps: multiCarState.targetLaps,
+          speed: speed
+        },
+        gameStatus: {
+          crashed: currentCar.crashed,
+          finished: currentCar.finished,
+          finishTime: currentCar.finishTime,
+          gameFinished: multiCarState.gameFinished,
+          winnerName,
+          winnerTime
+        },
+        leaderboard: hudLeaderboard,
+        performanceMetrics: isFeatureEnabled('debugMode') ? performanceTracker.getSummary() : undefined
+      }
+    } else {
+      // Fallback HUD data when no current player/car
+      hudData = {
+        playerInfo: {
+          position: { x: 0, y: 0 },
+          velocity: { x: 0, y: 0 },
+          lap: 0,
+          targetLaps: multiCarState.targetLaps
+        },
+        gameStatus: {
+          crashed: false,
+          finished: false,
+          gameFinished: multiCarState.gameFinished
+        },
+        performanceMetrics: isFeatureEnabled('debugMode') ? performanceTracker.getSummary() : undefined
+      }
     }
     
-    // Feature-flagged performance metrics
-    if (isFeatureEnabled('performanceMetrics')) {
-      // End render tracking
-      performanceTracker.endRender()
-      
-      // Display comprehensive performance metrics
-      const performanceLines = performanceTracker.getSummary()
-      for (const line of performanceLines) {
-        if (line.includes('⚠️')) {
-          drawHudLine(line, '#f66')
-        } else {
-          drawHudLine(line)
-        }
-      }
-    }
-    
-    // Feature-flagged development help
-    if (isFeatureEnabled('debugMode') && multiCarState.showHelp) {
-      ctx.fillStyle = '#888'
-      ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-      const helpY = H - 140
-      
-      ctx.fillText('🚩 Multi-car mode enabled', 12, helpY)
-      ctx.fillText('Features can be toggled in src/features.ts', 12, helpY + 15)
-      
-      if (isFeatureEnabled('improvedControls')) {
-        ctx.fillText('⌨️  Keyboard controls: WASD/arrows, Q/E/Z/X (diagonals), Space/Enter (coast)', 12, helpY + 30)
-        ctx.fillText('🔄 Players take turns automatically after each move', 12, helpY + 45)
-        if (canUndo(multiCarState)) {
-          ctx.fillText('↶  Undo: U or Ctrl+Z', 12, helpY + 60)
-        }
-      }
-      
-      
-      ctx.fillText(`👥 Players: ${multiCarState.players.length}`, 12, helpY + 90)
-    }
+    hudManager.update(hudData)
   }
 }
 

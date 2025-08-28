@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml)
 [![Deploy](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/brentaenck/vRacer/releases/tag/v1.0.0)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/brentaenck/vRacer/releases/tag/v2.0.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)** | 🏁 **[Latest Release v1.0.0](https://github.com/brentaenck/vRacer/releases/tag/v1.0.0)**
+🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)** | 🏁 **[Latest Release v2.0.0](https://github.com/brentaenck/vRacer/releases/tag/v2.0.0)**
 
 Quick start
 - Ensure you have Node via nvm
@@ -39,11 +39,13 @@ Rules (simplified)
 - No car collisions yet (single player for now)
 
 Project Structure
-- index.html: Canvas and controls
-- src/main.ts: Entry point and UI wiring
-- src/game.ts: Core game state, rules, rendering
+- index.html: Canvas and controls with DOM-based HUD
+- src/main.ts: Entry point and UI event handling
+- src/game.ts: Core game state, rules, canvas rendering
+- src/hud.ts: DOM-based HUD management and display
 - src/geometry.ts: Geometry helpers (segments, intersections)
-- src/styles.css: Basic styling
+- src/features.ts: Feature flag system
+- src/styles.css: Complete UI styling system
 
 Track
 - A simple rectangular track with inner and outer boundaries and a start/finish line
@@ -72,18 +74,20 @@ git commit -m "..." # Commit frequently to main
 - **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
 - **[WORKFLOW.md](./WORKFLOW.md)** - Quick reference
 
-### Current Features (v1.0.0)
+### Current Features (v2.0.0)
 ✅ **Complete multi-car racing with 2-player support**  
 ✅ **Enhanced controls** (keyboard, mouse, undo system)  
 ✅ **Visual polish** (60 FPS animations, particle effects)  
 ✅ **Developer tools** (performance metrics, debug mode)  
 ✅ **Professional racing** (3 laps, checkered finish line)  
+✅ **Modern UI architecture** (DOM-based HUD, responsive design)  
+✅ **Car collision detection** (multi-car competitive racing)  
 
 ### Planned Features
 *See [RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md) for detailed roadmap:*
-- **v1.1.0:** Car collisions and competitive racing
-- **v1.2.0:** Visual track editor and custom tracks
-- **v2.0.0:** AI opponents and advanced physics
+- **v2.1.0:** Visual track editor and custom tracks
+- **v2.2.0:** AI opponents and advanced physics
+- **v3.0.0:** Multiplayer networking and tournaments
 
 License
 - MIT
