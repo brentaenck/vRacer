@@ -48,7 +48,7 @@ export const FEATURES: FeatureFlags = {
   stopOnCrash: true,          // Current behavior (always on for now)
   
   // Track features - content creation tools
-  trackEditor: false,         // Major feature for later
+  trackEditor: true,          // 🚧 Track editor for custom track creation
   trackSaveLoad: false,       // Depends on trackEditor
   customTrackFormats: false,  // Advanced track features
   

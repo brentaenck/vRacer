@@ -198,6 +198,21 @@
               </div>
             </section>
             
+            <section class="config-section" id="trackEditorSection" style="display: none;">
+              <h3>🗐️ Track Editor</h3>
+              <div class="config-group">
+                <label class="config-toggle">
+                  <input id="editorToggle" type="checkbox" />
+                  <span class="toggle-slider"></span>
+                  <div class="toggle-info">
+                    <span class="toggle-label">Track Editor</span>
+                    <span class="toggle-desc">Create and edit custom racing tracks</span>
+                  </div>
+                  <span class="shortcut">E</span>
+                </label>
+              </div>
+            </section>
+            
             <section class="config-section">
               <h3>🐛 Developer Options</h3>
               <div class="config-group">
@@ -217,6 +232,121 @@
           <footer class="modal-footer">
             <p class="modal-hint">Press <kbd>Esc</kbd> to close this dialog</p>
           </footer>
+        </div>
+      </div>
+      
+      <!-- Track Editor Overlay -->
+      <div id="trackEditorPanel" class="editor-panel" style="display: none;" role="dialog" aria-labelledby="editor-title">
+        <header class="editor-header">
+          <h2 id="editor-title">
+            🗐️ Track Editor
+            <span id="editorMode" class="editor-mode">Draw Mode</span>
+          </h2>
+          <button id="closeEditorBtn" class="btn-close" aria-label="Close track editor">
+            <span>&times;</span>
+          </button>
+        </header>
+        
+        <div class="editor-content">
+          <section class="editor-tools">
+            <h3>🔨 Tools</h3>
+            <div class="tool-palette">
+              <button class="tool-btn tool-active" data-tool="pen" title="Pen Tool (P)">
+                ✏️ Pen
+              </button>
+              <button class="tool-btn" data-tool="eraser" title="Eraser Tool (E)">
+                🗑️ Erase
+              </button>
+              <button class="tool-btn" data-tool="move" title="Move Tool (M)">
+                ↔️ Move
+              </button>
+              <button class="tool-btn" data-tool="start_finish" title="Start/Finish Line (S)">
+                🏁 Start/Finish
+              </button>
+            </div>
+          </section>
+          
+          <section class="editor-modes">
+            <h3>🎯 Mode</h3>
+            <div class="mode-buttons">
+              <button class="mode-btn mode-active" data-mode="draw" title="Draw Mode (1)">
+                ✏️ Draw
+              </button>
+              <button class="mode-btn" data-mode="edit" title="Edit Mode (2)">
+                📝 Edit
+              </button>
+              <button class="mode-btn" data-mode="test" title="Test Mode (3)">
+                🏎️ Test
+              </button>
+              <button class="mode-btn" data-mode="validate" title="Validate Mode (4)">
+                ✅ Validate
+              </button>
+            </div>
+          </section>
+          
+          <section class="editor-properties">
+            <h3>🏠 Track Properties</h3>
+            <div class="property-group">
+              <label class="property-label">
+                Track Name:
+                <input id="trackName" type="text" value="New Track" class="property-input" />
+              </label>
+              <label class="property-label">
+                Author:
+                <input id="trackAuthor" type="text" value="Anonymous" class="property-input" />
+              </label>
+              <label class="property-label">
+                Difficulty:
+                <select id="trackDifficulty" class="property-select">
+                  <option value="Easy">Easy</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="Hard">Hard</option>
+                  <option value="Expert">Expert</option>
+                </select>
+              </label>
+            </div>
+          </section>
+          
+          <section class="editor-options">
+            <h3>⚙️ Options</h3>
+            <div class="option-group">
+              <label class="option-toggle">
+                <input id="snapToGrid" type="checkbox" checked />
+                <span class="toggle-slider small"></span>
+                <span class="option-label">Snap to Grid</span>
+              </label>
+              <label class="option-toggle">
+                <input id="showValidation" type="checkbox" />
+                <span class="toggle-slider small"></span>
+                <span class="option-label">Show Validation</span>
+              </label>
+            </div>
+          </section>
+          
+          <section class="editor-validation" id="validationResults" style="display: none;">
+            <h3>⚠️ Validation</h3>
+            <div id="validationErrors" class="validation-errors"></div>
+            <div id="validationWarnings" class="validation-warnings"></div>
+            <div id="validationMetrics" class="validation-metrics"></div>
+          </section>
+          
+          <section class="editor-actions">
+            <h3>💾 Actions</h3>
+            <div class="action-buttons">
+              <button id="saveTrackBtn" class="btn-action btn-save" disabled>
+                💾 Save Track
+              </button>
+              <button id="loadTrackBtn" class="btn-action btn-load">
+                📁 Load Track
+              </button>
+              <button id="exportTrackBtn" class="btn-action btn-export" disabled>
+                📤 Export
+              </button>
+              <button id="clearTrackBtn" class="btn-action btn-clear">
+                🗑️ Clear
+              </button>
+            </div>
+          </section>
         </div>
       </div>
     </div>

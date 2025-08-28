@@ -1164,3 +1164,329 @@ kbd {
   }
 }
 
+/* =============================================================================
+   TRACK EDITOR STYLES
+   ============================================================================= */
+
+.editor-panel {
+  position: fixed;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  width: 320px;
+  max-height: 80vh;
+  background: var(--bg-secondary);
+  border: 1px solid var(--text-accent);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+  z-index: 1000;
+  overflow-y: auto;
+  font-family: var(--font-primary);
+}
+
+.editor-header {
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editor-header h2 {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.editor-mode {
+  background: var(--text-accent);
+  color: var(--bg-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-left: var(--spacing-sm);
+}
+
+.editor-content {
+  padding: var(--spacing-lg);
+}
+
+.editor-content section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.editor-content h3 {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 var(--spacing-sm) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Tool Palette */
+.tool-palette {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.tool-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.tool-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--text-accent);
+  transform: translateY(-1px);
+}
+
+.tool-btn.tool-active {
+  background: var(--text-accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+/* Mode Buttons */
+.mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xs);
+}
+
+.mode-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.mode-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--text-accent);
+}
+
+.mode-btn.mode-active {
+  background: var(--text-accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Property Inputs */
+.property-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.property-label {
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.property-input,
+.property-select {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-family: var(--font-primary);
+  transition: all var(--transition-fast);
+}
+
+.property-input:focus,
+.property-select:focus {
+  outline: none;
+  border-color: var(--text-accent);
+  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
+/* Option Toggles */
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.option-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.toggle-slider.small {
+  width: 32px;
+  height: 16px;
+}
+
+.toggle-slider.small::before {
+  width: 12px;
+  height: 12px;
+}
+
+.option-label {
+  flex: 1;
+}
+
+/* Validation Display */
+.validation-errors,
+.validation-warnings,
+.validation-metrics {
+  margin-bottom: var(--spacing-sm);
+}
+
+.validation-errors {
+  color: var(--error);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.validation-warnings {
+  color: var(--warning);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.validation-metrics {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  line-height: 1.4;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.btn-action {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.btn-action:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--text-accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-action.btn-save {
+  background: linear-gradient(135deg, var(--success), #16a34a);
+  border-color: var(--success);
+  color: white;
+}
+
+.btn-action.btn-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-color: #16a34a;
+}
+
+.btn-action.btn-clear {
+  background: linear-gradient(135deg, var(--error), #dc2626);
+  border-color: var(--error);
+  color: white;
+}
+
+.btn-action.btn-clear:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border-color: #dc2626;
+}
+
+/* Track Editor Mobile Responsive */
+@media (max-width: 1024px) {
+  .editor-panel {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    max-height: 50vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+  
+  .editor-header {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+  
+  .tool-palette,
+  .mode-buttons {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .action-buttons {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-content {
+    padding: var(--spacing-md);
+  }
+  
+  .editor-content section {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .tool-btn,
+  .mode-btn,
+  .btn-action {
+    padding: var(--spacing-xs);
+    font-size: 10px;
+  }
+}
+
