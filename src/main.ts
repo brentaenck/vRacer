@@ -3,6 +3,7 @@ import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled, toggleFeature } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
+import { initializeTrackEditor, isEditorActive } from './track-editor-ui'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -24,6 +25,9 @@ let state = createDefaultGame()
 
 // Initialize feature flags and log enabled features
 logEnabledFeatures()
+
+// Initialize track editor UI system
+initializeTrackEditor()
 
 
 function render() {
@@ -323,7 +327,10 @@ window.addEventListener('keydown', (e) => {
             break
           case 'e':
           case 'E':
-            acc = { x: 1, y: -1 }
+            // Only handle diagonal movement if track editor is not active
+            if (!isEditorActive()) {
+              acc = { x: 1, y: -1 }
+            }
             break
           case 'z':
           case 'Z':
@@ -383,7 +390,10 @@ window.addEventListener('keydown', (e) => {
             break
           case 'e':
           case 'E':
-            acc = { x: 1, y: -1 }
+            // Only handle diagonal movement if track editor is not active
+            if (!isEditorActive()) {
+              acc = { x: 1, y: -1 }
+            }
             break
           case 'z':
           case 'Z':
