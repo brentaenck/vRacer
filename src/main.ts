@@ -21,6 +21,7 @@ const newGameModal = document.getElementById('newGameModal') as HTMLDivElement
 const closeNewGameBtn = document.getElementById('closeNewGameBtn') as HTMLButtonElement
 const startNewGameBtn = document.getElementById('startNewGameBtn') as HTMLButtonElement
 const playerCountSelect = document.getElementById('playerCount') as HTMLSelectElement
+const lapCountSelect = document.getElementById('lapCount') as HTMLSelectElement
 const playerRows = document.getElementById('playerRows') as HTMLDivElement
 
 // Control elements
@@ -344,6 +345,7 @@ closeNewGameBtn?.addEventListener('click', closeNewGameModal)
 startNewGameBtn?.addEventListener('click', () => {
   // Build players config from form
   const count = parseInt(playerCountSelect.value, 10)
+  const lapCount = parseInt(lapCountSelect.value, 10)
   const rows = Array.from(playerRows.querySelectorAll('.player-row')).slice(0, count)
   const players = rows.map((row, idx) => {
     const nameInput = row.querySelector('.player-name') as HTMLInputElement
@@ -366,11 +368,15 @@ startNewGameBtn?.addEventListener('click', () => {
 
   // Create game from config (multi-car), fallback to default if single player and multi disabled
   if (isFeatureEnabled('multiCarSupport') && players.length > 1) {
-    state = createMultiCarGameFromConfig({ players })
+    state = createMultiCarGameFromConfig({ players, targetLaps: lapCount })
   } else if (players.length === 1) {
     state = createDefaultGame()
+    // For single player legacy mode, manually set target laps
+    if ('targetLaps' in state) {
+      (state as any).targetLaps = lapCount
+    }
   } else {
-    state = createMultiCarGameFromConfig({ players })
+    state = createMultiCarGameFromConfig({ players, targetLaps: lapCount })
   }
 
   syncToggles()

@@ -18,7 +18,7 @@
         <div class="header-brand">
           <h1>
             🏁 vRacer
-            <span class="version">v2.1.0</span>
+            <span class="version">v2.1.1</span>
           </h1>
           <p class="tagline">Professional Vector Racing</p>
         </div>
@@ -79,7 +79,7 @@
               <div class="help-category">
                 <h3>🎯 Objective</h3>
                 <ul>
-                  <li>Complete <strong>3 laps</strong> around the track</li>
+                  <li>Complete the <strong>required laps</strong> around the track (1-10 laps)</li>
                   <li>Cross the <strong>checkered finish line</strong> in the correct direction</li>
                   <li>Beat other players in multi-car races!</li>
                 </ul>
@@ -258,7 +258,7 @@
       <footer role="contentinfo">
         <div class="footer-content">
           <div class="footer-info">
-            <strong>vRacer v2.1.0</strong> •
+            <strong>vRacer v2.1.1</strong> •
             <span class="text-accent">Professional Vector Racing Game</span>
           </div>
           <div class="footer-links">
@@ -356,7 +356,7 @@
           
           <div class="modal-body">
             <section class="config-section">
-              <h3>👥 Players</h3>
+              <h3>🏁 Race Settings</h3>
               <div class="config-group">
                 <label class="property-label">
                   Number of Players:
@@ -365,6 +365,16 @@
                     <option value="2" selected>2 Players</option>
                     <option value="3">3 Players</option>
                     <option value="4">4 Players</option>
+                  </select>
+                </label>
+                <label class="property-label">
+                  Race Length:
+                  <select id="lapCount" class="property-select">
+                    <option value="1">1 Lap (Sprint)</option>
+                    <option value="2">2 Laps (Quick)</option>
+                    <option value="3" selected>3 Laps (Standard)</option>
+                    <option value="5">5 Laps (Extended)</option>
+                    <option value="10">10 Laps (Endurance)</option>
                   </select>
                 </label>
               </div>

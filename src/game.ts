@@ -241,7 +241,7 @@ export function createMultiCarGame(numPlayers = 2): GameState {
 }
 
 // Create multi-car game from explicit player configuration
-export function createMultiCarGameFromConfig(config: { players: Array<{ name: string; isLocal: boolean; isAI?: boolean; aiDifficulty?: 'easy'|'medium'|'hard'; color?: string }> }): GameState {
+export function createMultiCarGameFromConfig(config: { players: Array<{ name: string; isLocal: boolean; isAI?: boolean; aiDifficulty?: 'easy'|'medium'|'hard'; color?: string }>; targetLaps?: number }): GameState {
   const base = createMultiCarGame(Math.max(1, Math.min(config.players.length, 8))) as any
   // Override players according to config
   const assignedPlayers: Player[] = []
@@ -258,6 +258,12 @@ export function createMultiCarGameFromConfig(config: { players: Array<{ name: st
     })
   }
   base.players = assignedPlayers
+  
+  // Set target laps if provided in config
+  if (config.targetLaps !== undefined) {
+    base.targetLaps = config.targetLaps
+  }
+  
   // Sync car colors and names to player configs
   for (let i = 0; i < Math.min(base.cars.length, assignedPlayers.length); i++) {
     const player = assignedPlayers[i]
