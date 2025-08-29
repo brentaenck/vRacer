@@ -60,7 +60,7 @@ export const FEATURES: FeatureFlags = {
   // Development and debugging - off by default for users
   debugMode: false,           // Show extra info for development
   performanceMetrics: true,   // FPS counter, render time
-  aiPlayers: false,           // Computer-controlled cars
+  aiPlayers: true,            // Computer-controlled cars
 };
 
 // Runtime overrides for features that can be toggled dynamically

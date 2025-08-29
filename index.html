@@ -32,6 +32,10 @@
         </div>
         
         <nav class="controls" role="navigation" aria-label="Game controls">
+          <button id="resetBtn" title="New Game (R key)" class="btn-reset-header" aria-label="Start new game">
+            <span class="btn-icon">🔄</span>
+            New Game
+          </button>
           <button id="configBtn" title="Game Settings" class="btn-config" aria-label="Open game settings">
             <span class="hamburger-icon">
               <span class="hamburger-line"></span>
@@ -131,6 +135,7 @@
               <span class="badge badge-enabled">Advanced Controls</span>
               <span class="badge badge-enabled">Particle Effects</span>
               <span class="badge badge-enabled">Performance Metrics</span>
+              <span class="badge badge-enabled">🤖 AI Players</span>
             </div>
           </section>
           <!-- Track Editor Panel (inside sidebar) -->
@@ -276,16 +281,6 @@
           </header>
           
           <div class="modal-body">
-            <section class="config-section">
-              <h3>🎮 Game Controls</h3>
-              <div class="config-group">
-                <button id="resetBtn" title="Reset game (R key)" class="btn-reset btn-full">
-                  <span class="btn-icon">🔄</span>
-                  Reset Game
-                  <span class="shortcut">R</span>
-                </button>
-              </div>
-            </section>
             
             <section class="config-section">
               <h3>👁️ Display Options</h3>
@@ -345,6 +340,161 @@
           
           <footer class="modal-footer">
             <p class="modal-hint">Press <kbd>Esc</kbd> to close this dialog</p>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- New Game Dialog Modal -->
+      <div id="newGameModal" class="modal-overlay" role="dialog" aria-labelledby="new-game-title" aria-hidden="true">
+        <div class="modal-content">
+          <header class="modal-header">
+            <h2 id="new-game-title">🏁 New Game Setup</h2>
+            <button id="closeNewGameBtn" class="btn-close" aria-label="Close new game dialog">
+              <span>&times;</span>
+            </button>
+          </header>
+          
+          <div class="modal-body">
+            <section class="config-section">
+              <h3>👥 Players</h3>
+              <div class="config-group">
+                <label class="property-label">
+                  Number of Players:
+                  <select id="playerCount" class="property-select">
+                    <option value="1">1 Player</option>
+                    <option value="2" selected>2 Players</option>
+                    <option value="3">3 Players</option>
+                    <option value="4">4 Players</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+            
+            <section class="config-section">
+              <h3>🎮 Player Setup</h3>
+              <div id="playerRows" class="player-rows">
+                <!-- Player 1 -->
+                <div class="player-row">
+                  <div class="player-config">
+                    <label class="property-label">
+                      Player 1 Name:
+                      <input type="text" class="player-name property-input" value="Player 1" placeholder="Enter name...">
+                    </label>
+                    <label class="config-toggle player-ai-toggle">
+                      <input type="checkbox" class="player-ai">
+                      <span class="toggle-slider small"></span>
+                      <div class="toggle-info">
+                        <span class="toggle-label">AI Player</span>
+                        <span class="toggle-desc">Computer controlled</span>
+                      </div>
+                    </label>
+                    <div class="player-ai-settings" style="display: none;">
+                      <label class="property-label">
+                        AI Difficulty:
+                        <select class="player-ai-diff property-select">
+                          <option value="easy">Easy</option>
+                          <option value="medium" selected>Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Player 2 -->
+                <div class="player-row">
+                  <div class="player-config">
+                    <label class="property-label">
+                      Player 2 Name:
+                      <input type="text" class="player-name property-input" value="Player 2" placeholder="Enter name...">
+                    </label>
+                    <label class="config-toggle player-ai-toggle">
+                      <input type="checkbox" class="player-ai">
+                      <span class="toggle-slider small"></span>
+                      <div class="toggle-info">
+                        <span class="toggle-label">AI Player</span>
+                        <span class="toggle-desc">Computer controlled</span>
+                      </div>
+                    </label>
+                    <div class="player-ai-settings" style="display: none;">
+                      <label class="property-label">
+                        AI Difficulty:
+                        <select class="player-ai-diff property-select">
+                          <option value="easy">Easy</option>
+                          <option value="medium" selected>Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Player 3 -->
+                <div class="player-row" style="display: none;">
+                  <div class="player-config">
+                    <label class="property-label">
+                      Player 3 Name:
+                      <input type="text" class="player-name property-input" value="Player 3" placeholder="Enter name...">
+                    </label>
+                    <label class="config-toggle player-ai-toggle">
+                      <input type="checkbox" class="player-ai">
+                      <span class="toggle-slider small"></span>
+                      <div class="toggle-info">
+                        <span class="toggle-label">AI Player</span>
+                        <span class="toggle-desc">Computer controlled</span>
+                      </div>
+                    </label>
+                    <div class="player-ai-settings" style="display: none;">
+                      <label class="property-label">
+                        AI Difficulty:
+                        <select class="player-ai-diff property-select">
+                          <option value="easy">Easy</option>
+                          <option value="medium" selected>Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Player 4 -->
+                <div class="player-row" style="display: none;">
+                  <div class="player-config">
+                    <label class="property-label">
+                      Player 4 Name:
+                      <input type="text" class="player-name property-input" value="Player 4" placeholder="Enter name...">
+                    </label>
+                    <label class="config-toggle player-ai-toggle">
+                      <input type="checkbox" class="player-ai">
+                      <span class="toggle-slider small"></span>
+                      <div class="toggle-info">
+                        <span class="toggle-label">AI Player</span>
+                        <span class="toggle-desc">Computer controlled</span>
+                      </div>
+                    </label>
+                    <div class="player-ai-settings" style="display: none;">
+                      <label class="property-label">
+                        AI Difficulty:
+                        <select class="player-ai-diff property-select">
+                          <option value="easy">Easy</option>
+                          <option value="medium" selected>Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          
+          <footer class="modal-footer">
+            <div class="modal-actions">
+              <button id="startNewGameBtn" class="btn-action btn-primary">
+                🏁 Start Game
+              </button>
+            </div>
+            <p class="modal-hint">Welcome to vRacer! Configure your players and click "Start Game" to begin racing</p>
           </footer>
         </div>
       </div>

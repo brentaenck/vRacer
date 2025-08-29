@@ -1,10 +1,11 @@
-import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove, canUndo } from './game'
+import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove, canUndo, getCurrentPlayer, getCurrentCar, isMultiCarGame, createMultiCarGameFromConfig } from './game'
 import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled, toggleFeature } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { initializeTrackEditor, isEditorActive } from './track-editor-ui'
 import { setupEditorCanvas, drawEditorOverlay } from './track-editor-canvas'
+import { chooseAIMove } from './ai'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -15,7 +16,14 @@ const configBtn = document.getElementById('configBtn') as HTMLButtonElement
 const configModal = document.getElementById('configModal') as HTMLDivElement
 const closeConfigBtn = document.getElementById('closeConfigBtn') as HTMLButtonElement
 
-// Control elements (now inside modal)
+// New Game modal elements
+const newGameModal = document.getElementById('newGameModal') as HTMLDivElement
+const closeNewGameBtn = document.getElementById('closeNewGameBtn') as HTMLButtonElement
+const startNewGameBtn = document.getElementById('startNewGameBtn') as HTMLButtonElement
+const playerCountSelect = document.getElementById('playerCount') as HTMLSelectElement
+const playerRows = document.getElementById('playerRows') as HTMLDivElement
+
+// Control elements
 const resetBtn = document.getElementById('resetBtn') as HTMLButtonElement
 const gridToggle = document.getElementById('gridToggle') as HTMLInputElement
 const candToggle = document.getElementById('candToggle') as HTMLInputElement
@@ -23,6 +31,10 @@ const debugToggle = document.getElementById('debugToggle') as HTMLInputElement
 
 
 let state = createDefaultGame()
+
+// AI automation variables
+let aiTurnTimeout: number | null = null
+const AI_MOVE_DELAY = 800 // milliseconds before AI makes move
 
 // Initialize feature flags and log enabled features
 logEnabledFeatures()
@@ -33,6 +45,39 @@ initializeTrackEditor()
 // Initialize track editor canvas handlers
 setupEditorCanvas(canvas)
 
+
+// Check if it's an AI player's turn and schedule move
+function checkAITurn() {
+  if (!isFeatureEnabled('aiPlayers')) return
+  
+  // Clear any existing AI timeout
+  if (aiTurnTimeout !== null) {
+    clearTimeout(aiTurnTimeout)
+    aiTurnTimeout = null
+  }
+  
+  // Only handle AI turns in multi-car mode
+  if (!isMultiCarGame(state)) return
+  
+  const currentPlayer = getCurrentPlayer(state)
+  const currentCar = getCurrentCar(state)
+  
+  // Check if current player is AI and can move
+  if (currentPlayer?.isAI && currentCar && !currentCar.crashed && !currentCar.finished && !state.gameFinished) {
+    aiTurnTimeout = setTimeout(() => {
+      const aiMove = chooseAIMove(state)
+      if (aiMove) {
+        const newState = applyMove(state, aiMove)
+        if (newState !== state) {
+          state = newState
+          render()
+          // Check for next AI turn (in case multiple AI players in sequence)
+          checkAITurn()
+        }
+      }
+    }, AI_MOVE_DELAY) as unknown as number
+  }
+}
 
 function render() {
   // Track frame performance if enabled
@@ -94,7 +139,8 @@ function render() {
       // Multi-car status
       const multiCarState = state as any
       const currentPlayer = multiCarState.players[multiCarState.currentPlayerIndex]
-      statusEl.textContent = `Multi-car Racing - ${currentPlayer?.name || 'Unknown'}'s Turn`
+      const aiIndicator = currentPlayer?.isAI ? ' (AI)' : ''
+      statusEl.textContent = `Multi-car Racing - ${currentPlayer?.name || 'Unknown'}'s Turn${aiIndicator}`
     } else {
       const legacyState = state as any
       statusEl.textContent = JSON.stringify({ pos: legacyState.pos, vel: legacyState.vel, crashed: legacyState.crashed, finished: legacyState.finished }, null, 2)
@@ -116,6 +162,16 @@ if (isFeatureEnabled('animations')) {
 // Initialize toggle states
 syncToggles()
 render()
+
+// Start AI turn checking
+if (isFeatureEnabled('aiPlayers')) {
+  checkAITurn()
+}
+
+// Show New Game modal on initial load
+setTimeout(() => {
+  openNewGameModal()
+}, 100)
 
 // Mouse hover for improved controls
 if (isFeatureEnabled('improvedControls')) {
@@ -213,6 +269,10 @@ canvas.addEventListener('click', (e) => {
     if (newState !== multiCarState) {
       state = newState
       render()
+      // Check if next player is AI
+      if (isFeatureEnabled('aiPlayers')) {
+        checkAITurn()
+      }
     }
   } else {
     // Legacy mode handling
@@ -233,10 +293,90 @@ canvas.addEventListener('click', (e) => {
   }
 })
 
-resetBtn.addEventListener('click', () => { 
-  state = createDefaultGame(); 
-  syncToggles(); 
-  render() 
+resetBtn.addEventListener('click', () => {
+  openNewGameModal()
+})
+
+function openNewGameModal() {
+  // Initialize visibility based on count
+  const count = parseInt(playerCountSelect.value, 10)
+  updatePlayerRowVisibility(count)
+  
+  newGameModal.classList.add('show')
+  newGameModal.setAttribute('aria-hidden', 'false')
+  setTimeout(() => startNewGameBtn.focus(), 50)
+}
+
+function closeNewGameModal() {
+  newGameModal.classList.remove('show')
+  newGameModal.setAttribute('aria-hidden', 'true')
+}
+
+function updatePlayerRowVisibility(count: number) {
+  const rows = playerRows.querySelectorAll('.player-row')
+  rows.forEach((row, idx) => {
+    (row as HTMLElement).style.display = idx < count ? 'block' : 'none'
+  })
+}
+
+playerCountSelect?.addEventListener('change', () => {
+  const count = parseInt(playerCountSelect.value, 10)
+  updatePlayerRowVisibility(count)
+})
+
+// Add AI toggle functionality for each player row
+document.addEventListener('DOMContentLoaded', () => {
+  const playerAiToggleInputs = document.querySelectorAll('.player-ai')
+  playerAiToggleInputs.forEach(toggle => {
+    toggle.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement
+      const playerRow = target.closest('.player-row')
+      const aiSettings = playerRow?.querySelector('.player-ai-settings') as HTMLElement
+      if (aiSettings) {
+        aiSettings.style.display = target.checked ? 'block' : 'none'
+      }
+    })
+  })
+})
+
+closeNewGameBtn?.addEventListener('click', closeNewGameModal)
+
+startNewGameBtn?.addEventListener('click', () => {
+  // Build players config from form
+  const count = parseInt(playerCountSelect.value, 10)
+  const rows = Array.from(playerRows.querySelectorAll('.player-row')).slice(0, count)
+  const players = rows.map((row, idx) => {
+    const nameInput = row.querySelector('.player-name') as HTMLInputElement
+    const aiCheckbox = row.querySelector('.player-ai') as HTMLInputElement
+    const diffSelect = row.querySelector('.player-ai-diff') as HTMLSelectElement
+    const isAI = aiCheckbox.checked
+    return {
+      name: (nameInput?.value || `Player ${idx + 1}`).trim(),
+      isLocal: !isAI,
+      isAI,
+      aiDifficulty: isAI ? (diffSelect?.value as any || 'medium') : undefined
+    }
+  })
+
+  // Clear AI timeout
+  if (aiTurnTimeout !== null) {
+    clearTimeout(aiTurnTimeout)
+    aiTurnTimeout = null
+  }
+
+  // Create game from config (multi-car), fallback to default if single player and multi disabled
+  if (isFeatureEnabled('multiCarSupport') && players.length > 1) {
+    state = createMultiCarGameFromConfig({ players })
+  } else if (players.length === 1) {
+    state = createDefaultGame()
+  } else {
+    state = createMultiCarGameFromConfig({ players })
+  }
+
+  syncToggles()
+  render()
+  closeNewGameModal()
+  if (isFeatureEnabled('aiPlayers')) checkAITurn()
 })
 
 gridToggle.addEventListener('change', () => { state = { ...state, showGrid: gridToggle.checked }; render() })
@@ -251,7 +391,7 @@ function openConfigModal() {
   configModal.classList.add('show')
   configModal.setAttribute('aria-hidden', 'false')
   // Focus first interactive element in modal
-  setTimeout(() => resetBtn.focus(), 100)
+  setTimeout(() => gridToggle.focus(), 100)
 }
 
 function closeConfigModal() {
@@ -272,6 +412,12 @@ configModal.addEventListener('click', (e) => {
   }
 })
 
+newGameModal.addEventListener('click', (e) => {
+  if (e.target === newGameModal) {
+    closeNewGameModal()
+  }
+})
+
 window.addEventListener('keydown', (e) => {
   // Close configuration modal with Escape key
   if (e.key === 'Escape' && configModal.classList.contains('show')) {
@@ -280,11 +426,16 @@ window.addEventListener('keydown', (e) => {
     return
   }
   
+  // Close new game modal with Escape key
+  if (e.key === 'Escape' && newGameModal.classList.contains('show')) {
+    closeNewGameModal()
+    e.preventDefault()
+    return
+  }
+  
   // Existing toggle controls
-  if (e.key === 'r' || e.key === 'R') { 
-    state = createDefaultGame(); 
-    syncToggles(); 
-    render() 
+  if (e.key === 'r' || e.key === 'R') {
+    openNewGameModal()
   }
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
@@ -361,6 +512,10 @@ window.addEventListener('keydown', (e) => {
           if (newState !== multiCarState) {
             state = newState
             render()
+            // Check if next player is AI after keyboard move
+            if (isFeatureEnabled('aiPlayers')) {
+              checkAITurn()
+            }
           }
         }
       }

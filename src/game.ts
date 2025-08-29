@@ -30,6 +30,9 @@ export interface Player {
   name: string
   color: string
   isLocal: boolean // Whether this player is controlled locally
+  // AI fields (optional)
+  isAI?: boolean
+  aiDifficulty?: 'easy' | 'medium' | 'hard'
 }
 
 // Multi-car game state
@@ -189,7 +192,14 @@ export function createMultiCarGame(numPlayers = 2): GameState {
     const color = CAR_COLORS[i % CAR_COLORS.length]!
     const startPos = startPositions[i] || { x: 7, y: 20 + i } // Fallback positioning
     
-    const player = createPlayer(playerId, playerName, color, true) // All local for now
+    // Default to local human players
+    const player = createPlayer(playerId, playerName, color, true)
+    // If AI feature is enabled, convert players after the first to AI by default (MVP behavior)
+    if (isFeatureEnabled('aiPlayers') && i > 0) {
+      (player as Player).isLocal = false
+      ;(player as Player).isAI = true
+      ;(player as Player).aiDifficulty = 'medium'
+    }
     const car = createCar(`car-${i + 1}`, playerId, `${playerName}'s Car`, startPos, color)
     
     players.push(player)
@@ -228,6 +238,48 @@ export function createMultiCarGame(numPlayers = 2): GameState {
     animatedPos: undefined,
     isAnimating: false
   }
+}
+
+// Create multi-car game from explicit player configuration
+export function createMultiCarGameFromConfig(config: { players: Array<{ name: string; isLocal: boolean; isAI?: boolean; aiDifficulty?: 'easy'|'medium'|'hard'; color?: string }> }): GameState {
+  const base = createMultiCarGame(Math.max(1, Math.min(config.players.length, 8))) as any
+  // Override players according to config
+  const assignedPlayers: Player[] = []
+  for (let i = 0; i < config.players.length; i++) {
+    const pCfg = config.players[i]
+    const color = pCfg?.color || CAR_COLORS[i % CAR_COLORS.length]!
+    assignedPlayers.push({
+      id: `player-${i + 1}`,
+      name: pCfg?.name || `Player ${i + 1}`,
+      color,
+      isLocal: pCfg?.isLocal ?? true,
+      isAI: pCfg?.isAI ?? false,
+      aiDifficulty: pCfg?.aiDifficulty || (pCfg?.isAI ? 'medium' : undefined)
+    })
+  }
+  base.players = assignedPlayers
+  // Sync car colors and names to player configs
+  for (let i = 0; i < Math.min(base.cars.length, assignedPlayers.length); i++) {
+    const player = assignedPlayers[i]
+    if (!player) continue
+    base.cars[i].name = `${player.name}'s Car`
+    base.cars[i].playerId = player.id
+    base.cars[i].color = player.color
+    // Reset dynamic car state for a clean game
+    const startPos = base.cars[i].trail[0] || { x: 7, y: 20 + i }
+    base.cars[i].pos = { ...startPos }
+    base.cars[i].vel = { x: 0, y: 0 }
+    base.cars[i].trail = [ { ...startPos } ]
+    base.cars[i].crashed = false
+    base.cars[i].finished = false
+    base.cars[i].currentLap = 0
+    base.cars[i].lastCrossDirection = undefined
+    base.cars[i].finishTime = undefined
+  }
+  base.currentPlayerIndex = 0
+  base.gameFinished = false
+  base.raceStartTime = Date.now()
+  return base
 }
 
 // Legacy single-car game creation for backwards compatibility
@@ -312,7 +364,7 @@ export function stepOptions(state: GameState): { acc: Vec; nextPos: Vec }[] {
   }
 }
 
-function polyToSegments(poly: Vec[]): Segment[] {
+export function polyToSegments(poly: Vec[]): Segment[] {
   return poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
 }
 
@@ -323,7 +375,7 @@ function insideTrack(p: Vec, state: GameState): boolean {
   return inOuter && !inInner
 }
 
-function pointInPoly(p: Vec, poly: Vec[]): boolean {
+export function pointInPoly(p: Vec, poly: Vec[]): boolean {
   // ray casting
   let inside = false
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -336,7 +388,7 @@ function pointInPoly(p: Vec, poly: Vec[]): boolean {
   return inside
 }
 
-function pathLegal(a: Vec, b: Vec, state: GameState): boolean {
+export function pathLegal(a: Vec, b: Vec, state: GameState): boolean {
   // stays within track band and does not cross walls
   // Sample along the path, ensure insideTrack
   const dx = b.x - a.x
@@ -710,8 +762,23 @@ export function applyMove(state: GameState, acc: Vec): GameState {
       return switchToNextPlayer(newState)
     }
     
-    return newState
+return newState
   }
+}
+
+// Get only legal step options for current mover (legacy or current car)
+export function legalStepOptions(state: GameState): { acc: Vec; nextPos: Vec }[] {
+  const opts = stepOptions(state)
+  return opts.filter(({ nextPos }) => {
+    if (isMultiCarGame(state)) {
+      const currentCar = state.cars[state.currentPlayerIndex]
+      if (!currentCar) return false
+      return pathLegal(currentCar.pos, nextPos, state)
+    } else {
+      const legacyState = state as any
+      return pathLegal(legacyState.pos, nextPos, state)
+    }
+  })
 }
 
 // Undo function for improved controls
