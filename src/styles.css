@@ -282,6 +282,16 @@ main {
   padding: var(--spacing-lg);
   overflow-y: auto;
   box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+/* Hide sidebar content when editor is active */
+#sidebar.editor-active > section {
+  display: none;
+}
+
+#sidebar.editor-active {
+  padding: 0; /* Remove padding when editor is active */
 }
 
 #sidebar h2 {
@@ -1169,17 +1179,16 @@ kbd {
    ============================================================================= */
 
 .editor-panel {
-  position: fixed;
-  top: 50%;
-  left: 20px;
-  transform: translateY(-50%);
-  width: 320px;
-  max-height: 80vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: var(--bg-secondary);
   border: 1px solid var(--text-accent);
   border-radius: var(--radius-xl);
   box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
-  z-index: 1000;
+  z-index: 10;
   overflow-y: auto;
   font-family: var(--font-primary);
 }

@@ -4,6 +4,7 @@ import { logEnabledFeatures, isFeatureEnabled, toggleFeature } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { initializeTrackEditor, isEditorActive } from './track-editor-ui'
+import { setupEditorCanvas, drawEditorOverlay } from './track-editor-canvas'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -29,6 +30,9 @@ logEnabledFeatures()
 // Initialize track editor UI system
 initializeTrackEditor()
 
+// Initialize track editor canvas handlers
+setupEditorCanvas(canvas)
+
 
 function render() {
   // Track frame performance if enabled
@@ -42,6 +46,11 @@ function render() {
   }
   
   draw(ctx, state, canvas)
+  
+  // Draw track editor overlay if active
+  if (isFeatureEnabled('trackEditor') && isEditorActive()) {
+    drawEditorOverlay(ctx)
+  }
   
   // End frame tracking
   if (isFeatureEnabled('performanceMetrics')) {

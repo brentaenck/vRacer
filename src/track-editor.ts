@@ -84,6 +84,7 @@ export interface EditorState {
   
   // Current track being edited
   track: Partial<CustomTrack>;
+  validation?: TrackValidation; // Track validation results
   
   // Drawing state
   isDrawing: boolean;

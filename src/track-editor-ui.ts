@@ -103,6 +103,12 @@ function enableTrackEditor(): void {
     panOffset: { x: 0, y: 0 }
   };
 
+  // Add editor-active class to sidebar and hide default content
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.classList.add('editor-active');
+  }
+
   // Show the editor panel
   const editorPanel = document.getElementById('trackEditorPanel');
   if (editorPanel) {
@@ -129,6 +135,12 @@ function disableTrackEditor(): void {
   const editorPanel = document.getElementById('trackEditorPanel');
   if (editorPanel) {
     editorPanel.style.display = 'none';
+  }
+  
+  // Remove editor-active class from sidebar to restore default content
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.classList.remove('editor-active');
   }
   
   editorState = null;
@@ -518,4 +530,12 @@ export function getEditorState(): EditorState | null {
  */
 export function isEditorActive(): boolean {
   return editorState?.isActive ?? false;
+}
+
+/**
+ * Refresh the editor UI (for external modules to trigger updates)
+ */
+export function refreshEditorUI(): void {
+  updateEditorUI();
+  updateValidationDisplay();
 }
