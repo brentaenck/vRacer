@@ -18,6 +18,10 @@ export interface Car {
   currentLap: number
   lastCrossDirection?: 'forward' | 'backward'
   finishTime?: number
+  // Checkpoint validation for proper lap completion
+  checkpointsPassed: boolean[] // Track which checkpoints have been passed in order
+  lastValidCheckpoint: number // Last checkpoint passed in sequence (-1 if none)
+  lapStartPosition?: Vec // Position where current lap attempt started
   // Car appearance
   color: string
   // Undo history (only for current player's car)
@@ -119,6 +123,11 @@ const CAR_COLORS = [
 
 // Create a new car instance
 export function createCar(id: string, playerId: string, name: string, startPos: Vec, color: string): Car {
+  // Initialize checkpoint tracking for lap validation
+  // We'll use 4 checkpoints for the rectangular track (one per side)
+  const numCheckpoints = 4
+  const checkpointsPassed = new Array(numCheckpoints).fill(false)
+  
   return {
     id,
     playerId,
@@ -131,6 +140,10 @@ export function createCar(id: string, playerId: string, name: string, startPos: 
     currentLap: 0,
     lastCrossDirection: undefined,
     finishTime: undefined,
+    // Checkpoint validation for proper lap completion
+    checkpointsPassed,
+    lastValidCheckpoint: -1, // No checkpoints passed yet
+    lapStartPosition: { ...startPos }, // Track where this lap attempt started
     color,
     previousStates: []
   }
@@ -281,6 +294,10 @@ export function createMultiCarGameFromConfig(config: { players: Array<{ name: st
     base.cars[i].currentLap = 0
     base.cars[i].lastCrossDirection = undefined
     base.cars[i].finishTime = undefined
+    // Reset checkpoint tracking
+    base.cars[i].checkpointsPassed = new Array(4).fill(false)
+    base.cars[i].lastValidCheckpoint = -1
+    base.cars[i].lapStartPosition = { ...startPos }
   }
   base.currentPlayerIndex = 0
   base.gameFinished = false
@@ -409,27 +426,153 @@ export function pathLegal(a: Vec, b: Vec, state: GameState): boolean {
   return true
 }
 
+// Define track checkpoints for lap validation
+// For our rectangular counter-clockwise track, we define 4 checkpoints:
+// Track boundaries: outer (2,2)-(48,33), inner (12,10)-(38,25)
+// Cars start at (7,20) and race counter-clockwise: up → right → down → left → back to start
+// Natural racing order: Bottom → Right → Top → Left → Finish
+const TRACK_CHECKPOINTS: Segment[] = [
+  // Checkpoint 0: Bottom side (first checkpoint after start) - spans vertically across track
+  { a: { x: 25, y: 33 }, b: { x: 25, y: 25 } },
+  
+  // Checkpoint 1: Right side (after turning up) - spans horizontally across track  
+  { a: { x: 48, y: 17.5 }, b: { x: 38, y: 17.5 } },
+  
+  // Checkpoint 2: Top side (after turning right) - spans vertically across track
+  { a: { x: 25, y: 10 }, b: { x: 25, y: 2 } },
+  
+  // Checkpoint 3: Left side (after turning down, before returning to start) - spans horizontally across track
+  { a: { x: 12, y: 17.5 }, b: { x: 2, y: 17.5 } }
+]
+
 // Determine if crossing the start line is in the correct direction (forward/backward)
 function determineCrossDirection(fromPos: Vec, toPos: Vec, startLine: Segment): 'forward' | 'backward' {
-  // For our track layout, the start line is now horizontal at y=18
-  // Counter-clockwise racing: car comes from top (around the track) and crosses downward
-  // Forward direction is top-to-bottom (lower y to higher y values)
+  // Track layout analysis:
+  // - Start line: horizontal at y=18 (from x=2 to x=12)
+  // - Cars start at: y=20+ (below the start line)
+  // - Counter-clockwise racing: up → right → down → left → back to start
+  // - To complete a lap: cars must approach from above (y < 18) and cross downward (y > 18)
   
   const lineY = startLine.a.y // Start line is horizontal, so both points have same y
   const fromSide = fromPos.y < lineY ? 'top' : 'bottom'
   const toSide = toPos.y < lineY ? 'top' : 'bottom'
   
-  // Forward crossing: from top side to bottom side (completing counter-clockwise lap)
+  // For counter-clockwise racing on this track:
+  // FORWARD crossing: from TOP side to BOTTOM side (from y < 18 to y > 18)
+  // This means the car has completed the counter-clockwise lap and is returning to start area
   if (fromSide === 'top' && toSide === 'bottom') {
     return 'forward'
   }
-  // Backward crossing: from bottom side to top side
+  
+  // BACKWARD crossing: from BOTTOM side to TOP side (from y > 18 to y < 18)
+  // This means the car is going the wrong way (clockwise)
   else if (fromSide === 'bottom' && toSide === 'top') {
     return 'backward'
   }
   
-  // This shouldn't happen if we're truly crossing, but default to forward
+  // If both positions are on the same side, this shouldn't count as a crossing
+  // But if we reach here, default to forward to avoid breaking the game
   return 'forward'
+}
+
+// Check if a car passes through any checkpoints during a move
+function updateCheckpointProgress(car: Car, fromPos: Vec, toPos: Vec): {
+  updatedCheckpointsPassed: boolean[]
+  updatedLastValidCheckpoint: number
+  resetLap: boolean
+} {
+  const movePath: Segment = { a: fromPos, b: toPos }
+  
+  // Ensure we have valid checkpoint data - handle legacy cars
+  let updatedCheckpointsPassed = car.checkpointsPassed || new Array(TRACK_CHECKPOINTS.length).fill(false)
+  let updatedLastValidCheckpoint = car.lastValidCheckpoint ?? -1
+  let resetLap = false
+  
+  // Create a copy to avoid mutating the original
+  updatedCheckpointsPassed = [...updatedCheckpointsPassed]
+  
+  // Check each checkpoint for crossing
+  for (let i = 0; i < TRACK_CHECKPOINTS.length; i++) {
+    const checkpoint = TRACK_CHECKPOINTS[i]!
+    
+    if (segmentsIntersect(movePath, checkpoint)) {
+      // Determine if this is the next expected checkpoint in sequence
+      const expectedNextCheckpoint = (car.lastValidCheckpoint + 1) % TRACK_CHECKPOINTS.length
+      
+      if (i === expectedNextCheckpoint && !updatedCheckpointsPassed[i]) {
+        // Valid checkpoint progression AND not already passed
+        updatedCheckpointsPassed[i] = true
+        updatedLastValidCheckpoint = i
+        
+        if (isFeatureEnabled('debugMode')) {
+          const passedCheckpoints = updatedCheckpointsPassed.map((passed, idx) => passed ? idx : null).filter(cp => cp !== null)
+          console.log(`✓ ${car.name} passed checkpoint ${i} (valid progression)`, {
+            checkpoint: i,
+            lastValid: car.lastValidCheckpoint,
+            expected: expectedNextCheckpoint,
+            checkpointsPassed: updatedCheckpointsPassed,
+            passedCheckpoints: passedCheckpoints,
+            progress: `${passedCheckpoints.length}/${TRACK_CHECKPOINTS.length}`,
+            from: fromPos,
+            to: toPos
+          })
+        }
+      } else if (i !== expectedNextCheckpoint && !updatedCheckpointsPassed[i]) {
+        // Invalid checkpoint sequence - car went backwards or skipped checkpoints
+        // Only process if not already handled for this checkpoint
+        if (isFeatureEnabled('debugMode')) {
+          console.log(`⚠️ ${car.name} passed checkpoint ${i} out of sequence`, {
+            checkpoint: i,
+            lastValid: car.lastValidCheckpoint,
+            expected: expectedNextCheckpoint,
+            from: fromPos,
+            to: toPos
+          })
+        }
+        
+        // Reset checkpoint progress - car must start lap validation over
+        updatedCheckpointsPassed.fill(false)
+        updatedLastValidCheckpoint = -1
+        resetLap = true
+        
+        // If the crossed checkpoint is checkpoint 0, start fresh from there
+        if (i === 0) {
+          updatedCheckpointsPassed[0] = true
+          updatedLastValidCheckpoint = 0
+          resetLap = false
+        }
+      }
+      // If checkpoint is already passed (updatedCheckpointsPassed[i] is true), ignore this crossing
+    }
+  }
+  
+  return {
+    updatedCheckpointsPassed,
+    updatedLastValidCheckpoint,
+    resetLap
+  }
+}
+
+// Check if a car has completed a valid lap (all checkpoints passed in sequence)
+function hasCompletedValidLap(checkpointsPassed: boolean[], lastValidCheckpoint: number): boolean {
+  // A valid lap requires:
+  // 1. All checkpoints have been passed (all true)
+  // 2. The last valid checkpoint is the final one (checkpoint 3)
+  const allCheckpointsPassed = checkpointsPassed.every(passed => passed)
+  const completedFullSequence = lastValidCheckpoint === TRACK_CHECKPOINTS.length - 1
+  
+  return allCheckpointsPassed && completedFullSequence
+}
+
+// Reset checkpoint progress for a new lap
+function resetCheckpointProgress(): {
+  checkpointsPassed: boolean[]
+  lastValidCheckpoint: number
+} {
+  return {
+    checkpointsPassed: new Array(TRACK_CHECKPOINTS.length).fill(false),
+    lastValidCheckpoint: -1
+  }
 }
 
 // Car collision detection functions (carCollisions feature)
@@ -651,6 +794,10 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     let lastCrossDirection: 'forward' | 'backward' | undefined = currentCar.lastCrossDirection
     let finishTime: number | undefined = currentCar.finishTime
     
+    // Initialize checkpoint progress variables - ensure we have valid checkpoint data
+    let updatedCheckpointsPassed = currentCar.checkpointsPassed || new Array(TRACK_CHECKPOINTS.length).fill(false)
+    let updatedLastValidCheckpoint = currentCar.lastValidCheckpoint ?? -1
+    
     const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
     
     // Lap detection: check if car crosses start line
@@ -676,6 +823,11 @@ export function applyMove(state: GameState, acc: Vec): GameState {
         AnimationUtils.createExplosion(nextPos, currentCar.color, 8)
       }
     } else {
+      // Update checkpoint progress during the move
+      const checkpointUpdate = updateCheckpointProgress(currentCar, currentCar.pos, nextPos)
+      updatedCheckpointsPassed = checkpointUpdate.updatedCheckpointsPassed
+      updatedLastValidCheckpoint = checkpointUpdate.updatedLastValidCheckpoint
+      
       // Check for car-to-car collisions (carCollisions feature)
       const collidedCar = checkCarCollision(currentCar, currentCar.pos, nextPos, multiCarState.cars)
       if (collidedCar) {
@@ -692,40 +844,63 @@ export function applyMove(state: GameState, acc: Vec): GameState {
         }
         // Future: handle other collision types like 'bounce' or 'crash'
       }
+      
       if (crossedStart) {
         const crossDirection = determineCrossDirection(currentCar.pos, nextPos, multiCarState.start)
         
         if (crossDirection === 'forward') {
-          currentLap += 1
-          lastCrossDirection = 'forward'
+          // Check if car has completed a valid lap with all checkpoints
+          const completedValidLap = hasCompletedValidLap(updatedCheckpointsPassed, updatedLastValidCheckpoint)
           
-          console.log(`✅ ${currentCar.name} completed lap ${currentLap}!`)
-          
-          // Check if this car finished the race
-          if (currentLap >= multiCarState.targetLaps) {
-            finished = true
-            finishTime = Date.now() - multiCarState.raceStartTime
-            console.log(`🏆 ${currentCar.name} finished the race! Time: ${(finishTime / 1000).toFixed(1)}s`)
+          if (completedValidLap) {
+            currentLap += 1
+            lastCrossDirection = 'forward'
             
-            if (isFeatureEnabled('animations')) {
-              AnimationUtils.createCelebration(nextPos, currentCar.color, 12)
+            // Reset checkpoint progress for the next lap
+            const resetProgress = resetCheckpointProgress()
+            updatedCheckpointsPassed = resetProgress.checkpointsPassed
+            updatedLastValidCheckpoint = resetProgress.lastValidCheckpoint
+            
+            console.log(`✅ ${currentCar.name} completed valid lap ${currentLap}! (all checkpoints passed)`)
+            
+            // Check if this car finished the race
+            if (currentLap >= multiCarState.targetLaps) {
+              finished = true
+              finishTime = Date.now() - multiCarState.raceStartTime
+              console.log(`🏆 ${currentCar.name} finished the race! Time: ${(finishTime / 1000).toFixed(1)}s`)
+              
+              if (isFeatureEnabled('animations')) {
+                AnimationUtils.createCelebration(nextPos, currentCar.color, 12)
+              }
+            } else {
+              // Lap completed but race continues
+              if (isFeatureEnabled('animations')) {
+                AnimationUtils.createCelebration(nextPos, currentCar.color, 6)
+              }
             }
           } else {
-            // Lap completed but race continues
-            if (isFeatureEnabled('animations')) {
-              AnimationUtils.createCelebration(nextPos, currentCar.color, 6)
-            }
+            // Forward crossing but invalid lap (not all checkpoints passed in sequence)
+            lastCrossDirection = 'forward'
+            console.log(`⚠️ ${currentCar.name} crossed finish line forward but lap invalid (missing checkpoints)`, {
+              checkpointsPassed: updatedCheckpointsPassed,
+              lastValidCheckpoint: updatedLastValidCheckpoint
+            })
           }
         } else {
           lastCrossDirection = 'backward'
           console.log(`⚠️ ${currentCar.name} wrong direction crossing!`)
         }
       }
+      
+      // Apply checkpoint progress reset if car went backwards through checkpoints
+      if (checkpointUpdate.resetLap) {
+        console.log(`🔄 ${currentCar.name} checkpoint progress reset due to invalid sequence`)
+      }
     }
     
     const trail = [...currentCar.trail, nextPos]
     
-    // Update current car with new state
+    // Update current car with new state including checkpoint progress
     const updatedCar: Car = {
       ...currentCar,
       pos: nextPos,
@@ -735,7 +910,9 @@ export function applyMove(state: GameState, acc: Vec): GameState {
       finished,
       currentLap,
       lastCrossDirection,
-      finishTime
+      finishTime,
+      checkpointsPassed: updatedCheckpointsPassed,
+      lastValidCheckpoint: updatedLastValidCheckpoint
     }
     
     // Save game state for undo (full game state)
@@ -983,6 +1160,11 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
 
     // Directional arrows to show racing direction
     drawDirectionalArrows(ctx, multiCarState, g)
+    
+    // Draw checkpoint lines when in debug mode
+    if (isFeatureEnabled('debugMode')) {
+      drawCheckpointLines(ctx, g)
+    }
 
     // Draw all car trails
     for (let i = 0; i < multiCarState.cars.length; i++) {
@@ -1310,6 +1492,39 @@ function drawNode(ctx: CanvasRenderingContext2D, p: Vec, g: number, color: strin
 
 function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+}
+
+// Debug function to draw checkpoint lines when debug mode is enabled
+function drawCheckpointLines(ctx: CanvasRenderingContext2D, g: number) {
+  ctx.save()
+  
+  // Draw each checkpoint line with different colors for identification
+  const checkpointColors = ['#ff0', '#0ff', '#f0f', '#0f0'] // Yellow, Cyan, Magenta, Green
+  
+  for (let i = 0; i < TRACK_CHECKPOINTS.length; i++) {
+    const checkpoint = TRACK_CHECKPOINTS[i]!
+    const color = checkpointColors[i] || '#fff'
+    
+    ctx.strokeStyle = color
+    ctx.lineWidth = 3
+    ctx.globalAlpha = 0.7
+    
+    // Draw checkpoint line
+    ctx.beginPath()
+    ctx.moveTo(checkpoint.a.x * g, checkpoint.a.y * g)
+    ctx.lineTo(checkpoint.b.x * g, checkpoint.b.y * g)
+    ctx.stroke()
+    
+    // Draw checkpoint number label
+    ctx.fillStyle = color
+    ctx.font = '16px Arial'
+    ctx.globalAlpha = 1.0
+    const midX = (checkpoint.a.x + checkpoint.b.x) / 2 * g
+    const midY = (checkpoint.a.y + checkpoint.b.y) / 2 * g
+    ctx.fillText(`CP${i}`, midX - 10, midY - 5)
+  }
+  
+  ctx.restore()
 }
 
 // Helper functions for multi-car gameplay
