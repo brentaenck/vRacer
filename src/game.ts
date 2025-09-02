@@ -3,6 +3,7 @@ import { isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { hudManager, HUDData } from './hud'
+import { createTrackAnalysis, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis } from './track-analysis'
 
 // Individual car state
 export interface Car {
@@ -175,7 +176,7 @@ export function createMultiCarGame(numPlayers = 2): GameState {
     { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
   ]
   // Walls: edges of inner and outer polygons
-  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
+  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] || poly[0]! }))
   const walls = [...wallSegments(outer), ...wallSegments(inner)]
 
   // Start/finish line spans across the track width at the left side
@@ -202,7 +203,7 @@ export function createMultiCarGame(numPlayers = 2): GameState {
   for (let i = 0; i < clampedNumPlayers; i++) {
     const playerId = `player-${i + 1}`
     const playerName = `Player ${i + 1}`
-    const color = CAR_COLORS[i % CAR_COLORS.length]!
+    const color = CAR_COLORS[i % CAR_COLORS.length] || '#ff4444'
     const startPos = startPositions[i] || { x: 7, y: 20 + i } // Fallback positioning
     
     // Default to local human players
@@ -260,7 +261,7 @@ export function createMultiCarGameFromConfig(config: { players: Array<{ name: st
   const assignedPlayers: Player[] = []
   for (let i = 0; i < config.players.length; i++) {
     const pCfg = config.players[i]
-    const color = pCfg?.color || CAR_COLORS[i % CAR_COLORS.length]!
+    const color = pCfg?.color || CAR_COLORS[i % CAR_COLORS.length] || '#ff4444'
     assignedPlayers.push({
       id: `player-${i + 1}`,
       name: pCfg?.name || `Player ${i + 1}`,
@@ -316,7 +317,7 @@ export function createLegacyGame(): LegacyGameState {
     { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
   ]
   // Walls: edges of inner and outer polygons
-  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
+  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] || poly[0]! }))
   const walls = [...wallSegments(outer), ...wallSegments(inner)]
 
   // Start/finish line spans across the track width at the left side
@@ -388,7 +389,7 @@ export function stepOptions(state: GameState): { acc: Vec; nextPos: Vec }[] {
 }
 
 export function polyToSegments(poly: Vec[]): Segment[] {
-  return poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length]! }))
+return poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] || poly[0]! }))
 }
 
 function insideTrack(p: Vec, state: GameState): boolean {
@@ -402,8 +403,9 @@ export function pointInPoly(p: Vec, poly: Vec[]): boolean {
   // ray casting
   let inside = false
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const pi = poly[i]!
-    const pj = poly[j]!
+    const pi = poly[i]
+    const pj = poly[j]
+    if (!pi || !pj) continue
     const intersect = (pi.y > p.y) !== (pj.y > p.y) &&
       p.x < ((pj.x - pi.x) * (p.y - pi.y)) / (pj.y - pi.y + 1e-12) + pi.x
     if (intersect) inside = !inside
@@ -1163,7 +1165,10 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     // Draw checkpoint lines when in debug mode
     if (isFeatureEnabled('debugMode')) {
-      drawCheckpointLines(ctx, g)
+      drawCheckpointLines(ctx, multiCarState, g)
+      
+      // AI Debug Visualization
+      drawAIDebugVisualization(ctx, multiCarState, g)
     }
 
     // Draw all car trails
@@ -1343,8 +1348,12 @@ function drawDirectionalArrows(ctx: CanvasRenderingContext2D, state: GameState, 
   ctx.strokeStyle = '#bbb'
   ctx.lineWidth = 2
   
-  // Arrow positions around the track showing counter-clockwise direction
+  // Arrow positions around the track showing CLOCKWISE direction (matching AI racing line)
+  // Clockwise path: start → down → right → up → left → back to start
   const arrows = [
+    // Left side near start/finish (going down from start)
+    { pos: { x: 7, y: 15 }, angle: Math.PI / 2 }, // ↓
+    
     // Bottom side (going left to right)
     { pos: { x: 25, y: 30 }, angle: 0 }, // →
     
@@ -1353,9 +1362,6 @@ function drawDirectionalArrows(ctx: CanvasRenderingContext2D, state: GameState, 
     
     // Top side (going right to left)
     { pos: { x: 25, y: 5 }, angle: Math.PI }, // ←
-    
-    // Left side near start/finish (going top to bottom)
-    { pos: { x: 7, y: 12 }, angle: Math.PI / 2 }, // ↓
   ]
   
   for (const arrow of arrows) {
@@ -1473,7 +1479,8 @@ function drawPoly(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke:
   ctx.fillStyle = fill
   ctx.beginPath()
   for (let i = 0; i < poly.length; i++) {
-    const p = poly[i]!
+    const p = poly[i]
+    if (!p) continue
     const x = p.x * g, y = p.y * g
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
   }
@@ -1495,14 +1502,19 @@ function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number,
 }
 
 // Debug function to draw checkpoint lines when debug mode is enabled
-function drawCheckpointLines(ctx: CanvasRenderingContext2D, g: number) {
+function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameState, g: number) {
   ctx.save()
+  
+  // Create track analysis to get consistent checkpoint data
+  const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+  const checkpoints = trackAnalysis.lapValidationCheckpoints
   
   // Draw each checkpoint line with different colors for identification
   const checkpointColors = ['#ff0', '#0ff', '#f0f', '#0f0'] // Yellow, Cyan, Magenta, Green
   
-  for (let i = 0; i < TRACK_CHECKPOINTS.length; i++) {
-    const checkpoint = TRACK_CHECKPOINTS[i]!
+  for (let i = 0; i < checkpoints.length; i++) {
+    const checkpoint = checkpoints[i]
+    if (!checkpoint) continue
     const color = checkpointColors[i] || '#fff'
     
     ctx.strokeStyle = color
@@ -1522,6 +1534,420 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, g: number) {
     const midX = (checkpoint.a.x + checkpoint.b.x) / 2 * g
     const midY = (checkpoint.a.y + checkpoint.b.y) / 2 * g
     ctx.fillText(`CP${i}`, midX - 10, midY - 5)
+  }
+  
+  ctx.restore()
+}
+
+// AI Debug Visualization - show racing line, target points, and AI decision making
+function drawAIDebugVisualization(ctx: CanvasRenderingContext2D, state: MultiCarGameState, g: number) {
+  if (!isFeatureEnabled('aiPlayers')) return
+  
+  ctx.save()
+  
+  try {
+    // Create track analysis for consistent racing line data
+    const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+    
+    // Draw racing line visualization using track analysis
+    drawRacingLineVisualization(ctx, trackAnalysis.optimalRacingLine, g)
+    
+    // Draw AI target waypoint indicators for each AI player
+    const racingLine = trackAnalysis.optimalRacingLine
+    
+    for (let i = 0; i < state.cars.length; i++) {
+      const car = state.cars[i]
+      const player = state.players[i]
+      if (!car || !player) continue
+      
+      if (player?.isAI && !car.crashed && !car.finished) {
+        drawAITargetVisualization(ctx, car, player, racingLine, g)
+        drawSimplifiedAIVisualization(ctx, car, player, g)
+      }
+    }
+    
+  } catch (error) {
+    console.warn('AI debug visualization error:', error)
+  }
+  
+  ctx.restore()
+}
+
+// Draw racing line waypoints and speed indicators
+function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: any[], g: number) {
+  ctx.save()
+  
+  // Draw racing line as connected waypoints
+  ctx.strokeStyle = '#888'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  ctx.setLineDash([5, 5])
+  
+  ctx.beginPath()
+  for (let i = 0; i < racingLine.length; i++) {
+    const point = racingLine[i]
+    const x = point.pos.x * g
+    const y = point.pos.y * g
+    
+    if (i === 0) {
+      ctx.moveTo(x, y)
+    } else {
+      ctx.lineTo(x, y)
+    }
+  }
+  // Close the loop
+  if (racingLine.length > 0) {
+    const firstPoint = racingLine[0]
+    if (firstPoint) {
+      ctx.lineTo(firstPoint.pos.x * g, firstPoint.pos.y * g)
+    }
+  }
+  ctx.stroke()
+  
+  // Draw waypoints with different colors based on corner type
+  ctx.globalAlpha = 0.8
+  ctx.setLineDash([]) // Reset dash pattern
+  
+  for (let i = 0; i < racingLine.length; i++) {
+    const point = racingLine[i]
+    if (!point) continue
+    const x = point.pos.x * g
+    const y = point.pos.y * g
+    
+    // Color based on corner type
+    let color = '#888' // default
+    switch (point.cornerType) {
+      case 'straight': color = '#4a4'; break  // Green for straights
+      case 'entry': color = '#fa4'; break     // Orange for corner entry
+      case 'apex': color = '#f44'; break      // Red for apex
+      case 'exit': color = '#44f'; break      // Blue for corner exit
+    }
+    
+    // Draw waypoint circle
+    ctx.fillStyle = color
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.arc(x, y, 4, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+    
+    // Draw speed indicator as a small text label
+    ctx.fillStyle = '#fff'
+    ctx.font = '10px Arial'
+    ctx.fillText(point.targetSpeed.toString(), x + 6, y - 6)
+    
+    // Draw brake zone indicator
+    if (point.brakeZone) {
+      ctx.strokeStyle = '#f80'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(x, y, 8, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+  }
+  
+  ctx.restore()
+}
+
+// Draw racing line using the single source of truth from track-analysis.ts
+function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
+  // Use the centralized track analysis - single source of truth
+  const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+  const racingLine = trackAnalysis.optimalRacingLine
+  
+  ctx.save()
+  
+  // Draw racing line as connected waypoints
+  ctx.strokeStyle = '#666'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.4
+  ctx.setLineDash([5, 5])
+  
+  ctx.beginPath()
+  for (let i = 0; i < racingLine.length; i++) {
+    const point = racingLine[i]
+    if (!point) continue
+    const x = point.pos.x * g
+    const y = point.pos.y * g
+    
+    if (i === 0) {
+      ctx.moveTo(x, y)
+    } else {
+      ctx.lineTo(x, y)
+    }
+  }
+  // Close the loop
+  if (racingLine.length > 0) {
+    const firstPoint = racingLine[0]
+    if (firstPoint) {
+      ctx.lineTo(firstPoint.pos.x * g, firstPoint.pos.y * g)
+    }
+  }
+  ctx.stroke()
+  
+  // Draw waypoints with different colors based on corner type
+  ctx.globalAlpha = 0.6
+  ctx.setLineDash([]) // Reset dash pattern
+  
+  for (const point of racingLine) {
+    const x = point.pos.x * g
+    const y = point.pos.y * g
+    
+    // Color based on corner type from track analysis
+    let color = '#888' // default
+    switch (point.cornerType) {
+      case 'straight': color = '#4a4'; break  // Green for straights
+      case 'entry': color = '#fa4'; break     // Orange for corner entry
+      case 'apex': color = '#f44'; break      // Red for apex
+      case 'exit': color = '#af4'; break      // Light green for corner exit
+    }
+    
+    // Draw waypoint circle
+    ctx.fillStyle = color
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.arc(x, y, 3, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+  }
+  
+  ctx.restore()
+}
+
+// Draw AI target waypoint visualization  
+function drawAITargetVisualization(ctx: CanvasRenderingContext2D, car: any, player: any, racingLine: any[], g: number) {
+  ctx.save()
+  
+  try {
+    // For now, just draw the car as the target since we don't have direct access to state here
+    // TODO: Pass state or track analysis as parameter for better targeting
+    const currentTarget = racingLine[0] || { pos: car.pos, cornerType: 'straight' }
+    
+    const carX = car.pos.x * g
+    const carY = car.pos.y * g
+    const targetX = currentTarget.pos.x * g
+    const targetY = currentTarget.pos.y * g
+    
+    // Calculate distance to target
+    const distance = Math.sqrt(
+      Math.pow(currentTarget.pos.x - car.pos.x, 2) + 
+      Math.pow(currentTarget.pos.y - car.pos.y, 2)
+    )
+    
+    // Draw line from AI car to its target waypoint
+    ctx.strokeStyle = player.color
+    ctx.lineWidth = 3
+    ctx.globalAlpha = 0.8
+    ctx.setLineDash([4, 4])
+    ctx.beginPath()
+    ctx.moveTo(carX, carY)
+    ctx.lineTo(targetX, targetY)
+    ctx.stroke()
+    
+    // Draw target waypoint with enhanced styling
+    ctx.fillStyle = player.color
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 2
+    ctx.globalAlpha = 0.9
+    ctx.setLineDash([])
+    ctx.beginPath()
+    ctx.arc(targetX, targetY, 8, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+    
+    // Add inner dot to highlight the target
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.arc(targetX, targetY, 3, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // Draw target info label
+    ctx.fillStyle = '#fff'
+    ctx.font = 'bold 11px Arial'
+    ctx.globalAlpha = 1.0
+    const labelOffset = 12
+    
+    // Position label to avoid overlap with other elements
+    let labelX = targetX + labelOffset
+    let labelY = targetY - labelOffset
+    
+    // Add background for better readability
+    const labelText = `${player.name.replace('Player ', 'P')}: ${currentTarget.cornerType}`
+    const labelWidth = ctx.measureText(labelText).width + 4
+    const labelHeight = 14
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+    ctx.fillRect(labelX - 2, labelY - labelHeight + 2, labelWidth, labelHeight)
+    
+    ctx.fillStyle = player.color
+    ctx.fillText(labelText, labelX, labelY)
+    
+    // Draw distance info
+    ctx.font = '9px Arial'
+    ctx.fillStyle = '#ccc'
+    ctx.fillText(`${distance.toFixed(1)}u`, labelX, labelY + 12)
+    
+    // Draw target speed info if available
+    if (currentTarget.targetSpeed !== undefined) {
+      ctx.fillStyle = '#aaa'
+      ctx.fillText(`v:${currentTarget.targetSpeed}`, labelX, labelY + 22)
+    }
+    
+  } catch (error) {
+    console.warn(`AI target visualization error for ${player.name}:`, error)
+  }
+  
+  ctx.restore()
+}
+
+// Draw simplified AI indicators without complex AI logic
+function drawSimplifiedAIVisualization(ctx: CanvasRenderingContext2D, car: any, player: any, g: number) {
+  ctx.save()
+  
+  const carX = car.pos.x * g
+  const carY = car.pos.y * g
+  
+  // Draw AI indicator - a simple ring around AI cars
+  ctx.strokeStyle = player.color
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.5
+  ctx.setLineDash([2, 2])
+  ctx.beginPath()
+  ctx.arc(carX, carY, 12, 0, Math.PI * 2)
+  ctx.stroke()
+  
+  // Draw AI label
+  ctx.fillStyle = player.color
+  ctx.font = '10px Arial'
+  ctx.globalAlpha = 0.8
+  ctx.setLineDash([])
+  ctx.fillText('AI', carX + 8, carY - 8)
+  
+  // Draw velocity vector if car is moving
+  const velMagnitude = Math.sqrt(car.vel.x * car.vel.x + car.vel.y * car.vel.y)
+  if (velMagnitude > 0.1) {
+    const velEndX = carX + car.vel.x * g * 1.5 // Scale for visibility
+    const velEndY = carY + car.vel.y * g * 1.5
+    
+    ctx.strokeStyle = player.color
+    ctx.lineWidth = 2
+    ctx.globalAlpha = 0.6
+    ctx.beginPath()
+    ctx.moveTo(carX, carY)
+    ctx.lineTo(velEndX, velEndY)
+    ctx.stroke()
+    
+    // Simple arrow head
+    const angle = Math.atan2(car.vel.y, car.vel.x)
+    const arrowSize = 6
+    ctx.fillStyle = player.color
+    ctx.beginPath()
+    ctx.moveTo(velEndX, velEndY)
+    ctx.lineTo(
+      velEndX - arrowSize * Math.cos(angle - Math.PI / 6),
+      velEndY - arrowSize * Math.sin(angle - Math.PI / 6)
+    )
+    ctx.lineTo(
+      velEndX - arrowSize * Math.cos(angle + Math.PI / 6),
+      velEndY - arrowSize * Math.sin(angle + Math.PI / 6)
+    )
+    ctx.closePath()
+    ctx.fill()
+  }
+  
+  ctx.restore()
+}
+
+// Draw AI-specific visualization for each AI player
+function drawAIPlayerVisualization(ctx: CanvasRenderingContext2D, car: any, player: any, racingLine: any[], findNearestRacingLinePointFn: any, g: number) {
+  ctx.save()
+  
+  // Find AI's current target
+  try {
+    const currentTarget = findNearestRacingLinePointFn(car.pos, racingLine)
+    
+    // Draw target point with player's color
+    const targetX = currentTarget.pos.x * g
+    const targetY = currentTarget.pos.y * g
+    const carX = car.pos.x * g
+    const carY = car.pos.y * g
+    
+    // Draw line from car to target
+    ctx.strokeStyle = player.color
+    ctx.lineWidth = 2
+    ctx.globalAlpha = 0.8
+    ctx.setLineDash([3, 3])
+    ctx.beginPath()
+    ctx.moveTo(carX, carY)
+    ctx.lineTo(targetX, targetY)
+    ctx.stroke()
+    
+    // Draw target point
+    ctx.fillStyle = player.color
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 2
+    ctx.globalAlpha = 0.9
+    ctx.setLineDash([])
+    ctx.beginPath()
+    ctx.arc(targetX, targetY, 6, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+    
+    // Draw target info label
+    ctx.fillStyle = '#fff'
+    ctx.font = '12px Arial'
+    ctx.fillText(`${player.name}: ${currentTarget.cornerType}`, targetX + 10, targetY - 10)
+    
+    // Draw distance to target
+    const distance = Math.sqrt(
+      Math.pow(currentTarget.pos.x - car.pos.x, 2) + 
+      Math.pow(currentTarget.pos.y - car.pos.y, 2)
+    )
+    ctx.font = '10px Arial'
+    ctx.fillText(`dist: ${distance.toFixed(1)}`, targetX + 10, targetY + 5)
+    
+    // Draw velocity vector
+    const velMagnitude = Math.sqrt(car.vel.x * car.vel.x + car.vel.y * car.vel.y)
+    if (velMagnitude > 0.1) {
+      const velEndX = carX + car.vel.x * g * 2 // Scale for visibility
+      const velEndY = carY + car.vel.y * g * 2
+      
+      ctx.strokeStyle = lightenColor(player.color, 0.3)
+      ctx.lineWidth = 3
+      ctx.globalAlpha = 0.7
+      ctx.setLineDash([])
+      ctx.beginPath()
+      ctx.moveTo(carX, carY)
+      ctx.lineTo(velEndX, velEndY)
+      ctx.stroke()
+      
+      // Velocity arrow head
+      const angle = Math.atan2(car.vel.y, car.vel.x)
+      const arrowSize = 8
+      ctx.fillStyle = lightenColor(player.color, 0.3)
+      ctx.beginPath()
+      ctx.moveTo(velEndX, velEndY)
+      ctx.lineTo(
+        velEndX - arrowSize * Math.cos(angle - Math.PI / 6),
+        velEndY - arrowSize * Math.sin(angle - Math.PI / 6)
+      )
+      ctx.lineTo(
+        velEndX - arrowSize * Math.cos(angle + Math.PI / 6),
+        velEndY - arrowSize * Math.sin(angle + Math.PI / 6)
+      )
+      ctx.closePath()
+      ctx.fill()
+      
+      // Speed label
+      ctx.fillStyle = '#fff'
+      ctx.font = '10px Arial'
+      ctx.fillText(`v: ${velMagnitude.toFixed(1)}`, carX - 20, carY - 20)
+    }
+    
+  } catch (error) {
+    console.warn(`AI visualization error for ${player.name}:`, error)
   }
   
   ctx.restore()
@@ -1578,7 +2004,7 @@ export function getLeaderboard(state: GameState): Array<{car: Car, player: Playe
   // Sort cars by: finished (first), then by finish time (fastest first), then by laps (most first), then by trail length (progress)
   const sortedData = state.cars.map((car, index) => ({
     car,
-    player: state.players[index]!,
+    player: state.players[index] || { id: 'unknown', name: 'Unknown', color: '#666', isLocal: false },
     position: 0 // Will be set below
   }))
   .sort((a, b) => {

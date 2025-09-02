@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vRacer AI Test</title>
+    <link rel="stylesheet" href="dist/assets/index-BMk6l4As.css">
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: Arial, sans-serif; 
+            background: #000;
+            color: #fff;
+        }
+        .test-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 100;
+        }
+        .test-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h3>🤖 AI Racing Test</h3>
+        <p>This test validates the AI fixes:</p>
+        <ul>
+            <li>✅ Optimized racing line geometry</li>
+            <li>✅ Simplified AI decision making</li>  
+            <li>✅ Enhanced track boundary safety</li>
+        </ul>
+        <p>Watch the AI players to ensure they:</p>
+        <ul>
+            <li>Follow the racing line smoothly</li>
+            <li>Don't crash into walls</li>
+            <li>Complete laps successfully</li>
+        </ul>
+    </div>
+    
+    <div class="test-controls">
+        <button onclick="resetTest()">🔄 Reset Test</button>
+        <button onclick="toggleDebug()">🔍 Toggle Debug</button>
+        <button onclick="changeDifficulty()">⚙️ Change Difficulty</button>
+    </div>
+
+    <div id="root"></div>
+    
+    <script type="module" src="dist/assets/index-B2KilsMq.js"></script>
+    
+    <script>
+        // Test utilities
+        let debugMode = false;
+        let currentDifficulty = 'medium';
+        
+        function resetTest() {
+            location.reload();
+        }
+        
+        function toggleDebug() {
+            debugMode = !debugMode;
+            // This would need to be implemented in the main app
+            console.log('Debug mode:', debugMode);
+        }
+        
+        function changeDifficulty() {
+            const difficulties = ['easy', 'medium', 'hard'];
+            const currentIndex = difficulties.indexOf(currentDifficulty);
+            currentDifficulty = difficulties[(currentIndex + 1) % difficulties.length];
+            console.log('AI Difficulty changed to:', currentDifficulty);
+            // This would need to be implemented in the main app
+        }
+        
+        // Log AI performance metrics
+        let moveCount = 0;
+        let crashCount = 0;
+        let lapCount = 0;
+        
+        // Monitor AI moves (this would need integration with the main app)
+        setInterval(() => {
+            // This is a placeholder for monitoring
+            // In a real implementation, we'd hook into the game state
+        }, 1000);
+        
+        console.log('🤖 AI Test Page Loaded');
+        console.log('Watch the console for AI debugging info');
+    </script>
+</body>
+</html>
