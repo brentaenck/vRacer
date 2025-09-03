@@ -57,8 +57,8 @@ export const FEATURES: FeatureFlags = {
   soundEffects: false,        // Audio feedback - DISABLED
   animations: true,           // Smooth movement, particle effects
   
-  // Development and debugging - off by default for users
-  debugMode: false,           // Show extra info for development
+  // Development and debugging - ENABLED for AI testing
+  debugMode: true,            // Show extra info for development
   performanceMetrics: true,   // FPS counter, render time
   aiPlayers: true,            // Computer-controlled cars
 };

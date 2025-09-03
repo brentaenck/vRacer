@@ -233,7 +233,7 @@ function planPath(
     
     // Score this immediate move
     const target = findNearestRacingLineTarget(move.pos, racingLine);
-    const immediateScore = scoreAdvancedMove(state, move.pos, move.vel, target, difficulty);
+    const immediateScore = scoreSimplifiedMove(state, move.pos, move.vel, target, difficulty);
     
     // Recursively plan ahead if we're not at max depth
     let futureScore = 0;
@@ -266,46 +266,48 @@ function planPath(
   return bestNode
 }
 
-// Use the single source of truth from track-analysis.ts
-// This wrapper function provides backward compatibility for AI-specific usage
+// CRITICAL FIX: Find the next waypoint ahead in racing direction, not just the nearest one
 function findNearestRacingLineTarget(pos: Vec, racingLine: RacingLinePoint[]): RacingLinePoint {
-  // Create a minimal track analysis object to use the centralized function
-  // This is a lightweight approach that reuses the racing line data
-  const mockAnalysis: TrackAnalysis = {
-    outer: [], // Not used in findNearestRacingLinePoint
-    inner: [], // Not used in findNearestRacingLinePoint
-    startLine: { a: { x: 0, y: 0 }, b: { x: 0, y: 0 } }, // Not used in findNearestRacingLinePoint
-    racingDirection: 'clockwise',
-    optimalRacingLine: racingLine,
-    lapValidationCheckpoints: [],
-    safeZones: [
-      {
-        name: 'left',
-        bounds: { minX: 3, maxX: 11, minY: 3, maxY: 32 },
-        direction: { x: 0.3, y: 1 }
-      },
-      {
-        name: 'bottom', 
-        bounds: { minX: 3, maxX: 47, minY: 26, maxY: 32 },
-        direction: { x: 1, y: -0.3 }
-      },
-      {
-        name: 'right',
-        bounds: { minX: 39, maxX: 47, minY: 3, maxY: 32 },
-        direction: { x: -0.3, y: -1 }
-      },
-      {
-        name: 'top',
-        bounds: { minX: 3, maxX: 47, minY: 3, maxY: 9 },
-        direction: { x: -1, y: 0.3 }
-      }
-    ],
-    trackBounds: { minX: 2, maxX: 48, minY: 2, maxY: 33 },
-    innerBounds: { minX: 12, maxX: 38, minY: 10, maxY: 25 }
+  if (racingLine.length === 0) {
+    throw new Error('Racing line is empty')
   }
   
-  // Use the centralized function from track-analysis.ts
-  return findNearestRacingLinePoint(pos, mockAnalysis)
+  // First, find the closest waypoint to establish our current position on the racing line
+  let closestIdx = 0
+  let closestDistance = Infinity
+  
+  for (let i = 0; i < racingLine.length; i++) {
+    const dist = distance(pos, racingLine[i]!.pos)
+    if (dist < closestDistance) {
+      closestDistance = dist
+      closestIdx = i
+    }
+  }
+  
+  // Now find the next waypoint ahead that we should be targeting
+  // Look ahead 2-4 waypoints from our current closest position
+  const lookAheadMin = Math.min(2, Math.floor(racingLine.length * 0.05)) // At least 2 waypoints or 5% of track
+  const lookAheadMax = Math.min(6, Math.floor(racingLine.length * 0.15)) // At most 6 waypoints or 15% of track
+  
+  // Choose look-ahead distance based on current speed and distance to closest waypoint
+  let lookAhead = lookAheadMin
+  if (closestDistance < 3) {
+    // We're very close to the current waypoint, look further ahead
+    lookAhead = lookAheadMax
+  } else if (closestDistance < 6) {
+    // We're reasonably close, moderate look-ahead
+    lookAhead = Math.floor((lookAheadMin + lookAheadMax) / 2)
+  }
+  
+  // Calculate target index (wrap around for circular track)
+  const targetIdx = (closestIdx + lookAhead) % racingLine.length
+  const targetWaypoint = racingLine[targetIdx]!
+  
+  if (isFeatureEnabled('debugMode')) {
+    console.log(`🎯 Waypoint selection: closest=${closestIdx} (dist=${closestDistance.toFixed(1)}), target=${targetIdx} (lookahead=${lookAhead})`)
+  }
+  
+  return targetWaypoint
 }
 
 // Use the single source of truth from track-analysis.ts
@@ -502,8 +504,10 @@ let circularMotionDetected = false
 let circularMotionCounter = 0
 let globalMoveCounter = 0 // Global counter to track AI moves across all calls
 
-// Advanced move scoring with racing line awareness
-function scoreAdvancedMove(
+// PHASE 1 COMPLETE: Optimized AI scoring system
+// Focus on 6 CORE factors only: Progress, Speed, Safety, Racing Line, Direction, Start Handling
+// This eliminates the 15+ factor complexity that caused conflicting priorities
+function scoreSimplifiedMove(
   state: GameState,
   nextPos: Vec,
   velAfter: Vec,
@@ -513,452 +517,301 @@ function scoreAdvancedMove(
   const currentCar = getCurrentCar(state)!
   const futureSpeed = Math.hypot(velAfter.x, velAfter.y)
   const currentSpeed = Math.hypot(currentCar.vel.x, currentCar.vel.y)
+  let score = 0
   
-  // ENHANCED CIRCULAR MOTION DETECTION - using reliable move counter
-  globalMoveCounter++ // Increment on every AI move
-  let circularMotionPenalty = 0
-  
-  // Update recent positions using move counter instead of unreliable turn tracking
-  const needsUpdate = recentPositions.length === 0 || 
-                     recentPositions[recentPositions.length - 1]?.moveIndex !== globalMoveCounter - 1
-  if (needsUpdate) {
-    // Keep only recent positions (last 10 moves)
-    recentPositions = recentPositions.filter(r => globalMoveCounter - r.moveIndex <= 10)
-    recentPositions.push({ pos: { x: currentCar.pos.x, y: currentCar.pos.y }, moveIndex: globalMoveCounter })
-    
-    // DETECT CIRCULAR MOTION PATTERNS
-    if (recentPositions.length >= 4) {
-      // Check for 2-4 position loops by looking for repeated position patterns
-      const recent4 = recentPositions.slice(-4).map(r => `${r.pos.x},${r.pos.y}`)
-      const recent6 = recentPositions.slice(-6).map(r => `${r.pos.x},${r.pos.y}`)
-      
-      // Detect 2-position oscillation (A-B-A-B)
-      if (recent4.length === 4 && recent4[0] === recent4[2] && recent4[1] === recent4[3] && recent4[0] !== recent4[1]) {
-        circularMotionDetected = true
-        circularMotionCounter++
-        console.log(`🔄 CIRCULAR MOTION DETECTED: 2-position loop ${recent4[0]} ↔ ${recent4[1]} (counter: ${circularMotionCounter})`)
-      }
-      // Detect 3-position loops (A-B-C-A-B-C)
-      else if (recent6.length >= 6 && recent6[0] === recent6[3] && recent6[1] === recent6[4] && recent6[2] === recent6[5]) {
-        circularMotionDetected = true
-        circularMotionCounter++
-        console.log(`🔄 CIRCULAR MOTION DETECTED: 3-position loop [${recent6.slice(0,3).join(',')}] (counter: ${circularMotionCounter})`)
-      }
-      // Detect 4-position loops (A-B-C-D-A-B-C-D)
-      else if (recentPositions.length >= 8) {
-        const recent8 = recentPositions.slice(-8).map(r => `${r.pos.x},${r.pos.y}`)
-        if (recent8[0] === recent8[4] && recent8[1] === recent8[5] && recent8[2] === recent8[6] && recent8[3] === recent8[7]) {
-          circularMotionDetected = true
-          circularMotionCounter++
-          console.log(`🔄 CIRCULAR MOTION DETECTED: 4-position loop [${recent8.slice(0,4).join(',')}] (counter: ${circularMotionCounter})`)
-        }
-      }
-      
-      // Reset detection if we break the pattern
-      if (!circularMotionDetected || circularMotionCounter > 3) {
-        if (circularMotionCounter > 3) {
-          console.log(`🔄 CIRCULAR MOTION COUNTER RESET: ${circularMotionCounter} loops detected`)
-        }
-        circularMotionDetected = false
-        circularMotionCounter = 0
-      }
-    }
-  }
-  
-  // Apply enhanced circular motion penalties and escape mechanism
-  if (circularMotionDetected && circularMotionCounter > 0) {
-    // Check if the NEXT position would continue the circular pattern
-    for (const recent of recentPositions.slice(-6)) { // Check last 6 positions
-      if (globalMoveCounter - recent.moveIndex <= 6 && globalMoveCounter - recent.moveIndex > 0) {
-        const distToRecent = distance(nextPos, recent.pos)
-        if (distToRecent < 3) { // Larger detection radius
-          // MASSIVE penalty for continuing circular motion, increasing with counter
-          const basePenalty = (3 - distToRecent) * 50 * Math.min(circularMotionCounter, 5)
-          circularMotionPenalty += basePenalty
-          if (isFeatureEnabled('debugMode')) {
-            console.log(`🔄 CIRCULAR MOTION PENALTY: ${basePenalty.toFixed(1)} for revisiting (${recent.pos.x},${recent.pos.y}), counter: ${circularMotionCounter}`)
-          }
-        }
-      }
-    }
-    
-    // ESCAPE MECHANISM: When in circular motion, reward moves that break the pattern
-    if (circularMotionCounter > 1) {
-      // Calculate average position of recent loop
-      const loopPositions = recentPositions.slice(-4).map(r => r.pos)
-      const avgX = loopPositions.reduce((sum, p) => sum + p.x, 0) / loopPositions.length
-      const avgY = loopPositions.reduce((sum, p) => sum + p.y, 0) / loopPositions.length
-      const loopCenter = { x: avgX, y: avgY }
-      
-      // Calculate distance from loop center
-      const distFromLoopCenter = distance(nextPos, loopCenter)
-      
-      // ESCAPE BONUS: Reward moves that take us further from the loop center
-      const escapeBonus = Math.max(0, distFromLoopCenter - 2) * 30 * circularMotionCounter
-      // Note: escapeBonus will be applied after the main score calculation
-      
-      if (isFeatureEnabled('debugMode') && escapeBonus > 0) {
-        console.log(`🎆 ESCAPE BONUS: ${escapeBonus.toFixed(1)} for moving away from loop center (${loopCenter.x.toFixed(1)},${loopCenter.y.toFixed(1)}), distance: ${distFromLoopCenter.toFixed(1)}`)
-      }
-    }
-  } else {
-    // Standard circular motion detection for close positions
-    for (const recent of recentPositions) {
-      if (globalMoveCounter - recent.moveIndex <= 5 && globalMoveCounter - recent.moveIndex > 0) {
-        const distToRecent = distance(nextPos, recent.pos)
-        if (distToRecent < 2) {
-          circularMotionPenalty += (2 - distToRecent) * 25
-        }
-      }
-    }
-  }
-  
-  // CRITICAL: Prevent backward movement by checking velocity direction against racing direction
-  const expectedDirection = getExpectedRacingDirection(currentCar.pos)
+  // 1. PROGRESS FACTOR: Encourage movement in the racing direction
+  const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+  const expectedDirection = getExpectedDirection(currentCar.pos, trackAnalysis)
   const velocityAlignment = velAfter.x * expectedDirection.x + velAfter.y * expectedDirection.y
   
-  // Heavy penalty for moves that would result in backward velocity
-  if (velocityAlignment < -0.5 && futureSpeed > 1) {
-    // This move would take us significantly backward - heavily penalize it
-    return -1000 - futureSpeed * 50 // Severe penalty that increases with backward speed
-  }
-  
-  // Distance to racing line (closer is better) - STRONGER penalty for being far off
-  const lineDistance = distance(nextPos, targetPoint.pos)
-  let score = -lineDistance * 15 // INCREASED penalty for being off the racing line
-  
-  // MUCH STRONGER progressive penalty for being very far from racing line (prevents drift)
-  if (lineDistance > 6) {
-    score -= Math.pow(lineDistance - 6, 2) * 10 // Much stronger exponential penalty for extreme distances
-  }
-  
-  // TRACK BOUNDARY SAFETY: Ensure AI stays well within safe track bounds
-  // Track boundaries: outer (2,2)-(48,33), inner (12,10)-(38,25)
-  // Create safe buffer zones to prevent crashes
-  const OUTER_BUFFER = 1.5
-  const INNER_BUFFER = 1.0
-  
-  // Check if position is too close to outer boundaries
-  const tooCloseToOuterWalls = 
-    nextPos.x <= (2 + OUTER_BUFFER) ||  // Left wall
-    nextPos.x >= (48 - OUTER_BUFFER) || // Right wall  
-    nextPos.y <= (2 + OUTER_BUFFER) ||  // Top wall
-    nextPos.y >= (33 - OUTER_BUFFER)    // Bottom wall
-  
-  // Check if position is too close to inner walls
-  const tooCloseToInnerWalls =
-    nextPos.x >= (12 - INNER_BUFFER) && nextPos.x <= (38 + INNER_BUFFER) &&
-    nextPos.y >= (10 - INNER_BUFFER) && nextPos.y <= (25 + INNER_BUFFER)
-  
-  // Apply boundary penalties
-  if (tooCloseToOuterWalls) {
-    score -= 200 // Very heavy penalty for approaching outer walls
-  }
-  
-  if (tooCloseToInnerWalls) {
-    score -= 150 // Heavy penalty for approaching inner walls
-  }
-  
-  // Speed matching to target speed with lap-based strategy - REDUCED penalty
-  const lapBasedTargetSpeed = adjustSpeedForLapStrategy(targetPoint.targetSpeed, currentCar.currentLap, state)
-  const speedDiff = Math.abs(futureSpeed - lapBasedTargetSpeed)
-  score -= speedDiff * 4 // Reduced penalty for speed mismatch
-  
-  // Momentum and physics awareness
-  const speedChange = futureSpeed - currentSpeed
-  
-  // Penalize sudden speed changes that don't make sense
-  if (targetPoint.brakeZone && speedChange > 0.5) {
-    score -= 10 // penalty for accelerating in brake zones
-  }
-  
-  if (targetPoint.cornerType === 'straight' && speedChange < -1) {
-    score -= 5 // penalty for braking too hard on straights
-  }
-  
-  // Reward smooth acceleration patterns
-  if (targetPoint.cornerType === 'exit' && speedChange > 0 && speedChange < 2) {
-    score += 3 // bonus for smooth acceleration on corner exit
-  }
-  
-  // Velocity direction awareness (reward moves that align with track direction)
-  const velocityAlignmentScore = evaluateVelocityAlignment(currentCar.pos, velAfter)
-  score += velocityAlignmentScore
-  
-  // START POSITION SPECIAL HANDLING: Ensure AI goes DOWN first from start positions
-  // Match the expanded detection from findNearestRacingLinePoint function
-  const isAtStartPosition = currentCar.pos.x >= 4 && currentCar.pos.x <= 10 && currentCar.pos.y >= 19 && currentCar.pos.y <= 24
-  if (isAtStartPosition) {
-    const verticalMovement = velAfter.y // positive y is DOWN for clockwise
-    const horizontalMovement = Math.abs(velAfter.x)
+  // CRITICAL FIX: Much more aggressive backward movement prevention
+  // Strong bonus for forward movement, absolutely devastating penalty for backward
+  if (velocityAlignment > 0.1) {
+    score += velocityAlignment * 60 // Strong bonus for good direction
+  } else if (futureSpeed > 0.5) {
+    // CRITICAL: Make backward movement essentially impossible to select
+    score -= 500 // Devastating penalty for backward movement
     
-    // Strong bonus for vertical (downward) movement at start
-    if (verticalMovement > 0) {
-      score += verticalMovement * 20 // Heavy bonus for downward movement
-    }
+    // Additional penalty scaling with speed - faster backward is worse
+    score -= futureSpeed * 100
     
-    // Heavy penalty for horizontal movement until we've moved down enough
-    if (currentCar.pos.y < 24 && horizontalMovement > verticalMovement) {
-      score -= horizontalMovement * 25 // Severe penalty for premature horizontal movement
-    }
-    
-    // Additional penalty for moving UP (wrong direction) at start
-    if (verticalMovement < 0) {
-      score -= Math.abs(verticalMovement) * 30 // Very heavy penalty for going UP at start
-    }
-  }
-  
-  // CORNER ANTICIPATION: Start turning early for upcoming corners
-  const racingLine = computeRacingLine(state) // Fix: Define racingLine variable
-  const nextCornerDistance = getDistanceToNextCorner(currentCar.pos, racingLine)
-  if (nextCornerDistance < 6 && futureSpeed > 2) {
-    const nextCorner = getNextCorner(currentCar.pos, racingLine)
-    if (nextCorner) {
-      // ENHANCED SPEED PENALTIES NEAR CORNERS: Prevent dangerous entry speeds
-      if (nextCornerDistance < 4 && futureSpeed > 3) {
-        const cornerSpeedPenalty = Math.pow(futureSpeed - 3, 2) * 8 * (4 - nextCornerDistance)
-        score -= cornerSpeedPenalty
-        if (isFeatureEnabled('debugMode') && cornerSpeedPenalty > 5) {
-          console.log(`⚠️ Corner speed penalty: ${cornerSpeedPenalty.toFixed(1)} (speed: ${futureSpeed.toFixed(1)}, distance: ${nextCornerDistance.toFixed(1)})`)
-        }
-      }
-      
-      // Calculate ideal approach direction for the corner
-      const approachDirection = {
-        x: nextCorner.pos.x - currentCar.pos.x,
-        y: nextCorner.pos.y - currentCar.pos.y
-      }
-      const approachMagnitude = Math.hypot(approachDirection.x, approachDirection.y)
-      
-      if (approachMagnitude > 0) {
-        const normalizedApproach = {
-          x: approachDirection.x / approachMagnitude,
-          y: approachDirection.y / approachMagnitude
-        }
-        
-        // Bonus for moves that align with corner approach
-        const velMagnitude = Math.hypot(velAfter.x, velAfter.y)
-        if (velMagnitude > 0) {
-          const normalizedVel = {
-            x: velAfter.x / velMagnitude,
-            y: velAfter.y / velMagnitude
-          }
-          
-          const alignment = normalizedVel.x * normalizedApproach.x + normalizedVel.y * normalizedApproach.y
-          
-          // CRITICAL: Only apply corner bonus if it doesn't conflict with forward racing direction
-          const racingDirection = getExpectedRacingDirection(currentCar.pos)
-          const velocityRacingAlignment = normalizedVel.x * racingDirection.x + normalizedVel.y * racingDirection.y
-          
-          // Only give corner bonus if we're still generally moving in the racing direction
-          if (velocityRacingAlignment > -0.1 && alignment > 0) {
-            const cornerAlignmentBonus = alignment * 6 * (6 - nextCornerDistance) // FURTHER REDUCED bonus and stricter conditions
-            score += cornerAlignmentBonus
-            
-            if (isFeatureEnabled('debugMode') && cornerAlignmentBonus > 5) {
-              console.log(`🏁 Corner anticipation bonus: ${cornerAlignmentBonus.toFixed(1)} (distance: ${nextCornerDistance.toFixed(1)}, alignment: ${alignment.toFixed(2)})`)
-            }
-          } else if (velocityRacingAlignment < -0.3) {
-            // Only penalize moves that are clearly going backwards
-            score -= 15 // Reduced penalty for backward movement near corners
-            if (isFeatureEnabled('debugMode')) {
-              console.log(`❌ Rejected corner move due to poor racing alignment: ${velocityRacingAlignment.toFixed(2)}`)
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  // Brake zone awareness
-  if (targetPoint.brakeZone && futureSpeed > lapBasedTargetSpeed) {
-    score -= (futureSpeed - lapBasedTargetSpeed) * 12 // heavy penalty for not braking
-  }
-  
-  // Collision avoidance - enhanced version
-  if (isMultiCarGame(state)) {
-    const multiCarState = state as any
-    score += evaluateCollisionRisk(nextPos, velAfter, multiCarState, difficulty)
-    
-    // Add defensive/aggressive positioning based on race position
-    score += evaluateRacePosition(nextPos, velAfter, multiCarState, difficulty)
-  }
-  
-  // ENHANCED SPEED LIMITING: Prevent dangerous high speeds that cause crashes - INCREASED penalties
-  const safeMaxSpeed = getSafeMaxSpeed(targetPoint, difficulty, lineDistance)
-  if (futureSpeed > safeMaxSpeed) {
-    const overspeedPenalty = Math.pow(futureSpeed - safeMaxSpeed, 2) * 15 // Increased multiplier for safety
-    score -= overspeedPenalty
-    if (isFeatureEnabled('debugMode') && overspeedPenalty > 10) {
-      console.log(`⚠️ AI Speed Warning: ${futureSpeed.toFixed(1)} > safe max ${safeMaxSpeed.toFixed(1)}, penalty: ${overspeedPenalty.toFixed(1)}`)
-    }
-  }
-  
-  // REDUCED: Progressive speed penalties - less conservative to allow better racing
-  if (futureSpeed > 4) { // Raised threshold from 3 to 4
-    const conservativeSpeedPenalty = Math.pow(futureSpeed - 4, 2) * 2 // Reduced multiplier from 3 to 2
-    score -= conservativeSpeedPenalty
-  }
-  
-  // ADD BONUS for forward progress to encourage movement, but not if far off-line
-  const forwardProgressBonus = Math.max(0, futureSpeed - currentSpeed) * 2
-  if (lineDistance < 6) { // Only give speed bonus if reasonably close to racing line
-    score += forwardProgressBonus
-  } else {
-    // Penalize speed when far from racing line
-    score -= forwardProgressBonus
-  }
-  
-  // CRITICAL: MASSIVE penalty for staying still (zero velocity after move)
-  if (futureSpeed === 0) {
-    const zeroVelocityPenalty = 500 // MASSIVE penalty for not moving at all - this should never be selected
-    score -= zeroVelocityPenalty
+    // Debug logging for backward move detection
     if (isFeatureEnabled('debugMode')) {
-      console.log(`🛑 ZERO VELOCITY PENALTY: ${zeroVelocityPenalty} (futureSpeed: ${futureSpeed}, currentSpeed: ${currentSpeed})`)
+      console.warn(`🚫 AI backward movement detected: velocity=(${velAfter.x.toFixed(1)}, ${velAfter.y.toFixed(1)}), alignment=${velocityAlignment.toFixed(3)}, speed=${futureSpeed.toFixed(1)}`)
     }
   }
   
-  // CRITICAL: Penalty for zero acceleration when steering is needed
-  const moveVector = { x: velAfter.x - currentCar.vel.x, y: velAfter.y - currentCar.vel.y }
-  const isZeroAcceleration = moveVector.x === 0 && moveVector.y === 0
-  let zeroAccelPenalty = 0
-  
-  if (isZeroAcceleration) {
-    // Check if we need to steer (distance from racing line or approaching corner)
-    const nextCornerDistance = getDistanceToNextCorner(currentCar.pos, racingLine)
-    
-    if (lineDistance > 3) {
-      // Far from racing line - penalize coasting heavily
-      const offLinePenalty = 30 + (lineDistance - 3) * 10  // Increased from 15 + 5
-      zeroAccelPenalty += offLinePenalty
-      score -= offLinePenalty
-    }
-    
-    if (nextCornerDistance < 8 && futureSpeed > 1.5) {
-      // Approaching corner with speed - need to steer, not coast
-      const cornerPenalty = 40 * (8 - nextCornerDistance) / 8  // Increased from 20
-      zeroAccelPenalty += cornerPenalty
-      score -= cornerPenalty
-    }
-    
-    // General penalty for being passive when speed > 1 - MUCH HIGHER
-    if (futureSpeed > 1) {
-      const passivePenalty = 25 // Increased from 5
-      zeroAccelPenalty += passivePenalty
-      score -= passivePenalty
-    }
-    
-    // Base penalty for zero acceleration - always apply
-    const basePenalty = 20
-    zeroAccelPenalty += basePenalty
-    score -= basePenalty
-    
-    if (isFeatureEnabled('debugMode') && zeroAccelPenalty > 0) {
-      console.log(`⚠️ Zero acceleration penalty: ${zeroAccelPenalty.toFixed(1)} (lineDistance: ${lineDistance.toFixed(1)}, cornerDistance: ${nextCornerDistance.toFixed(1)}, speed: ${futureSpeed.toFixed(1)})`)
-    }
-  }
-  
-  // CRITICAL: Bonus for making any forward progress at all
-  if (futureSpeed > 0 && futureSpeed > currentSpeed) {
-    score += 15 // Bonus for accelerating from stationary or slow speeds
-  }
-  
-  // BACKUP ESCAPE MECHANISM: Immediate position-based detection for tight loops
-  // This works even if pattern detection fails, by checking if we're revisiting the same small area repeatedly
-  let stuckInSmallAreaPenalty = 0
-  let stuckInSmallAreaBonus = 0
-  
-  if (recentPositions.length >= 4) {
-    // Check if we've been in a very small area for several moves
-    const recentArea = recentPositions.slice(-4) // Last 4 positions including current
-    const minX = Math.min(...recentArea.map(r => r.pos.x))
-    const maxX = Math.max(...recentArea.map(r => r.pos.x))
-    const minY = Math.min(...recentArea.map(r => r.pos.y))
-    const maxY = Math.max(...recentArea.map(r => r.pos.y))
-    const areaWidth = maxX - minX
-    const areaHeight = maxY - minY
-    const areaSize = areaWidth * areaHeight
-    
-    // If we're stuck in a very small area (2x2 or smaller), this is likely a tight loop
-    if (areaSize <= 4 && recentArea.length >= 4) {
-      const stuckCounter = Math.min(recentArea.length, 6)
-      
-      // Check if the next position would keep us in the same small area
-      if (nextPos.x >= minX && nextPos.x <= maxX && nextPos.y >= minY && nextPos.y <= maxY) {
-        // MASSIVE penalty for staying in the stuck area
-        stuckInSmallAreaPenalty = 100 * stuckCounter
-        console.log(`🚨 STUCK IN SMALL AREA: Area size ${areaSize.toFixed(1)}, penalty: ${stuckInSmallAreaPenalty.toFixed(1)}`)
-      } else {
-        // BIG bonus for escaping the stuck area
-        const escapeDistance = Math.min(
-          Math.abs(nextPos.x - minX), Math.abs(nextPos.x - maxX),
-          Math.abs(nextPos.y - minY), Math.abs(nextPos.y - maxY)
-        )
-        stuckInSmallAreaBonus = 50 * stuckCounter + escapeDistance * 10
-        console.log(`🎆 ESCAPING SMALL AREA: Escape distance ${escapeDistance.toFixed(1)}, bonus: ${stuckInSmallAreaBonus.toFixed(1)}`)
-      }
-    }
-  }
-  
-  // Apply circular motion penalty and escape bonus
-  score -= circularMotionPenalty
-  score -= stuckInSmallAreaPenalty
-  score += stuckInSmallAreaBonus
-  
-  // Apply escape bonus for breaking circular motion patterns
-  if (circularMotionDetected && circularMotionCounter > 1) {
-    const loopPositions = recentPositions.slice(-4).map(r => r.pos)
-    const avgX = loopPositions.reduce((sum, p) => sum + p.x, 0) / loopPositions.length
-    const avgY = loopPositions.reduce((sum, p) => sum + p.y, 0) / loopPositions.length
-    const loopCenter = { x: avgX, y: avgY }
-    const distFromLoopCenter = distance(nextPos, loopCenter)
-    const escapeBonus = Math.max(0, distFromLoopCenter - 2) * 30 * circularMotionCounter
-    score += escapeBonus
-  }
-  
-  // Difficulty-specific adjustments
+  // 2. SPEED FACTOR: Encourage competitive but safe racing speeds
+  let targetSpeedRange: [number, number]
   switch (difficulty) {
     case 'easy':
-      // Add randomness and prefer safer moves
-      score += (Math.random() - 0.5) * 5
-      if (futureSpeed > 3) score -= 12 // very strong penalty for high speed
-      // Extra caution in corners
-      if (targetPoint.cornerType !== 'straight') score -= 4
-      // Prefer gentle accelerations
-      if (Math.abs(speedChange) > 1.5) score -= 8
+      targetSpeedRange = [2, 4] // Conservative but competitive speeds
       break
-      
     case 'medium':
-      // Balanced approach with slight randomness
-      score += (Math.random() - 0.5) * 2
-      if (futureSpeed > 6) score -= 3 // Reduced penalty for speed
-      
-      // RACING LINE ADHERENCE: Strong penalty for medium AI being off-line
-      if (lineDistance > 6) {
-        score -= (lineDistance - 6) * 8 // Progressive penalty for being off racing line
-      }
-      
-      // Reasonable corner speed management - REDUCED penalty
-      if (targetPoint.cornerType === 'apex' && futureSpeed > lapBasedTargetSpeed + 1) {
-        score -= 3
-      }
-      // Avoid sudden speed changes - REDUCED penalty
-      if (Math.abs(speedChange) > 3) score -= 2
+      targetSpeedRange = [3, 5] // Good racing speeds with safety margin
       break
-      
     case 'hard':
-      // Optimal racing with minimal randomness but still safety-conscious
-      if (futureSpeed > 5) score -= 3 // some penalty even for hard AI
-      if (futureSpeed < 2 && lineDistance > 5) score -= 10 // penalty for being slow and off-line
-      if (targetPoint.cornerType === 'straight' && futureSpeed < 4) {
-        score -= 3 // should be reasonably fast on straights
-      }
-      // Aggressive corner exit strategy but not reckless
-      if (targetPoint.cornerType === 'exit' && futureSpeed < lapBasedTargetSpeed + 0.5) {
-        score -= 2 // should be accelerating on exit
-      }
+      targetSpeedRange = [4, 6] // Aggressive but not reckless speeds
       break
   }
+  
+  // CRITICAL SAFETY: Add heavy penalty for speeds that might cause crashes
+  const CRASH_PREVENTION_SPEED = 4.5
+  if (futureSpeed > CRASH_PREVENTION_SPEED) {
+    // Progressive penalty for dangerous speeds
+    const overspeed = futureSpeed - CRASH_PREVENTION_SPEED
+    score -= overspeed * overspeed * 80 // Quadratic penalty for excessive speed
+    
+    if (isFeatureEnabled('debugMode')) {
+      console.warn(`⚠️ AI crash prevention: speed ${futureSpeed.toFixed(1)} > ${CRASH_PREVENTION_SPEED}, penalty: ${(overspeed * overspeed * 80).toFixed(0)}`)
+    }
+  }
+  
+  // CORNER APPROACH SAFETY: Extra penalties for high speeds near corners
+  if (targetPoint.cornerType === 'entry' || targetPoint.brakeZone) {
+    const CORNER_SAFE_SPEED = 3.5
+    if (futureSpeed > CORNER_SAFE_SPEED) {
+      const cornerOverspeed = futureSpeed - CORNER_SAFE_SPEED
+      score -= cornerOverspeed * cornerOverspeed * 60 // Heavy penalty for fast corner approach
+      
+      if (isFeatureEnabled('debugMode')) {
+        console.warn(`⚠️ AI corner safety: speed ${futureSpeed.toFixed(1)} > ${CORNER_SAFE_SPEED} at ${targetPoint.cornerType}, penalty: ${(cornerOverspeed * cornerOverspeed * 60).toFixed(0)}`)
+      }
+    }
+  }
+  
+  const [minSpeed, maxSpeed] = targetSpeedRange
+  if (futureSpeed >= minSpeed && futureSpeed <= maxSpeed) {
+    score += 30 // Bonus for ideal speed range
+  } else if (futureSpeed < minSpeed) {
+    score -= (minSpeed - futureSpeed) * 15 // Penalty for being too slow
+  } else if (futureSpeed > maxSpeed) {
+    score -= (futureSpeed - maxSpeed) * 10 // Penalty for being too fast (but less severe)
+  }
+  
+  // Special speed bonus for acceleration from low speeds
+  if (futureSpeed > currentSpeed && currentSpeed < 2) {
+    score += 25 // Strong bonus for getting moving
+  }
+  
+  // 3. SAFETY FACTOR: Avoid crashes and dangerous positions
+  // CRITICAL: Check if this move leads to an illegal position next turn
+  const futurePos = { x: nextPos.x + velAfter.x, y: nextPos.y + velAfter.y }
+  
+  // Check if future position would be outside track boundaries
+  const futureOutsideTrack = (
+    futurePos.x <= 2 || futurePos.x >= 48 || 
+    futurePos.y <= 2 || futurePos.y >= 33 ||
+    (futurePos.x >= 12 && futurePos.x <= 38 && futurePos.y >= 10 && futurePos.y <= 25) // Inside inner boundary
+  )
+  
+  // ENHANCED: More aggressive predictive crash prevention
+  if (futureOutsideTrack) {
+    score -= 2000 // Even more massive penalty to ensure this move is never selected
+    
+    if (isFeatureEnabled('debugMode')) {
+      console.warn(`⚠️ AI PREDICTIVE CRASH: move ${JSON.stringify({x: velAfter.x, y: velAfter.y})} -> future pos (${futurePos.x.toFixed(1)}, ${futurePos.y.toFixed(1)}) is ILLEGAL! Penalty: -2000`)
+    }
+  }
+  
+  // ADDITIONAL SAFETY: Check for dangerous speeds near boundaries
+  const DANGER_ZONE_MARGIN = 4.0
+  const nearBoundary = (
+    nextPos.x - 2 < DANGER_ZONE_MARGIN ||    // Near left wall
+    48 - nextPos.x < DANGER_ZONE_MARGIN ||   // Near right wall
+    nextPos.y - 2 < DANGER_ZONE_MARGIN ||    // Near top wall  
+    33 - nextPos.y < DANGER_ZONE_MARGIN      // Near bottom wall
+  )
+  
+  if (nearBoundary && futureSpeed > 3.0) {
+    const speedPenalty = (futureSpeed - 3.0) * 150 // Heavy penalty for fast speeds near boundaries
+    score -= speedPenalty
+    
+    if (isFeatureEnabled('debugMode')) {
+      console.warn(`⚠️ AI near boundary speed warning: speed ${futureSpeed.toFixed(1)} near boundary, penalty: ${speedPenalty.toFixed(0)}`)
+    }
+  }
+  
+  // Track boundaries with safety margins for current position
+  const OUTER_MARGIN = 2.0
+  const INNER_MARGIN = 1.5
+  
+  // Check distance to outer walls
+  const distToWalls = Math.min(
+    nextPos.x - 2,        // Left wall
+    48 - nextPos.x,       // Right wall  
+    nextPos.y - 2,        // Top wall
+    33 - nextPos.y        // Bottom wall
+  )
+  
+  if (distToWalls < OUTER_MARGIN) {
+    score -= (OUTER_MARGIN - distToWalls) * 100 // Heavy penalty for approaching walls
+  }
+  
+  // Check distance to inner walls
+  if (nextPos.x >= 12 && nextPos.x <= 38 && nextPos.y >= 10 && nextPos.y <= 25) {
+    const distToInner = Math.min(
+      nextPos.x - 12,
+      38 - nextPos.x,
+      nextPos.y - 10, 
+      25 - nextPos.y
+    )
+    
+    if (distToInner < INNER_MARGIN) {
+      score -= (INNER_MARGIN - distToInner) * 80 // Penalty for approaching inner walls
+    }
+  }
+  
+  // 4. RACING LINE FACTOR: Stay reasonably close to optimal path
+  const lineDistance = distance(nextPos, targetPoint.pos)
+  score -= lineDistance * 8 // Moderate penalty for being off racing line
+  
+  // Progressive penalty for being very far off line
+  if (lineDistance > 8) {
+    score -= Math.pow(lineDistance - 8, 1.5) * 5
+  }
+  
+  // CRITICAL: Racing line attraction when far from optimal path
+  // This helps the AI get back on track when safety measures push it off course
+  const currentLineDistance = distance(currentCar.pos, targetPoint.pos)
+  if (currentLineDistance > 10) {
+    // We're very far from racing line - add strong attraction toward it
+    const currentToTarget = {
+      x: targetPoint.pos.x - currentCar.pos.x,
+      y: targetPoint.pos.y - currentCar.pos.y
+    }
+    const currentToTargetMagnitude = Math.hypot(currentToTarget.x, currentToTarget.y)
+    
+    if (currentToTargetMagnitude > 0) {
+      // Normalize direction toward racing line
+      const raceLineDirection = {
+        x: currentToTarget.x / currentToTargetMagnitude,
+        y: currentToTarget.y / currentToTargetMagnitude
+      }
+      
+      // Calculate how much this move aligns with getting back to racing line
+      const moveDirection = {
+        x: nextPos.x - currentCar.pos.x,
+        y: nextPos.y - currentCar.pos.y
+      }
+      const moveMagnitude = Math.hypot(moveDirection.x, moveDirection.y)
+      
+      if (moveMagnitude > 0) {
+        const raceLineAlignment = (
+          (moveDirection.x / moveMagnitude) * raceLineDirection.x +
+          (moveDirection.y / moveMagnitude) * raceLineDirection.y
+        )
+        
+        // Strong bonus for moves that take us toward racing line when we're far off
+        const attractionBonus = raceLineAlignment * (currentLineDistance - 10) * 15
+        score += attractionBonus
+        
+        if (isFeatureEnabled('debugMode') && attractionBonus > 50) {
+          console.log(`🧲 AI racing line attraction: far from line (${currentLineDistance.toFixed(1)}), alignment=${raceLineAlignment.toFixed(2)}, bonus=+${attractionBonus.toFixed(0)}`)
+        }
+      }
+    }
+  }
+  
+  // 5. DIRECTION FACTOR: Ensure consistent forward progress
+  // Prevent getting stuck by heavily penalizing zero movement
+  if (futureSpeed === 0) {
+    score -= 300 // Very heavy penalty for not moving
+  }
+  
+  // Simple loop detection: penalize revisiting recent positions
+  globalMoveCounter++
+  recentPositions = recentPositions.filter(r => globalMoveCounter - r.moveIndex <= 8)
+  recentPositions.push({ pos: { x: currentCar.pos.x, y: currentCar.pos.y }, moveIndex: globalMoveCounter })
+  
+  for (const recent of recentPositions.slice(-6)) {
+    if (globalMoveCounter - recent.moveIndex > 1 && globalMoveCounter - recent.moveIndex <= 4) {
+      const distToRecent = distance(nextPos, recent.pos)
+      if (distToRecent < 2) {
+        score -= (2 - distToRecent) * 50 // Penalty for revisiting recent positions
+      }
+    }
+  }
+  
+  // ENHANCED START HANDLING: Much better logic for leaving starting area
+  const isAtStart = currentCar.pos.x >= 4 && currentCar.pos.x <= 10 && currentCar.pos.y >= 19 && currentCar.pos.y <= 26
+  const isNearStart = currentCar.pos.x >= 3 && currentCar.pos.x <= 12 && currentCar.pos.y >= 18 && currentCar.pos.y <= 28
+  
+  if (isAtStart || isNearStart) {
+    // CRITICAL: For clockwise racing from start, we must go DOWN (positive Y) first
+    // This is the fundamental direction requirement for leaving the starting area properly
+    
+    const distanceFromStartCenter = distance(currentCar.pos, { x: 7, y: 22 })
+    const isVeryCloseToStart = distanceFromStartCenter < 3
+    
+    if (isVeryCloseToStart) {
+      // VERY CLOSE TO START: Absolutely must move down first
+      if (velAfter.y > 0) {
+        // MASSIVE bonus for downward movement from start - this is critical
+        score += velAfter.y * 100 // Much stronger bonus than before
+        
+        // Extra bonus for pure downward movement (no horizontal component)
+        if (Math.abs(velAfter.x) <= Math.abs(velAfter.y)) {
+          score += 50 // Bonus for staying mostly vertical
+        }
+      } else if (velAfter.y < 0) {
+        // DEVASTATING penalty for upward movement from start
+        score -= 300 // Make upward movement from start nearly impossible
+      } else {
+        // velAfter.y === 0, purely horizontal movement
+        score -= 150 // Heavy penalty for not moving down at all
+      }
+      
+      // Discourage excessive horizontal movement until we've gone down enough
+      if (Math.abs(velAfter.x) > 2) {
+        score -= Math.abs(velAfter.x) * 50 // Heavy penalty for fast horizontal movement
+      }
+    } else {
+      // NEAR START but not at start: More flexible but still encourage good direction
+      if (velAfter.y > 0) {
+        score += velAfter.y * 60 // Good bonus for continuing downward
+      } else if (velAfter.y < 0) {
+        score -= Math.abs(velAfter.y) * 80 // Strong penalty for going backwards
+      }
+      
+      // Allow more horizontal movement once we've moved away from start
+      if (currentCar.pos.y > 24) {
+        // We've moved down enough, allow rightward movement toward racing line
+        if (velAfter.x > 0) {
+          score += velAfter.x * 20 // Bonus for moving right after going down
+        }
+      }
+    }
+    
+    // Prevent getting stuck by heavily penalizing very slow speeds at start
+    if (futureSpeed < 1.5 && isAtStart) {
+      score -= 100 // Push AI to move with decent speed from start
+    }
+    
+    // Special bonus for acceleration from start (getting moving)
+    if (currentSpeed < 1 && futureSpeed > 1) {
+      score += 75 // Strong bonus for getting moving from start
+    }
+  }
+  
+  // COLLISION AVOIDANCE: Basic multi-car safety
+  if (isMultiCarGame(state)) {
+    const multiCarState = state as any
+    const otherCars = multiCarState.cars.filter((car: any, idx: number) => 
+      idx !== multiCarState.currentPlayerIndex && !car.crashed && !car.finished
+    )
+    
+    for (const otherCar of otherCars) {
+      const distToOther = distance(nextPos, otherCar.pos)
+      if (distToOther < 3) {
+        score -= (3 - distToOther) * 40 // Penalty for getting too close to other cars
+      }
+    }
+  }
+  
+  // Add slight randomness based on difficulty
+  const randomFactor = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 4 : 2
+  score += (Math.random() - 0.5) * randomFactor
   
   return score
 }
@@ -1419,41 +1272,33 @@ export function chooseAIMove(state: GameState): Vec | null {
           }, timeoutMs);
         });
         
-        // Run path planning
-        plannedPath = planPath(state, car.pos, car.vel, racingLine, 0, 3, difficulty);
+        // PHASE 1: Disable complex path planning for now - focus on fixing basic move selection
+        console.log(`📝 Phase 1: Using simplified scoring system for ${difficulty} AI`);
+        plannedPath = null; // Temporarily disable path planning
         
         const endTime = performance.now();
-        console.log(`⏱️ Path planning took ${(endTime - startTime).toFixed(2)}ms`);
+        console.log(`⏱️ Path planning skipped (Phase 1 implementation)`);
         
         if (plannedPath) {
-          console.log(`✅ Path planning succeeded! Move: ${JSON.stringify(plannedPath.acc)}, Score: ${plannedPath.totalScore.toFixed(2)}`);
-          // Enhanced debugging for path planning
-          if (isFeatureEnabled('debugMode')) {
-            console.log(`🤖 AI ${player.name} (${difficulty}) using path planning:`, JSON.stringify({
-              position: car.pos,
-              velocity: car.vel,
-              plannedMove: plannedPath.acc,
-              totalScore: plannedPath.totalScore.toFixed(2),
-              depth: plannedPath.depth
-            }, null, 2));
-          }
-          return plannedPath.acc;
+          // This code is disabled in Phase 1 implementation
+          // console.log(`✅ Path planning succeeded! Move: ${JSON.stringify(plannedPath.acc)}, Score: ${plannedPath.totalScore.toFixed(2)}`);
+          // return plannedPath.acc;
         } else {
-          console.log(`❌ Path planning failed, falling back to single-move evaluation`);
+          console.log(`📝 Using simplified single-move evaluation (Phase 1)`);
         }
       } catch (error) {
         console.warn(`🚫 Error in path planning:`, error);
-        console.log(`❌ Path planning failed with error, falling back to single-move evaluation`);
+        console.log(`❌ Path planning failed with error, falling back to simplified evaluation`);
       }
     } else {
-      console.log(`📝 Using single-move evaluation for ${difficulty} AI`);
+      console.log(`📝 Using simplified single-move evaluation for ${difficulty} AI`);
     }
     
-    // Fallback to enhanced single-move evaluation
+    // Phase 1: Use simplified single-move evaluation for all difficulties
     let best = legal[0]!
     let bestScore = -Infinity
     
-    console.log(`🔢 EVALUATING ${legal.length} POSSIBLE MOVES:`)
+    console.log(`🔢 EVALUATING ${legal.length} POSSIBLE MOVES (SIMPLIFIED):`)
     
     // Add detailed analysis for each move
     const moveAnalysis: Array<{acc: Vec, nextPos: Vec, velAfter: Vec, score: number, analysis: string}> = []
@@ -1462,31 +1307,19 @@ export function chooseAIMove(state: GameState): Vec | null {
       const velAfter = { x: car.vel.x + acc.x, y: car.vel.y + acc.y }
       const targetPoint = findNearestRacingLineTarget(nextPos, racingLine)
       
-      // Log detailed scoring breakdown for zero moves
-      const isZeroAcceleration = acc.x === 0 && acc.y === 0
-      if (isZeroAcceleration && isFeatureEnabled('debugMode')) {
-        console.log(`🔍 ZERO ACCELERATION MOVE DETAILED ANALYSIS:`, {
-          currentPos: car.pos,
-          currentVel: car.vel,
-          nextPos,
-          velAfter,
-          lineDistance: distance(nextPos, targetPoint.pos).toFixed(1),
-          cornerDistance: getDistanceToNextCorner(car.pos, racingLine).toFixed(1),
-          targetPoint: targetPoint.pos
-        })
-      }
+      // Use the new simplified scoring system
+      const score = scoreSimplifiedMove(state, nextPos, velAfter, targetPoint, difficulty)
       
-      const score = scoreAdvancedMove(state, nextPos, velAfter, targetPoint, difficulty)
-      
-      // Check if this is a backward move
+      // Check if this is a backward move for analysis
       const expectedDirection = getExpectedRacingDirection(car.pos)
       const velocityAlignment = velAfter.x * expectedDirection.x + velAfter.y * expectedDirection.y
       const isBackward = velocityAlignment < -0.5
       const futureSpeed = Math.hypot(velAfter.x, velAfter.y)
+      const isZeroAcceleration = acc.x === 0 && acc.y === 0
       
       const analysis = `align=${velocityAlignment.toFixed(2)}, ${isBackward ? 'BACKWARD' : 'FORWARD'}, speed=${futureSpeed.toFixed(1)}${isZeroAcceleration ? ' [ZERO-ACCEL]' : ''}`
       
-      console.log(`  Move ${JSON.stringify(acc)}: pos=${JSON.stringify(nextPos)}, vel=${JSON.stringify(velAfter)}, score=${score.toFixed(1)}, ${analysis}`) 
+      console.log(`  Move ${JSON.stringify(acc)}: score=${score.toFixed(1)}, ${analysis}`) 
       
       moveAnalysis.push({ acc, nextPos, velAfter, score, analysis })
       
