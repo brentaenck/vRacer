@@ -346,7 +346,7 @@
       
       <!-- New Game Dialog Modal -->
       <div id="newGameModal" class="modal-overlay" role="dialog" aria-labelledby="new-game-title" aria-hidden="true">
-        <div class="modal-content">
+        <div class="modal-content new-game-modal">
           <header class="modal-header">
             <h2 id="new-game-title">🏁 New Game Setup</h2>
             <button id="closeNewGameBtn" class="btn-close" aria-label="Close new game dialog">
@@ -354,157 +354,190 @@
             </button>
           </header>
           
-          <div class="modal-body">
-            <section class="config-section">
-              <h3>🏁 Race Settings</h3>
-              <div class="config-group">
-                <label class="property-label">
-                  Number of Players:
-                  <select id="playerCount" class="property-select">
-                    <option value="1">1 Player</option>
-                    <option value="2" selected>2 Players</option>
-                    <option value="3">3 Players</option>
-                    <option value="4">4 Players</option>
-                  </select>
-                </label>
-                <label class="property-label">
-                  Race Length:
-                  <select id="lapCount" class="property-select">
-                    <option value="1">1 Lap (Sprint)</option>
-                    <option value="2">2 Laps (Quick)</option>
-                    <option value="3" selected>3 Laps (Standard)</option>
-                    <option value="5">5 Laps (Extended)</option>
-                    <option value="10">10 Laps (Endurance)</option>
-                  </select>
-                </label>
-              </div>
-            </section>
+          <div class="modal-body split-panel-body">
+            <!-- Left Panel: Race Settings -->
+            <div class="race-settings-panel">
+              <section class="settings-section">
+                <h3 class="section-title">🏁 Race Settings</h3>
+                
+                <div class="settings-group">
+                  <label class="setting-item">
+                    <span class="setting-label">👥 Players</span>
+                    <select id="playerCount" class="setting-select">
+                      <option value="1">1 Player</option>
+                      <option value="2" selected>2 Players</option>
+                      <option value="3">3 Players</option>
+                      <option value="4">4 Players</option>
+                    </select>
+                  </label>
+                  
+                  <label class="setting-item">
+                    <span class="setting-label">🏁 Laps</span>
+                    <select id="lapCount" class="setting-select">
+                      <option value="1">1 Lap (Sprint)</option>
+                      <option value="2">2 Laps (Quick)</option>
+                      <option value="3" selected>3 Laps (Standard)</option>
+                      <option value="5">5 Laps (Extended)</option>
+                      <option value="10">10 Laps (Endurance)</option>
+                    </select>
+                  </label>
+                </div>
+              </section>
+              
+              <section class="quick-setup-section">
+                <h3 class="section-title">⚡ Quick Setup</h3>
+                <div class="preset-buttons">
+                  <button type="button" class="preset-btn" data-preset="solo">
+                    <span class="preset-icon">🎯</span>
+                    <span class="preset-name">Solo Practice</span>
+                    <span class="preset-desc">1 Human + AI</span>
+                  </button>
+                  <button type="button" class="preset-btn" data-preset="local">
+                    <span class="preset-icon">👥</span>
+                    <span class="preset-name">Local Multi</span>
+                    <span class="preset-desc">2-4 Humans</span>
+                  </button>
+                  <button type="button" class="preset-btn" data-preset="ai-challenge">
+                    <span class="preset-icon">🤖</span>
+                    <span class="preset-name">AI Challenge</span>
+                    <span class="preset-desc">1 Human + 3 AI</span>
+                  </button>
+                </div>
+              </section>
+              
+              <section class="race-preview-section">
+                <h3 class="section-title">📊 Race Preview</h3>
+                <div class="preview-stats">
+                  <div class="preview-stat">
+                    <span class="stat-value" id="humanCount">2</span>
+                    <span class="stat-label">Humans</span>
+                  </div>
+                  <div class="preview-stat">
+                    <span class="stat-value" id="aiCount">0</span>
+                    <span class="stat-label">AI Players</span>
+                  </div>
+                  <div class="preview-stat">
+                    <span class="stat-value" id="totalLaps">3</span>
+                    <span class="stat-label">Laps</span>
+                  </div>
+                </div>
+              </section>
+            </div>
             
-            <section class="config-section">
-              <h3>🎮 Player Setup</h3>
-              <div id="playerRows" class="player-rows">
-                <!-- Player 1 -->
-                <div class="player-row">
-                  <div class="player-config">
-                    <label class="property-label">
-                      Player 1 Name:
-                      <input type="text" class="player-name property-input" value="Player 1" placeholder="Enter name...">
-                    </label>
-                    <label class="config-toggle player-ai-toggle">
-                      <input type="checkbox" class="player-ai">
-                      <span class="toggle-slider small"></span>
-                      <div class="toggle-info">
-                        <span class="toggle-label">AI Player</span>
-                        <span class="toggle-desc">Computer controlled</span>
-                      </div>
-                    </label>
-                    <div class="player-ai-settings" style="display: none;">
-                      <label class="property-label">
-                        AI Difficulty:
-                        <select class="player-ai-diff property-select">
-                          <option value="easy">Easy</option>
-                          <option value="medium" selected>Medium</option>
-                          <option value="hard">Hard</option>
-                        </select>
-                      </label>
-                    </div>
-                  </div>
-                </div>
+            <!-- Right Panel: Player Setup -->
+            <div class="player-setup-panel">
+              <section class="players-section">
+                <h3 class="section-title">🎮 Player Setup</h3>
                 
-                <!-- Player 2 -->
-                <div class="player-row">
-                  <div class="player-config">
-                    <label class="property-label">
-                      Player 2 Name:
-                      <input type="text" class="player-name property-input" value="Player 2" placeholder="Enter name...">
-                    </label>
-                    <label class="config-toggle player-ai-toggle">
-                      <input type="checkbox" class="player-ai">
-                      <span class="toggle-slider small"></span>
-                      <div class="toggle-info">
-                        <span class="toggle-label">AI Player</span>
-                        <span class="toggle-desc">Computer controlled</span>
-                      </div>
-                    </label>
-                    <div class="player-ai-settings" style="display: none;">
-                      <label class="property-label">
-                        AI Difficulty:
-                        <select class="player-ai-diff property-select">
+                <div id="playerGrid" class="player-grid">
+                  <!-- Player 1 -->
+                  <div class="player-card" data-player="1">
+                    <div class="player-card-header">
+                      <div class="player-color" data-color="#ff4444"></div>
+                      <span class="player-number">Player 1</span>
+                    </div>
+                    <div class="player-card-body">
+                      <input type="text" class="player-name" value="Player 1" placeholder="Enter name...">
+                      <div class="player-ai-controls">
+                        <label class="ai-toggle">
+                          <input type="checkbox" class="player-ai">
+                          <span class="ai-toggle-slider"></span>
+                          <span class="ai-toggle-label">AI</span>
+                        </label>
+                        <select class="player-ai-diff" style="display: none;">
                           <option value="easy">Easy</option>
                           <option value="medium" selected>Medium</option>
                           <option value="hard">Hard</option>
                         </select>
-                      </label>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <!-- Player 3 -->
-                <div class="player-row" style="display: none;">
-                  <div class="player-config">
-                    <label class="property-label">
-                      Player 3 Name:
-                      <input type="text" class="player-name property-input" value="Player 3" placeholder="Enter name...">
-                    </label>
-                    <label class="config-toggle player-ai-toggle">
-                      <input type="checkbox" class="player-ai">
-                      <span class="toggle-slider small"></span>
-                      <div class="toggle-info">
-                        <span class="toggle-label">AI Player</span>
-                        <span class="toggle-desc">Computer controlled</span>
-                      </div>
-                    </label>
-                    <div class="player-ai-settings" style="display: none;">
-                      <label class="property-label">
-                        AI Difficulty:
-                        <select class="player-ai-diff property-select">
+                  
+                  <!-- Player 2 -->
+                  <div class="player-card" data-player="2">
+                    <div class="player-card-header">
+                      <div class="player-color" data-color="#44ff44"></div>
+                      <span class="player-number">Player 2</span>
+                    </div>
+                    <div class="player-card-body">
+                      <input type="text" class="player-name" value="Player 2" placeholder="Enter name...">
+                      <div class="player-ai-controls">
+                        <label class="ai-toggle">
+                          <input type="checkbox" class="player-ai">
+                          <span class="ai-toggle-slider"></span>
+                          <span class="ai-toggle-label">AI</span>
+                        </label>
+                        <select class="player-ai-diff" style="display: none;">
                           <option value="easy">Easy</option>
                           <option value="medium" selected>Medium</option>
                           <option value="hard">Hard</option>
                         </select>
-                      </label>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <!-- Player 4 -->
-                <div class="player-row" style="display: none;">
-                  <div class="player-config">
-                    <label class="property-label">
-                      Player 4 Name:
-                      <input type="text" class="player-name property-input" value="Player 4" placeholder="Enter name...">
-                    </label>
-                    <label class="config-toggle player-ai-toggle">
-                      <input type="checkbox" class="player-ai">
-                      <span class="toggle-slider small"></span>
-                      <div class="toggle-info">
-                        <span class="toggle-label">AI Player</span>
-                        <span class="toggle-desc">Computer controlled</span>
-                      </div>
-                    </label>
-                    <div class="player-ai-settings" style="display: none;">
-                      <label class="property-label">
-                        AI Difficulty:
-                        <select class="player-ai-diff property-select">
+                  
+                  <!-- Player 3 -->
+                  <div class="player-card" data-player="3" style="display: none;">
+                    <div class="player-card-header">
+                      <div class="player-color" data-color="#4488ff"></div>
+                      <span class="player-number">Player 3</span>
+                    </div>
+                    <div class="player-card-body">
+                      <input type="text" class="player-name" value="Player 3" placeholder="Enter name...">
+                      <div class="player-ai-controls">
+                        <label class="ai-toggle">
+                          <input type="checkbox" class="player-ai">
+                          <span class="ai-toggle-slider"></span>
+                          <span class="ai-toggle-label">AI</span>
+                        </label>
+                        <select class="player-ai-diff" style="display: none;">
                           <option value="easy">Easy</option>
                           <option value="medium" selected>Medium</option>
                           <option value="hard">Hard</option>
                         </select>
-                      </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Player 4 -->
+                  <div class="player-card" data-player="4" style="display: none;">
+                    <div class="player-card-header">
+                      <div class="player-color" data-color="#ffcc00"></div>
+                      <span class="player-number">Player 4</span>
+                    </div>
+                    <div class="player-card-body">
+                      <input type="text" class="player-name" value="Player 4" placeholder="Enter name...">
+                      <div class="player-ai-controls">
+                        <label class="ai-toggle">
+                          <input type="checkbox" class="player-ai">
+                          <span class="ai-toggle-slider"></span>
+                          <span class="ai-toggle-label">AI</span>
+                        </label>
+                        <select class="player-ai-diff" style="display: none;">
+                          <option value="easy">Easy</option>
+                          <option value="medium" selected>Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
           </div>
           
-          <footer class="modal-footer">
-            <div class="modal-actions">
+          <footer class="modal-footer enhanced-footer">
+            <div class="footer-status">
+              <span id="raceStatus">Ready to race! 2 players, 3 laps</span>
+            </div>
+            <div class="footer-actions">
+              <button id="randomSetupBtn" class="btn-secondary" title="Generate random player setup">
+                🎲 Randomize
+              </button>
               <button id="startNewGameBtn" class="btn-action btn-primary">
-                🏁 Start Game
+                🏁 Start Race
               </button>
             </div>
-            <p class="modal-hint">Welcome to vRacer! Configure your players and click "Start Game" to begin racing</p>
           </footer>
         </div>
       </div>

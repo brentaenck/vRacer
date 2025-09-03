@@ -22,7 +22,14 @@ const closeNewGameBtn = document.getElementById('closeNewGameBtn') as HTMLButton
 const startNewGameBtn = document.getElementById('startNewGameBtn') as HTMLButtonElement
 const playerCountSelect = document.getElementById('playerCount') as HTMLSelectElement
 const lapCountSelect = document.getElementById('lapCount') as HTMLSelectElement
-const playerRows = document.getElementById('playerRows') as HTMLDivElement
+const playerGrid = document.getElementById('playerGrid') as HTMLDivElement
+
+// Enhanced New Game modal elements
+const humanCount = document.getElementById('humanCount') as HTMLSpanElement
+const aiCount = document.getElementById('aiCount') as HTMLSpanElement
+const totalLaps = document.getElementById('totalLaps') as HTMLSpanElement
+const raceStatus = document.getElementById('raceStatus') as HTMLSpanElement
+const randomSetupBtn = document.getElementById('randomSetupBtn') as HTMLButtonElement
 
 // Control elements
 const resetBtn = document.getElementById('resetBtn') as HTMLButtonElement
@@ -299,9 +306,9 @@ resetBtn.addEventListener('click', () => {
 })
 
 function openNewGameModal() {
-  // Initialize visibility based on count
-  const count = parseInt(playerCountSelect.value, 10)
-  updatePlayerRowVisibility(count)
+  // Initialize visibility and stats based on current selections
+  updatePlayerCardVisibility()
+  updateRacePreview()
   
   newGameModal.classList.add('show')
   newGameModal.setAttribute('aria-hidden', 'false')
@@ -313,45 +320,228 @@ function closeNewGameModal() {
   newGameModal.setAttribute('aria-hidden', 'true')
 }
 
-function updatePlayerRowVisibility(count: number) {
-  const rows = playerRows.querySelectorAll('.player-row')
-  rows.forEach((row, idx) => {
-    (row as HTMLElement).style.display = idx < count ? 'block' : 'none'
+function updatePlayerCardVisibility() {
+  const count = parseInt(playerCountSelect.value, 10)
+  const playerCards = playerGrid.querySelectorAll('.player-card')
+  
+  playerCards.forEach((card, idx) => {
+    (card as HTMLElement).style.display = idx < count ? 'flex' : 'none'
   })
 }
 
-playerCountSelect?.addEventListener('change', () => {
+function updateRacePreview() {
   const count = parseInt(playerCountSelect.value, 10)
-  updatePlayerRowVisibility(count)
+  const laps = parseInt(lapCountSelect.value, 10)
+  const playerCards = Array.from(playerGrid.querySelectorAll('.player-card')).slice(0, count)
+  
+  let humans = 0
+  let ais = 0
+  
+  playerCards.forEach(card => {
+    const aiCheckbox = card.querySelector('.player-ai') as HTMLInputElement
+    if (aiCheckbox?.checked) {
+      ais++
+    } else {
+      humans++
+    }
+  })
+  
+  // Update preview stats
+  if (humanCount) humanCount.textContent = humans.toString()
+  if (aiCount) aiCount.textContent = ais.toString()
+  if (totalLaps) totalLaps.textContent = laps.toString()
+  
+  // Update race status
+  const totalPlayers = humans + ais
+  const playerText = totalPlayers === 1 ? 'player' : 'players'
+  const lapText = laps === 1 ? 'lap' : 'laps'
+  if (raceStatus) {
+    raceStatus.textContent = `Ready to race! ${totalPlayers} ${playerText}, ${laps} ${lapText}`
+  }
+}
+
+// Enhanced modal event listeners
+playerCountSelect?.addEventListener('change', () => {
+  updatePlayerCardVisibility()
+  updateRacePreview()
 })
 
-// Add AI toggle functionality for each player row
+lapCountSelect?.addEventListener('change', () => {
+  updateRacePreview()
+})
+
+// Setup AI toggle functionality for each player card
+function setupPlayerCardListeners() {
+  const playerCards = playerGrid.querySelectorAll('.player-card')
+  
+  playerCards.forEach(card => {
+    const aiToggle = card.querySelector('.player-ai') as HTMLInputElement
+    const aiDiffSelect = card.querySelector('.player-ai-diff') as HTMLSelectElement
+    
+    if (aiToggle && aiDiffSelect) {
+      // Show/hide AI difficulty dropdown based on AI toggle
+      const updateAIDiffVisibility = () => {
+        aiDiffSelect.style.display = aiToggle.checked ? 'block' : 'none'
+        updateRacePreview()
+      }
+      
+      aiToggle.addEventListener('change', updateAIDiffVisibility)
+      updateAIDiffVisibility() // Initialize state
+    }
+  })
+}
+
+// Enhanced preset functionality
+function applyPreset(presetType: string) {
+  const playerCards = Array.from(playerGrid.querySelectorAll('.player-card'))
+  
+  switch (presetType) {
+    case 'solo':
+      // 1 Human + 1 AI
+      playerCountSelect.value = '2'
+      updatePlayerCardVisibility()
+      
+      // Player 1: Human
+      if (playerCards[0]) {
+        const nameInput = playerCards[0].querySelector('.player-name') as HTMLInputElement
+        const aiToggle = playerCards[0].querySelector('.player-ai') as HTMLInputElement
+        nameInput.value = 'Player 1'
+        aiToggle.checked = false
+      }
+      
+      // Player 2: AI
+      if (playerCards[1]) {
+        const nameInput = playerCards[1].querySelector('.player-name') as HTMLInputElement
+        const aiToggle = playerCards[1].querySelector('.player-ai') as HTMLInputElement
+        nameInput.value = 'AI Opponent'
+        aiToggle.checked = true
+      }
+      break
+      
+    case 'local':
+      // 2-4 Human players
+      playerCountSelect.value = '2'
+      updatePlayerCardVisibility()
+      
+      playerCards.slice(0, 2).forEach((card, idx) => {
+        const nameInput = card.querySelector('.player-name') as HTMLInputElement
+        const aiToggle = card.querySelector('.player-ai') as HTMLInputElement
+        nameInput.value = `Player ${idx + 1}`
+        aiToggle.checked = false
+      })
+      break
+      
+    case 'ai-challenge':
+      // 1 Human + 3 AI
+      playerCountSelect.value = '4'
+      updatePlayerCardVisibility()
+      
+      // Player 1: Human
+      if (playerCards[0]) {
+        const nameInput = playerCards[0].querySelector('.player-name') as HTMLInputElement
+        const aiToggle = playerCards[0].querySelector('.player-ai') as HTMLInputElement
+        nameInput.value = 'Player 1'
+        aiToggle.checked = false
+      }
+      
+      // Players 2-4: AI
+      playerCards.slice(1, 4).forEach((card, idx) => {
+        const nameInput = card.querySelector('.player-name') as HTMLInputElement
+        const aiToggle = card.querySelector('.player-ai') as HTMLInputElement
+        const diffSelect = card.querySelector('.player-ai-diff') as HTMLSelectElement
+        nameInput.value = `AI ${idx + 1}`
+        aiToggle.checked = true
+        
+        // Vary AI difficulty
+        const difficulties = ['easy', 'medium', 'hard']
+        diffSelect.value = difficulties[idx] || 'medium'
+      })
+      break
+  }
+  
+  // Update preview and AI toggles after applying preset
+  setupPlayerCardListeners()
+  updateRacePreview()
+}
+
+function randomizeSetup() {
+  const playerCards = Array.from(playerGrid.querySelectorAll('.player-card'))
+  const count = parseInt(playerCountSelect.value, 10)
+  const names = ['Alex', 'Sam', 'Jordan', 'Casey', 'Taylor', 'Morgan', 'Riley', 'Cameron']
+  const aiNames = ['HAL 9000', 'Deep Blue', 'Watson', 'AlphaGo', 'Skynet', 'ARIA', 'Nova', 'Zephyr']
+  
+  playerCards.slice(0, count).forEach((card, idx) => {
+    const nameInput = card.querySelector('.player-name') as HTMLInputElement
+    const aiToggle = card.querySelector('.player-ai') as HTMLInputElement
+    const diffSelect = card.querySelector('.player-ai-diff') as HTMLSelectElement
+    
+    // Randomly decide if AI (30% chance)
+    const isAI = Math.random() < 0.3
+    aiToggle.checked = isAI
+    
+    if (isAI) {
+      // Pick random AI name and difficulty
+      const randomAIName = aiNames[Math.floor(Math.random() * aiNames.length)]
+      nameInput.value = randomAIName || 'AI Player'
+      const difficulties = ['easy', 'medium', 'hard']
+      const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)]
+      diffSelect.value = randomDifficulty || 'medium'
+    } else {
+      // Pick random human name
+      const randomName = names[Math.floor(Math.random() * names.length)]
+      nameInput.value = randomName || `Player ${idx + 1}`
+    }
+  })
+  
+  // Randomize lap count too
+  const lapOptions = ['1', '2', '3', '5', '10']
+  const randomLapOption = lapOptions[Math.floor(Math.random() * lapOptions.length)]
+  lapCountSelect.value = randomLapOption || '3'
+  
+  // Update everything
+  setupPlayerCardListeners()
+  updateRacePreview()
+}
+
+// Initialize player card listeners when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  const playerAiToggleInputs = document.querySelectorAll('.player-ai')
-  playerAiToggleInputs.forEach(toggle => {
-    toggle.addEventListener('change', (e) => {
-      const target = e.target as HTMLInputElement
-      const playerRow = target.closest('.player-row')
-      const aiSettings = playerRow?.querySelector('.player-ai-settings') as HTMLElement
-      if (aiSettings) {
-        aiSettings.style.display = target.checked ? 'block' : 'none'
+  setupPlayerCardListeners()
+  
+  // Setup preset buttons
+  const presetButtons = document.querySelectorAll('.preset-btn')
+  presetButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget as HTMLButtonElement
+      const preset = target.dataset.preset
+      if (preset) {
+        // Remove active state from all presets
+        presetButtons.forEach(b => b.classList.remove('active'))
+        // Add active state to clicked preset
+        target.classList.add('active')
+        // Apply preset
+        applyPreset(preset)
       }
     })
   })
+  
+  // Setup random button
+  if (randomSetupBtn) {
+    randomSetupBtn.addEventListener('click', randomizeSetup)
+  }
 })
 
 closeNewGameBtn?.addEventListener('click', closeNewGameModal)
 
 startNewGameBtn?.addEventListener('click', () => {
-  // Build players config from form
+  // Build players config from enhanced form
   const count = parseInt(playerCountSelect.value, 10)
   const lapCount = parseInt(lapCountSelect.value, 10)
-  const rows = Array.from(playerRows.querySelectorAll('.player-row')).slice(0, count)
-  const players = rows.map((row, idx) => {
-    const nameInput = row.querySelector('.player-name') as HTMLInputElement
-    const aiCheckbox = row.querySelector('.player-ai') as HTMLInputElement
-    const diffSelect = row.querySelector('.player-ai-diff') as HTMLSelectElement
-    const isAI = aiCheckbox.checked
+  const playerCards = Array.from(playerGrid.querySelectorAll('.player-card')).slice(0, count)
+  const players = playerCards.map((card, idx) => {
+    const nameInput = card.querySelector('.player-name') as HTMLInputElement
+    const aiCheckbox = card.querySelector('.player-ai') as HTMLInputElement
+    const diffSelect = card.querySelector('.player-ai-diff') as HTMLSelectElement
+    const isAI = aiCheckbox?.checked || false
     return {
       name: (nameInput?.value || `Player ${idx + 1}`).trim(),
       isLocal: !isAI,
