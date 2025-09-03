@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [2.2.0] - 2025-09-03
+
+### 🤖 Added
+- **Major AI Player improvements (Phase 1 implementation)**
+  - Backward movement prevention with aggressive penalty system (-1000 penalty)
+  - Enhanced speed management with competitive target speeds (3-5 units for medium AI)
+  - Predictive crash prevention system to avoid illegal future positions (-2000 penalty)
+  - Racing line attraction mechanism to pull AI back to optimal racing path
+  - Improved start position handling to prevent AI from getting stuck
+  - Corner approach safety penalties for safer cornering behavior
+  - Comprehensive debug logging for AI decision analysis
+
+### 🎯 Improved
+- **Simplified AI move scoring system** reduced to 6 core factors:
+  - Progress toward racing line waypoints
+  - Speed management and acceleration
+  - Safety and crash avoidance
+  - Racing line adherence
+  - Direction alignment with track flow
+  - Start area handling
+
+### 🚀 Performance
+- AI now successfully completes laps and passes checkpoints
+- Eliminated AI getting stuck at start positions
+- AI achieves competitive racing speeds while maintaining safety
+- Effective track navigation with proper racing line following
+
+### 🔧 Technical
+- Enhanced waypoint targeting with lookahead system
+- Dynamic target speed calculation based on AI difficulty
+- Multi-factor move evaluation with weighted scoring
+- Emergency mode handling for extreme situations
+
 ## [1.1.0] - 2025-08-27
 
 ### Added
