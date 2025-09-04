@@ -2,6 +2,8 @@
 
 This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
+**🔥 CRITICAL FOR AI ASSISTANTS**: This repository has **automated validation** via git hooks and structured workflows. Always run `npm run ci` before committing and follow conventional commit formats. Use `npm run workflow-help` for reminders.
+
 ## Project Overview
 
 vRacer is a canvas-based implementation of the vector race game (Graph Paper Vector Race). It's a turn-based racing game where players control velocity and acceleration on a grid-based track, with collision detection and physics.
@@ -13,6 +15,8 @@ This project uses **Trunk-Based Development** with **Feature Flags** for rapid i
 - No feature branches - use feature flags in `src/features.ts` instead
 - Small, frequent commits to maintain always-working state
 - Features start disabled and are enabled when ready
+- **Automated validation** via git hooks ensures code quality
+- **Structured templates** for consistent issues and PRs
 
 ## Essential Commands
 
@@ -30,6 +34,10 @@ npm run preview        # Preview production build
 
 # Quick development flow
 npm run quick-commit "message"  # Equivalent to: git add . && git commit -m
+
+# Workflow helpers
+npm run workflow-help    # Show workflow reminders
+npm run pre-release      # Release preparation checklist  
 ```
 
 ### Node.js Setup
@@ -212,28 +220,89 @@ npm run dev
 # Make changes, test in browser
 # Toggle features in src/features.ts as needed
 
-# Before each commit (critical step)
-npm run ci
-
-# Commit frequently (multiple times per day)
+# Commit frequently (validation is automatic)
 git add .
-git commit -m "feat: add collision detection for cars"
-git push origin main
+git commit -m "feat: add collision detection for cars"  # pre-commit hook runs npm run ci
+git push origin main                                      # pre-push hook validates build
 ```
+
+**🤖 AI Assistant Note**: Git hooks automatically run validation, but it's still good practice to run `npm run ci` manually during development to catch issues early.
+
+## 🔄 AUTOMATED WORKFLOW SYSTEM
+
+### ⚡ Git Hooks (Automatic Quality Control)
+
+The repository uses custom git hooks to prevent common issues:
+
+**Pre-commit Hook** (`.githooks/pre-commit`)
+- Automatically runs `npm run ci` before every commit
+- Blocks commits if TypeScript errors or build failures exist
+- Bypass only in emergencies: `git commit --no-verify`
+
+**Pre-push Hook** (`.githooks/pre-push`)
+- Runs full build validation before pushing to remote
+- Ensures production builds work correctly
+- Prevents pushing broken code to main branch
+
+**Commit Message Hook** (`.githooks/commit-msg`)
+- Validates conventional commit format: `type(scope): description`
+- Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `release`
+- Example: `feat(ai): improve collision detection`
+- Provides helpful format examples on validation failure
+
+**Setup**: Hooks are automatically configured via `git config core.hooksPath .githooks`
+
+### 📋 GitHub Templates
+
+**Issue Templates** (`.github/ISSUE_TEMPLATE/`)
+- **Bug Reports**: Structured form with browser/game mode details
+- **Feature Requests**: Categorized with priority and implementation help options
+- **Configuration**: Disables blank issues, redirects to discussions
+
+**Pull Request Template** (`.github/PULL_REQUEST_TEMPLATE.md`)
+- Comprehensive testing checklist
+- Feature flag validation reminders
+- Release process integration
+- Links to `RELEASE_CHECKLIST.md` for version changes
+
+### 🚀 Release Automation
+
+**Release Commands**:
+```bash
+npm run pre-release     # Shows checklist + validates everything
+npm run release-check   # Validates release readiness
+```
+
+**Release Process** (see `RELEASE_CHECKLIST.md`):
+1. Run `npm run pre-release` for validation
+2. Update version in `package.json` (semantic versioning)
+3. Update `CHANGELOG.md` with changes
+4. Commit with: `git commit -m "release: prepare vX.X.X - description"`
+5. Create annotated tag: `git tag -a vX.X.X -m "Release notes"`
+6. Push with tags: `git push --follow-tags`
+7. Create GitHub Release with `dist/` assets
 
 ### Testing and Validation
 
-**Pre-commit Requirements:**
-- `npm run ci` must pass (TypeScript + build)
+**Automated Validation** (enforced by git hooks):
+- `npm run ci` must pass (TypeScript + build) - **blocked by pre-commit hook**
+- Production build must work - **blocked by pre-push hook**  
+- Commit messages must follow format - **blocked by commit-msg hook**
+
+**Manual Testing Requirements:**
 - Game loads without console errors
 - Core functionality remains working
 - New features work when enabled
-
-**Manual Testing:**
 - Mouse movement selection works
 - Keyboard shortcuts (R, G, C, H) work
 - Debug info appears when `debugMode: true`
 - Game state persists correctly through moves
+
+**Validation Override** (emergency only):
+```bash
+git commit --no-verify   # Bypasses pre-commit hook
+git push --no-verify     # Bypasses pre-push hook
+```
 
 ## Feature Flag System
 
@@ -312,6 +381,17 @@ Enable `debugMode: true` in `src/features.ts` to get:
 
 ## References
 
+### 📚 Process Documentation
+- **[WORKFLOW.md](./WORKFLOW.md)** - 🔥 **Quick reference (START HERE)**
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Complete development methodology guide
-- **[WORKFLOW.md](./WORKFLOW.md)** - Quick reference for daily development
+- **[RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md)** - Versioning and release planning
+- **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Step-by-step release checklist
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
 - **[README.md](./README.md)** - User-facing documentation and game rules
+
+### 🛠️ Automation Files
+- **`.githooks/`** - Pre-commit, pre-push, and commit-msg validation
+- **`.github/ISSUE_TEMPLATE/`** - Structured bug reports and feature requests
+- **`.github/PULL_REQUEST_TEMPLATE.md`** - PR checklist and validation
+- **`package.json`** - Workflow helper scripts (workflow-help, pre-release)
+- **`.gitmessage`** - Commit message template with examples
