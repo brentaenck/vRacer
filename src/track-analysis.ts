@@ -89,8 +89,8 @@ export function analyzeTrack(
   
   // For our rectangular track, determine optimal racing direction
   // Start line is on the left side, cars start below it
-  // Most natural flow: CLOCKWISE (start → down → right → up → left → finish)
-  const racingDirection = 'clockwise' as const
+  // Most natural flow: COUNTER-CLOCKWISE (start → down → right → up → left → finish)
+  const racingDirection = 'counter-clockwise' as const
   
   // Define safe racing zones (areas outside the inner boundary)
   const safeZones: SafeZone[] = [
@@ -102,7 +102,7 @@ export function analyzeTrack(
         minY: trackBounds.minY + 1, 
         maxY: trackBounds.maxY - 1 
       },
-      direction: { x: 0.3, y: 1 } // Mainly downward for clockwise
+      direction: { x: 0.3, y: 1 } // Mainly downward for counter-clockwise
     },
     {
       name: 'bottom', 
@@ -112,7 +112,7 @@ export function analyzeTrack(
         minY: innerBounds.maxY + 1, 
         maxY: trackBounds.maxY - 1 
       },
-      direction: { x: 1, y: -0.3 } // Mainly rightward for clockwise
+      direction: { x: 1, y: -0.3 } // Mainly rightward for counter-clockwise
     },
     {
       name: 'right',
@@ -122,7 +122,7 @@ export function analyzeTrack(
         minY: trackBounds.minY + 1, 
         maxY: trackBounds.maxY - 1 
       },
-      direction: { x: -0.3, y: -1 } // Mainly upward for clockwise
+      direction: { x: -0.3, y: -1 } // Mainly upward for counter-clockwise
     },
     {
       name: 'top',
@@ -132,11 +132,11 @@ export function analyzeTrack(
         minY: trackBounds.minY + 1, 
         maxY: innerBounds.minY - 1 
       },
-      direction: { x: -1, y: 0.3 } // Mainly leftward for clockwise
+      direction: { x: -1, y: 0.3 } // Mainly leftward for counter-clockwise
     }
   ]
   
-  // Generate optimal racing line waypoints for CLOCKWISE racing
+  // Generate optimal racing line waypoints for COUNTER-CLOCKWISE racing
   // Track bounds: outer (2,2)-(48,33), inner (12,10)-(38,25)
   // This creates a smooth, wide racing line that maximizes speed and minimizes sharp turns
   const optimalRacingLine: RacingLinePoint[] = [
@@ -180,10 +180,10 @@ export function analyzeTrack(
     { pos: { x: 7, y: 16 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'left' }
   ]
   
-  // Generate lap validation checkpoints for CLOCKWISE racing
+  // Generate lap validation checkpoints for COUNTER-CLOCKWISE racing
   // These should be placed to detect progression around the track
   const lapValidationCheckpoints: Segment[] = [
-    // Checkpoint 0: Bottom side (first after start going clockwise)
+    // Checkpoint 0: Bottom side (first after start going counter-clockwise)
     { a: { x: 25, y: trackBounds.maxY }, b: { x: 25, y: innerBounds.maxY } },
     
     // Checkpoint 1: Right side (after turning from bottom)
@@ -226,26 +226,26 @@ export function getExpectedRacingDirection(pos: Vec, analysis: TrackAnalysis): V
   const centerX = (analysis.trackBounds.minX + analysis.trackBounds.maxX) / 2
   const centerY = (analysis.trackBounds.minY + analysis.trackBounds.maxY) / 2
   
-  if (analysis.racingDirection === 'clockwise') {
+  if (analysis.racingDirection === 'counter-clockwise') {
     if (pos.x < centerX) {
       return { x: 0.3, y: 1 } // Left side: go down
     } else if (pos.x > centerX) {
       return { x: -0.3, y: -1 } // Right side: go up
     } else if (pos.y < centerY) {
-      return { x: 1, y: -0.3 } // Top: go right
+      return { x: -1, y: 0.3 } // Top: go left
     } else {
-      return { x: -1, y: 0.3 } // Bottom: go left
+      return { x: 1, y: -0.3 } // Bottom: go right
     }
   } else {
-    // Counter-clockwise directions (if needed)
+    // Clockwise directions (if needed)
     if (pos.x < centerX) {
       return { x: 0.3, y: -1 } // Left side: go up
     } else if (pos.x > centerX) {
       return { x: -0.3, y: 1 } // Right side: go down
     } else if (pos.y < centerY) {
-      return { x: -1, y: 0.3 } // Top: go left
+      return { x: 1, y: -0.3 } // Top: go right
     } else {
-      return { x: 1, y: -0.3 } // Bottom: go right
+      return { x: -1, y: 0.3 } // Bottom: go left
     }
   }
 }
@@ -264,15 +264,15 @@ export function determineCrossingDirection(
   const fromSide = fromPos.y < lineY ? 'top' : 'bottom'
   const toSide = toPos.y < lineY ? 'top' : 'bottom'
   
-  if (analysis.racingDirection === 'clockwise') {
-    // For clockwise: cars should approach from above (top) and cross downward (bottom) 
+  if (analysis.racingDirection === 'counter-clockwise') {
+    // For counter-clockwise: cars should approach from above (top) and cross downward (bottom) 
     if (fromSide === 'top' && toSide === 'bottom') {
       return 'forward'
     } else if (fromSide === 'bottom' && toSide === 'top') {
       return 'backward'
     }
   } else {
-    // For counter-clockwise: cars should approach from below (bottom) and cross upward (top)
+    // For clockwise: cars should approach from below (bottom) and cross upward (top)
     if (fromSide === 'bottom' && toSide === 'top') {
       return 'forward'
     } else if (fromSide === 'top' && toSide === 'bottom') {

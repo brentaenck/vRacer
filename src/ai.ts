@@ -318,7 +318,7 @@ function getExpectedRacingDirection(pos: Vec): Vec {
     outer: [],
     inner: [],
     startLine: { a: { x: 0, y: 0 }, b: { x: 0, y: 0 } },
-    racingDirection: 'clockwise',
+    racingDirection: 'counter-clockwise',
     optimalRacingLine: [],
     lapValidationCheckpoints: [],
     safeZones: [
@@ -353,42 +353,42 @@ function getExpectedRacingDirection(pos: Vec): Vec {
 
 // Calculate bonus for targets that are in the racing direction
 function calculateDirectionBonus(currentPos: Vec, targetPos: Vec, isAtStart = false): number {
-  // For CLOCKWISE racing on our rectangular track,
+  // For COUNTER-CLOCKWISE racing on our rectangular track,
   // we want to encourage movement in the right direction
   
   const dx = targetPos.x - currentPos.x
   const dy = targetPos.y - currentPos.y
   
-  // SPECIAL HANDLING: If at start position, heavily favor going DOWN (positive dy) for CLOCKWISE
+  // SPECIAL HANDLING: If at start position, heavily favor going DOWN (positive dy) for COUNTER-CLOCKWISE
   // and strongly penalize horizontal movement until we've moved down enough
   if (isAtStart) {
     // Strong enforcement to move DOWN first (vertical movement)
     if (dy > 1 && Math.abs(dx) <= dy) return 15 // Very strong bonus for going mostly DOWN from start
     if (dy > 0) return 5 // Good bonus for going down
-    if (dy < -1) return -10 // Strong penalty for going UP from start (wrong way for clockwise)
+    if (dy < -1) return -10 // Strong penalty for going UP from start (wrong way for counter-clockwise)
     if (Math.abs(dx) > Math.abs(dy) && currentPos.y < 24) return -8 // Heavy penalty for moving horizontally too early
     if (dx > 0 && currentPos.y >= 24) return 3 // Only allow rightward movement after going down enough
     return 0
   }
   
-  // CLOCKWISE track position logic
+  // COUNTER-CLOCKWISE track position logic
   // Determine which part of the track we're likely on
   if (currentPos.x < 15) {
-    // Left side of track - want to go DOWN (positive y) for clockwise
-    if (dy > 0) return 3 // Going down is good for clockwise
+    // Left side of track - want to go DOWN (positive y) for counter-clockwise
+    if (dy > 0) return 3 // Going down is good for counter-clockwise
     if (dx > 0) return 2 // Going right is okay
   } else if (currentPos.x > 35) {
-    // Right side of track - want to go UP (negative y) for clockwise  
-    if (dy < 0) return 3 // Going up is good for clockwise
+    // Right side of track - want to go UP (negative y) for counter-clockwise  
+    if (dy < 0) return 3 // Going up is good for counter-clockwise
     if (dx < 0) return 2 // Going left is okay
   } else {
     // Top or bottom of track
     if (currentPos.y < 15) {
-      // Top of track - want to go RIGHT (positive x) for clockwise (FIXED)
-      if (dx > 0) return 3
-    } else {
-      // Bottom of track - want to go LEFT (negative x) for clockwise (FIXED)
+      // Top of track - want to go LEFT (negative x) for counter-clockwise (FIXED)
       if (dx < 0) return 3
+    } else {
+      // Bottom of track - want to go RIGHT (positive x) for counter-clockwise (FIXED)
+      if (dx > 0) return 3
     }
   }
   
@@ -397,7 +397,7 @@ function calculateDirectionBonus(currentPos: Vec, targetPos: Vec, isAtStart = fa
 
 // Evaluate how well the velocity aligns with track direction
 function evaluateVelocityAlignment(pos: Vec, vel: Vec): number {
-  // For CLOCKWISE racing, ideal velocity directions based on track position
+  // For COUNTER-CLOCKWISE racing, ideal velocity directions based on track position
   const speed = Math.hypot(vel.x, vel.y)
   if (speed < 0.5) return 0 // Stationary or very slow - no alignment bonus/penalty
   
@@ -407,19 +407,19 @@ function evaluateVelocityAlignment(pos: Vec, vel: Vec): number {
   let idealDirection = { x: 0, y: 0 }
   let alignmentScore = 0
   
-  // Determine ideal direction based on track position for CLOCKWISE racing
+  // Determine ideal direction based on track position for COUNTER-CLOCKWISE racing
   if (pos.x < 15) {
-    // Left side of track - should be moving DOWN (positive y) primarily for clockwise
+    // Left side of track - should be moving DOWN (positive y) primarily for counter-clockwise
     idealDirection = { x: 0.3, y: 1 }
   } else if (pos.x > 35) {
-    // Right side of track - should be moving UP (negative y) primarily for clockwise
+    // Right side of track - should be moving UP (negative y) primarily for counter-clockwise
     idealDirection = { x: -0.3, y: -1 }
   } else if (pos.y < 15) {
-    // Top of track - should be moving RIGHT (positive x) primarily for clockwise (FIXED)
-    idealDirection = { x: 1, y: -0.3 }
-  } else {
-    // Bottom of track - should be moving LEFT (negative x) primarily for clockwise (FIXED)
+    // Top of track - should be moving LEFT (negative x) primarily for counter-clockwise (FIXED)
     idealDirection = { x: -1, y: 0.3 }
+  } else {
+    // Bottom of track - should be moving RIGHT (positive x) primarily for counter-clockwise (FIXED)
+    idealDirection = { x: 1, y: -0.3 }
   }
   
   // Normalize ideal direction
@@ -738,7 +738,7 @@ function scoreSimplifiedMove(
   const isNearStart = currentCar.pos.x >= 3 && currentCar.pos.x <= 12 && currentCar.pos.y >= 18 && currentCar.pos.y <= 28
   
   if (isAtStart || isNearStart) {
-    // CRITICAL: For clockwise racing from start, we must go DOWN (positive Y) first
+    // CRITICAL: For counter-clockwise racing from start, we must go DOWN (positive Y) first
     // This is the fundamental direction requirement for leaving the starting area properly
     
     const distanceFromStartCenter = distance(currentCar.pos, { x: 7, y: 22 })

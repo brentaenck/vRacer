@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [2.2.2] - 2025-09-04
+
+### 🔧 Fixed
+- **Racing Direction Terminology Standardization**
+  - Fixed inconsistent racing direction labels throughout codebase
+  - Standardized all terminology to match actual counter-clockwise implementation
+  - Corrected track-analysis.ts racingDirection from 'clockwise' to 'counter-clockwise'
+  - Fixed directional comments in game.ts and ai.ts to use consistent counter-clockwise terminology
+  - Fixed critical Top/Bottom direction vectors in fallback logic (Top: go left, Bottom: go right)
+  - Updated visual arrow comments to correctly describe counter-clockwise movement
+
+### 🎯 Improved
+- **Code Consistency**: All racing direction logic now uses consistent counter-clockwise terminology
+- **AI Behavior**: AI directional guidance now perfectly matches actual waypoint implementation
+- **Developer Experience**: Eliminated confusing contradictions between comments and implementation
+- **Documentation Accuracy**: All directional descriptions now correctly reflect the racing flow
+
+### 🔧 Technical
+- Updated safe zone direction comments for counter-clockwise racing
+- Fixed getExpectedRacingDirection() fallback logic for Top/Bottom track sections
+- Aligned AI velocity alignment calculations with correct directional flow
+- Ensured lap validation logic matches actual racing direction
+
 ## [2.2.1] - 2025-01-03
 
 ### 🔧 Fixed

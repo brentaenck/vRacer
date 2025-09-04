@@ -431,7 +431,7 @@ export function pathLegal(a: Vec, b: Vec, state: GameState): boolean {
 // Define track checkpoints for lap validation
 // For our rectangular counter-clockwise track, we define 4 checkpoints:
 // Track boundaries: outer (2,2)-(48,33), inner (12,10)-(38,25)
-// Cars start at (7,20) and race counter-clockwise: up → right → down → left → back to start
+// Cars start at (7,20) and race counter-clockwise: down → right → up → left → back to start
 // Natural racing order: Bottom → Right → Top → Left → Finish
 const TRACK_CHECKPOINTS: Segment[] = [
   // Checkpoint 0: Bottom side (first checkpoint after start) - spans vertically across track
@@ -452,7 +452,7 @@ function determineCrossDirection(fromPos: Vec, toPos: Vec, startLine: Segment): 
   // Track layout analysis:
   // - Start line: horizontal at y=18 (from x=2 to x=12)
   // - Cars start at: y=20+ (below the start line)
-  // - Counter-clockwise racing: up → right → down → left → back to start
+  // - Counter-clockwise racing: down → right → up → left → back to start
   // - To complete a lap: cars must approach from above (y < 18) and cross downward (y > 18)
   
   const lineY = startLine.a.y // Start line is horizontal, so both points have same y
@@ -1348,8 +1348,8 @@ function drawDirectionalArrows(ctx: CanvasRenderingContext2D, state: GameState, 
   ctx.strokeStyle = '#bbb'
   ctx.lineWidth = 2
   
-  // Arrow positions around the track showing CLOCKWISE direction (matching AI racing line)
-  // Clockwise path: start → down → right → up → left → back to start
+  // Arrow positions around the track showing COUNTER-CLOCKWISE direction (matching AI racing line)
+  // Counter-clockwise path: start → down → right → up → left → back to start
   const arrows = [
     // Left side near start/finish (going down from start)
     { pos: { x: 7, y: 15 }, angle: Math.PI / 2 }, // ↓
