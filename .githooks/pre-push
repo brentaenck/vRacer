@@ -1,0 +1,28 @@
+#!/bin/bash
+# Pre-push hook for vRacer
+# This hook runs before `git push` to ensure code quality
+
+echo "🚀 Running pre-push validation..."
+
+# Run full CI pipeline (type-check + build)
+echo "⚡ Running TypeScript checks and build..."
+npm run ci
+
+if [ $? -ne 0 ]; then
+    echo "❌ Pre-push validation failed!"
+    echo "Please fix TypeScript errors and build issues before pushing."
+    exit 1
+fi
+
+# Run additional production build test
+echo "🏗️  Testing production build..."
+npm run build > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+    echo "❌ Production build test failed!"
+    echo "Please ensure production build works before pushing."
+    exit 1
+fi
+
+echo "✅ Pre-push validation passed! Ready to push."
+exit 0

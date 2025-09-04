@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# vRacer pre-commit hook
+# Enforces code quality and build validation before commits
+
+set -e  # Exit on any error
+
+echo "🔍 Running pre-commit validation..."
+
+# Check if npm is available
+if ! command -v npm &> /dev/null; then
+    echo "❌ npm is not available. Please install Node.js and npm."
+    exit 1
+fi
+
+# Check if package.json exists
+if [ ! -f "package.json" ]; then
+    echo "❌ package.json not found. Are you in the project root?"
+    exit 1
+fi
+
+# Install dependencies if node_modules doesn't exist
+if [ ! -d "node_modules" ]; then
+    echo "📦 Installing dependencies..."
+    npm install
+fi
+
+# Run CI validation (type-check + build)
+echo "🔧 Running TypeScript validation and build..."
+if ! npm run ci; then
+    echo ""
+    echo "❌ Pre-commit validation failed!"
+    echo "   Fix TypeScript errors and build issues before committing."
+    echo "   Run 'npm run ci' to see detailed errors."
+    exit 1
+fi
+
+echo ""
+echo "✅ Pre-commit validation passed!"
+echo "   TypeScript ✓  Build ✓"
+echo ""
+echo "💡 Remember:"
+echo "   - Use feature flags for new functionality"
+echo "   - Follow trunk-based development (no feature branches)"
+echo "   - Keep commits small and focused"
+echo ""
