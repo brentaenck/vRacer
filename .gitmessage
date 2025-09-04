@@ -1,0 +1,38 @@
+# Commit Message Template
+# 
+# Format: <type>: <description>
+# 
+# Types:
+#   feat:     New feature or capability
+#   fix:      Bug fix
+#   refactor: Code restructure without behavior change
+#   docs:     Documentation changes
+#   chore:    Maintenance tasks
+#   release:  Version preparation and releases
+# 
+# ⚠️  RELEASE CHECKLIST (for release commits):
+# Before creating a release tag:
+# [ ] Updated package.json version (MAJOR.MINOR.PATCH)
+# [ ] Updated CHANGELOG.md with new features/fixes
+# [ ] Ran `npm run ci` (type-check + build)
+# [ ] Tested with `npm run preview`
+# [ ] All feature flags properly set
+# [ ] Core functionality verified
+# 
+# After release tag:
+# [ ] Push with --follow-tags
+# [ ] Create GitHub Release page
+# [ ] Upload dist/ assets to GitHub Release
+# [ ] Verify deployment works
+# 
+# 🚩 FEATURE FLAG REMINDER:
+# New features should:
+# [ ] Start with feature flag disabled
+# [ ] Be developed incrementally with small commits
+# [ ] Be enabled only when fully ready
+# 
+# Examples:
+# feat: add collision detection system
+# fix: resolve velocity calculation edge case
+# release: prepare v2.2.0 - AI improvements
+# feat: enable AI players feature
