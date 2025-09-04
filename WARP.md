@@ -387,7 +387,8 @@ Enable `debugMode: true` in `src/features.ts` to get:
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Complete development methodology guide
 - **[RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md)** - Versioning and release planning
 - **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Step-by-step release checklist
-- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
+- **[RELEASE_NOTES.md](./RELEASE_NOTES.md)** - Detailed release summaries with context and impact analysis
+- **[CHANGELOG.md](./CHANGELOG.md)** - Technical version history and structured changes
 - **[README.md](./README.md)** - User-facing documentation and game rules
 - **[DEBUG_VISUALIZATION.md](./DEBUG_VISUALIZATION.md)** - Debug visualization system guide
 
