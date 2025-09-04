@@ -277,11 +277,12 @@ npm run release-check   # Validates release readiness
 **Release Process** (see `RELEASE_CHECKLIST.md`):
 1. Run `npm run pre-release` for validation
 2. Update version in `package.json` (semantic versioning)
-3. Update `CHANGELOG.md` with changes
-4. Commit with: `git commit -m "release: prepare vX.X.X - description"`
-5. Create annotated tag: `git tag -a vX.X.X -m "Release notes"`
-6. Push with tags: `git push --follow-tags`
-7. Create GitHub Release with `dist/` assets
+3. Update `CHANGELOG.md` with technical changes
+4. Update `RELEASE_NOTES.md` with comprehensive release summary
+5. Commit with: `git commit -m "release: prepare vX.X.X - description"`
+6. Create annotated tag: `git tag -a vX.X.X -m "Release notes"`
+7. Push with tags: `git push --follow-tags`
+8. Create GitHub Release with `dist/` assets
 
 ### Testing and Validation
 

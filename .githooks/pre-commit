@@ -7,6 +7,56 @@ set -e  # Exit on any error
 
 echo "🔍 Running pre-commit validation..."
 
+# Check if this is a release commit
+RELEASE_COMMIT_PATTERN="^release:"
+COMMIT_MSG_FILE=".git/COMMIT_EDITMSG"
+if [ -f "$COMMIT_MSG_FILE" ]; then
+    COMMIT_MSG=$(head -n 1 "$COMMIT_MSG_FILE")
+    if [[ "$COMMIT_MSG" =~ $RELEASE_COMMIT_PATTERN ]]; then
+        echo "🚀 Detected release commit - validating release documentation..."
+        
+        # Check if RELEASE_NOTES.md has been staged for commit
+        if ! git diff --cached --name-only | grep -q "RELEASE_NOTES.md"; then
+            echo ""
+            echo "❌ Release commit validation failed!"
+            echo "   RELEASE_NOTES.md must be updated for release commits."
+            echo "   Please:"
+            echo "   1. Update RELEASE_NOTES.md with comprehensive release summary"
+            echo "   2. Stage the file: git add RELEASE_NOTES.md"
+            echo "   3. Commit again"
+            echo ""
+            echo "   See RELEASE_CHECKLIST.md for detailed requirements."
+            exit 1
+        fi
+        
+        # Check if CHANGELOG.md has been staged for commit
+        if ! git diff --cached --name-only | grep -q "CHANGELOG.md"; then
+            echo ""
+            echo "❌ Release commit validation failed!"
+            echo "   CHANGELOG.md must be updated for release commits."
+            echo "   Please:"
+            echo "   1. Update CHANGELOG.md with technical changes"
+            echo "   2. Stage the file: git add CHANGELOG.md"
+            echo "   3. Commit again"
+            exit 1
+        fi
+        
+        # Check if package.json has been staged (version update)
+        if ! git diff --cached --name-only | grep -q "package.json"; then
+            echo ""
+            echo "❌ Release commit validation failed!"
+            echo "   package.json must be updated for release commits."
+            echo "   Please:"
+            echo "   1. Update version in package.json"
+            echo "   2. Stage the file: git add package.json"
+            echo "   3. Commit again"
+            exit 1
+        fi
+        
+        echo "✅ Release documentation validation passed!"
+    fi
+fi
+
 # Check if npm is available
 if ! command -v npm &> /dev/null; then
     echo "❌ npm is not available. Please install Node.js and npm."

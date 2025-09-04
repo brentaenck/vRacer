@@ -33,6 +33,12 @@
   - [ ] Bug fixes section  
   - [ ] Improvements section
   - [ ] Technical changes section
+- [ ] `RELEASE_NOTES.md` updated with:
+  - [ ] Comprehensive release summary
+  - [ ] Problem analysis (if bug fix)
+  - [ ] Impact on functionality and developer experience
+  - [ ] Quality assurance and validation details
+  - [ ] Future development foundation notes
 - [ ] `README.md` updated if needed (version badges, features list)
 - [ ] Any new documentation created/updated
 
@@ -43,8 +49,8 @@
 ### Version Commit
 - [ ] Commit version updates:
   ```bash
-  git add package.json CHANGELOG.md
-  git commit -m "🚀 Prepare vX.X.X release - [Release Name]"
+  git add package.json CHANGELOG.md RELEASE_NOTES.md
+  git commit -m "release: prepare vX.X.X - [Release Name]"
   ```
 
 ### Tag Creation  

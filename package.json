@@ -12,10 +12,11 @@
     "test": "echo 'Tests pending - add vitest later'",
     "ci": "npm run type-check && npm run build",
     "quick-commit": "git add . && git commit -m",
-    "pre-release": "echo '⚠️  PRE-RELEASE CHECKLIST:' && echo '[ ] Update package.json version' && echo '[ ] Update CHANGELOG.md' && echo '[ ] Run npm run ci' && echo '[ ] Test with npm run preview' && echo '[ ] Verify feature flags' && npm run ci",
+    "pre-release": "echo '⚠️  PRE-RELEASE CHECKLIST:' && echo '[ ] Update package.json version' && echo '[ ] Update CHANGELOG.md' && echo '[ ] Update RELEASE_NOTES.md' && echo '[ ] Run npm run ci' && echo '[ ] Test with npm run preview' && echo '[ ] Verify feature flags' && npm run ci",
     "release-check": "echo '🔍 Release validation...' && npm run ci && npm run preview -- --host localhost --port 5174 &",
     "release-tag": "echo '⚠️  Run: git tag -a vX.X.X -m \"Release message\"' && echo '⚠️  Then: git push --follow-tags'",
-    "workflow-help": "echo '📋 WORKFLOW HELP:' && echo 'Development: npm run dev' && echo 'Validate: npm run ci' && echo 'Release prep: npm run pre-release' && echo 'Create tag: npm run release-tag' && echo 'See: WORKFLOW.md for details'"
+    "release-notes-template": "node scripts/release-template.js",
+    "workflow-help": "echo '📋 WORKFLOW HELP:' && echo 'Development: npm run dev' && echo 'Validate: npm run ci' && echo 'Release prep: npm run pre-release' && echo 'Release template: npm run release-notes-template' && echo 'Create tag: npm run release-tag' && echo 'See: WORKFLOW.md for details'"
   },
   "engines": {
     "node": ">=18"
