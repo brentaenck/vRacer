@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [2.2.1] - 2025-01-03
+
+### 🔧 Fixed
+- **Debug Visualization System improvements**
+  - Fixed AI target visualization to use proper `findNearestRacingLinePoint()` from track-analysis.ts
+  - AI targeting lines now correctly show what each AI player is actually targeting
+  - Enhanced integration with single source of truth racing line data
+  - Eliminated inconsistency between AI decision-making and debug display
+
+### 📚 Added  
+- **Comprehensive debug visualization documentation** 
+  - New `DEBUG_VISUALIZATION.md` with complete system explanation
+  - Technical details for racing line waypoints, AI targeting, and checkpoint visualization
+  - Integration guide for track-analysis.ts single source of truth
+  - Troubleshooting and development usage instructions
+
+### 🎯 Improved
+- **Debug mode accuracy**: Debug visualizations now perfectly match AI behavior
+- **Developer experience**: Better understanding of AI decision-making through accurate visualization
+- **Documentation completeness**: All debug features now properly documented
+
 ## [2.2.0] - 2025-09-03
 
 ### 🤖 Added

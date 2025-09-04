@@ -1561,7 +1561,7 @@ function drawAIDebugVisualization(ctx: CanvasRenderingContext2D, state: MultiCar
       if (!car || !player) continue
       
       if (player?.isAI && !car.crashed && !car.finished) {
-        drawAITargetVisualization(ctx, car, player, racingLine, g)
+        drawAITargetVisualization(ctx, car, player, racingLine, g, state)
         drawSimplifiedAIVisualization(ctx, car, player, g)
       }
     }
@@ -1717,13 +1717,20 @@ function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state:
 }
 
 // Draw AI target waypoint visualization  
-function drawAITargetVisualization(ctx: CanvasRenderingContext2D, car: any, player: any, racingLine: any[], g: number) {
+function drawAITargetVisualization(ctx: CanvasRenderingContext2D, car: any, player: any, racingLine: any[], g: number, state?: MultiCarGameState) {
   ctx.save()
   
   try {
-    // For now, just draw the car as the target since we don't have direct access to state here
-    // TODO: Pass state or track analysis as parameter for better targeting
-    const currentTarget = racingLine[0] || { pos: car.pos, cornerType: 'straight' }
+    // Use proper track analysis to find the AI's actual target waypoint
+    let currentTarget
+    if (state) {
+      // Create track analysis to use the same targeting logic as the AI
+      const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+      currentTarget = findNearestRacingLinePoint(car.pos, trackAnalysis)
+    } else {
+      // Fallback to first waypoint if no state available
+      currentTarget = racingLine[0] || { pos: car.pos, cornerType: 'straight' }
+    }
     
     const carX = car.pos.x * g
     const carY = car.pos.y * g

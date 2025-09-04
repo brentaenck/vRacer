@@ -144,6 +144,7 @@ type GameState = {
 - **Feature flag status** logging
 - **Console debugging** for game state inspection
 - **Development help** text with keyboard shortcuts
+- **Visual debug system** for racing lines, waypoints, and AI targeting (see [DEBUG_VISUALIZATION.md](./DEBUG_VISUALIZATION.md))
 
 ## 🚀 PHASE 1 COMPLETE - v1.0.0 RELEASED!
 
@@ -388,6 +389,7 @@ Enable `debugMode: true` in `src/features.ts` to get:
 - **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Step-by-step release checklist
 - **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
 - **[README.md](./README.md)** - User-facing documentation and game rules
+- **[DEBUG_VISUALIZATION.md](./DEBUG_VISUALIZATION.md)** - Debug visualization system guide
 
 ### 🛠️ Automation Files
 - **`.githooks/`** - Pre-commit, pre-push, and commit-msg validation
