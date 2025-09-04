@@ -55,24 +55,76 @@ Track
 
 This project uses **trunk-based development with feature flags** for rapid iteration.
 
-### Quick Start for Developers
+### 📋 Quick Development Workflow
 ```bash
-npm run dev         # Start development
-npm run ci          # Validate before commits
-git commit -m "..." # Commit frequently to main
+# Daily development cycle
+npm run dev            # Start development server
+# Make changes, test in browser
+npm run ci             # Validate before each commit 
+git add . && git commit -m "feat: description"
+git push origin main   # Push frequently
 ```
 
-### Feature Flags
-- All new features controlled in `src/features.ts`
-- Features start disabled, enabled when ready
-- No feature branches - all work on `main`
-- Currently enabled: `debugMode`, `stopOnCrash`
+### 🚀 Release Process 
+```bash
+# 1. Prepare release
+npm run pre-release    # Shows checklist + validates build
+# 2. Update version in package.json (MAJOR.MINOR.PATCH)
+# 3. Update CHANGELOG.md with features/fixes
+# 4. Commit changes
+git commit -m "release: prepare vX.X.X - description"
+# 5. Create and push tag
+git tag -a vX.X.X -m "Release notes"
+git push --follow-tags
+# 6. Create GitHub Release + upload dist/ assets
+```
 
-### Documentation
+### 🏴 Feature Flags
+- All new features controlled in `src/features.ts`
+- Features start **disabled**, enabled when ready
+- No feature branches - all work on `main`
+- Use: `if (isFeatureEnabled('myFeature')) { ... }`
+
+### 📚 Process Documentation
+- **[WORKFLOW.md](./WORKFLOW.md)** - 🔥 Quick reference (START HERE)
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Complete development guide
 - **[RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md)** - Versioning and release planning
+- **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Step-by-step release checklist
 - **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
-- **[WORKFLOW.md](./WORKFLOW.md)** - Quick reference
+
+### 📝 GitHub Templates
+
+Structured issue and PR templates help maintain consistent quality:
+
+- **Bug Reports**: `.github/ISSUE_TEMPLATE/bug_report.yml` - Detailed bug tracking
+- **Feature Requests**: `.github/ISSUE_TEMPLATE/feature_request.yml` - Enhancement proposals  
+- **Pull Requests**: `.github/PULL_REQUEST_TEMPLATE.md` - Code review checklist
+
+All templates reference our release process and include validation reminders.
+
+### 🎯 Helpful Commands
+```bash
+npm run workflow-help  # Show workflow reminders
+npm run pre-release    # Release preparation checklist
+npm run ci             # Full validation (type-check + build)
+npm run preview        # Test production build
+```
+
+### ⚡ Automated Validation (Git Hooks)
+
+This repository uses custom git hooks to ensure code quality:
+
+- **Pre-commit**: Runs `npm run ci` (TypeScript + build validation)
+- **Pre-push**: Runs full build tests before pushing
+- **Commit-msg**: Validates conventional commit message format
+
+**Setup**: Hooks are automatically enabled via `git config core.hooksPath .githooks`
+
+**Bypass** (emergency only): `git commit --no-verify`
+
+**Commit Format**: `type(scope): description`
+- Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `release`
+- Example: `feat(ai): improve collision detection`
 
 ### Current Features (v2.0.0)
 ✅ **Complete multi-car racing with 2-player support**  
