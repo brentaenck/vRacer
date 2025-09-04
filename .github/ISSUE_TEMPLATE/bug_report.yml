@@ -1,0 +1,96 @@
+name: 🐛 Bug Report
+description: File a bug report to help us improve vRacer
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! 
+        
+        Before submitting, please check:
+        - [ ] This bug hasn't been reported yet
+        - [ ] You've reproduced this issue consistently
+        - [ ] You've tested with the latest version
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      description: Which browser are you using?
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: game-mode
+    attributes:
+      label: Game Mode
+      description: In which mode did the bug occur?
+      options:
+        - Single player
+        - Multi-player (2-4 cars)
+        - AI vs Human
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: The game crashes when I try to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. Move the car...
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: The car should move normally without crashing
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem
+      placeholder: Drag and drop images here or paste from clipboard
+
+  - type: textarea
+    id: console-errors
+    attributes:
+      label: Console Errors
+      description: Any error messages in the browser console (F12 → Console tab)
+      placeholder: |
+        TypeError: Cannot read property 'x' of undefined
+        at game.ts:123:45
+      render: text
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: This only happens when using keyboard controls...
