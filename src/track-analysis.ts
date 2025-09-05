@@ -152,8 +152,8 @@ export function analyzeTrack(
     { pos: { x: 11, y: 31 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'bottom' },
     { pos: { x: 18, y: 29 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'bottom' },
     
-    // Bottom straight - wide, fast section
-    { pos: { x: 25, y: 29 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
+    // Bottom straight - maximum speed on longest straight section
+    { pos: { x: 25, y: 29 }, targetSpeed: 5, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
     { pos: { x: 32, y: 29 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
     
     // Turn 2: Bottom to right (optimized entry for better track width utilization)
