@@ -156,14 +156,14 @@ export function analyzeTrack(
     { pos: { x: 25, y: 29 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
     { pos: { x: 32, y: 29 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
     
-    // Turn 2: Bottom to right (wide entry, late apex, early exit)
-    { pos: { x: 38, y: 28 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'bottom' },
+    // Turn 2: Bottom to right (optimized entry for better track width utilization)
+    { pos: { x: 39, y: 29 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'bottom' },
     { pos: { x: 42, y: 25 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'right' },
-    { pos: { x: 41, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'right' },
+    { pos: { x: 43, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'right' },
     
-    // Right straight - maintain speed up the right side
-    { pos: { x: 41, y: 17 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
-    { pos: { x: 41, y: 14 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    // Right straight - maximize track width for consistent optimization
+    { pos: { x: 43, y: 17 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    { pos: { x: 43, y: 14 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
     
     // Turn 3: Right to top (wide entry, late apex, early exit)
     { pos: { x: 38, y: 8 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'right' },
