@@ -1034,8 +1034,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     ctx.fillStyle = '#0b0b0b'
     ctx.fillRect(0, 0, W, H)
 
-    // Grid
-    if (legacyState.showGrid) {
+    // Basic grid behind track (only if not using enhanced grid)
+    if (legacyState.showGrid && !isFeatureEnabled('graphPaperGrid')) {
       ctx.strokeStyle = '#222'
       ctx.lineWidth = 1
       for (let x = 0; x <= W; x += g) { line(ctx, x, 0, x, H) }
@@ -1045,6 +1045,11 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     // Track polygons
     drawPoly(ctx, legacyState.outer, g, '#555', '#111')
     drawPoly(ctx, legacyState.inner, g, '#555', '#0b0b0b', true)
+    
+    // Enhanced grid overlaid on track (if enabled)
+    if (legacyState.showGrid && isFeatureEnabled('graphPaperGrid')) {
+      drawEnhancedGrid(ctx, W, H, g)
+    }
 
     // Start/Finish line - checkered flag pattern
     drawCheckeredStartLine(ctx, legacyState.start, g)
@@ -1145,8 +1150,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     ctx.fillStyle = '#0b0b0b'
     ctx.fillRect(0, 0, W, H)
 
-    // Grid
-    if (multiCarState.showGrid) {
+    // Basic grid behind track (only if not using enhanced grid)
+    if (multiCarState.showGrid && !isFeatureEnabled('graphPaperGrid')) {
       ctx.strokeStyle = '#222'
       ctx.lineWidth = 1
       for (let x = 0; x <= W; x += g) { line(ctx, x, 0, x, H) }
@@ -1156,6 +1161,11 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     // Track polygons
     drawPoly(ctx, multiCarState.outer, g, '#555', '#111')
     drawPoly(ctx, multiCarState.inner, g, '#555', '#0b0b0b', true)
+    
+    // Enhanced grid overlaid on track (if enabled)
+    if (multiCarState.showGrid && isFeatureEnabled('graphPaperGrid')) {
+      drawEnhancedGrid(ctx, W, H, g)
+    }
 
     // Start/Finish line - checkered flag pattern
     drawCheckeredStartLine(ctx, multiCarState.start, g)
@@ -1499,6 +1509,124 @@ function drawNode(ctx: CanvasRenderingContext2D, p: Vec, g: number, color: strin
 
 function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+}
+
+// Enhanced grid drawing function with coordinate indicators
+function drawEnhancedGrid(ctx: CanvasRenderingContext2D, W: number, H: number, g: number) {
+  ctx.save()
+  
+  // Calculate grid boundaries based on game coordinate system
+  const maxX = Math.floor(W / g)
+  const maxY = Math.floor(H / g)
+  
+  // Draw grid lines with improved visibility
+  ctx.strokeStyle = '#333' // Slightly brighter than original #222
+  ctx.lineWidth = 0.8
+  ctx.globalAlpha = 0.6 // Semi-transparent so it doesn't overwhelm track elements
+  
+  // Major grid lines every 5 units (like graph paper)
+  ctx.strokeStyle = '#444'
+  ctx.lineWidth = 1
+  for (let x = 0; x <= maxX; x += 5) {
+    const xPixel = x * g
+    if (xPixel <= W) {
+      line(ctx, xPixel, 0, xPixel, H)
+    }
+  }
+  for (let y = 0; y <= maxY; y += 5) {
+    const yPixel = y * g
+    if (yPixel <= H) {
+      line(ctx, 0, yPixel, W, yPixel)
+    }
+  }
+  
+  // Minor grid lines
+  ctx.strokeStyle = '#2a2a2a'
+  ctx.lineWidth = 0.5
+  for (let x = 1; x < maxX; x++) {
+    if (x % 5 !== 0) { // Skip major grid lines
+      const xPixel = x * g
+      if (xPixel <= W) {
+        line(ctx, xPixel, 0, xPixel, H)
+      }
+    }
+  }
+  for (let y = 1; y < maxY; y++) {
+    if (y % 5 !== 0) { // Skip major grid lines
+      const yPixel = y * g
+      if (yPixel <= H) {
+        line(ctx, 0, yPixel, W, yPixel)
+      }
+    }
+  }
+  
+  // Reset alpha for coordinate labels
+  ctx.globalAlpha = 0.8
+  
+  // Coordinate labels around the edges
+  ctx.fillStyle = '#666'
+  ctx.font = '11px monospace'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  
+  // X-axis labels (bottom edge)
+  for (let x = 0; x <= maxX; x += 2) { // Every 2 units to avoid crowding
+    const xPixel = x * g
+    if (xPixel <= W) {
+      ctx.fillText(x.toString(), xPixel, H - 8)
+    }
+  }
+  
+  // Y-axis labels (left edge) - note: Y increases downward in canvas, but we want graph paper style
+  ctx.textAlign = 'right'
+  for (let y = 0; y <= maxY; y += 2) { // Every 2 units to avoid crowding
+    const yPixel = y * g
+    if (yPixel <= H) {
+      // Display coordinate as it appears in the game (Y increases downward)
+      ctx.fillText(y.toString(), 12, yPixel)
+    }
+  }
+  
+  // Origin marker (0,0)
+  ctx.fillStyle = '#888'
+  ctx.fillRect(-2, -2, 4, 4)
+  
+  // Add small coordinate indicators at regular intervals along edges
+  ctx.fillStyle = '#555'
+  
+  // Top edge tick marks
+  for (let x = 5; x <= maxX; x += 5) {
+    const xPixel = x * g
+    if (xPixel <= W) {
+      ctx.fillRect(xPixel - 0.5, 0, 1, 6)
+      if (x % 10 === 0) { // Larger ticks every 10 units
+        ctx.fillRect(xPixel - 1, 0, 2, 10)
+        // Add label on top edge for major coordinates
+        ctx.fillStyle = '#777'
+        ctx.textAlign = 'center'
+        ctx.fillText(x.toString(), xPixel, 15)
+        ctx.fillStyle = '#555'
+      }
+    }
+  }
+  
+  // Right edge tick marks
+  for (let y = 5; y <= maxY; y += 5) {
+    const yPixel = y * g
+    if (yPixel <= H) {
+      ctx.fillRect(W - 6, yPixel - 0.5, 6, 1)
+      if (y % 10 === 0) { // Larger ticks every 10 units
+        ctx.fillRect(W - 10, yPixel - 1, 10, 2)
+        // Add label on right edge for major coordinates
+        ctx.fillStyle = '#777'
+        ctx.textAlign = 'left'
+        ctx.fillText(y.toString(), W - 15, yPixel)
+        ctx.fillStyle = '#555'
+      }
+    }
+  }
+  
+  ctx.restore()
 }
 
 // Debug function to draw checkpoint lines when debug mode is enabled

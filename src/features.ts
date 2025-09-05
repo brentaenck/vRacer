@@ -29,6 +29,7 @@ export interface FeatureFlags {
   improvedControls: boolean;
   soundEffects: boolean;
   animations: boolean;
+  graphPaperGrid: boolean;
   
   // Development and debugging
   debugMode: boolean;
@@ -56,6 +57,7 @@ export const FEATURES: FeatureFlags = {
   improvedControls: true,     // Keyboard support, better mouse handling
   soundEffects: false,        // Audio feedback - DISABLED
   animations: true,           // Smooth movement, particle effects
+  graphPaperGrid: true,       // Enhanced grid with coordinate indicators
   
   // Development and debugging - ENABLED for AI testing
   debugMode: true,            // Show extra info for development
