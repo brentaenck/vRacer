@@ -140,16 +140,16 @@ export function analyzeTrack(
   // Track bounds: outer (2,2)-(48,33), inner (12,10)-(38,25)
   // This creates a smooth, wide racing line that maximizes speed and minimizes sharp turns
   const optimalRacingLine: RacingLinePoint[] = [
-    // Start/finish area - positioned for good straight-line approach to first turn
-    { pos: { x: 7, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    // Start/finish area - optimized for maximum track width utilization
+    { pos: { x: 5, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
     
-    // Left side - gradual acceleration down the left straight
-    { pos: { x: 7, y: 23 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
-    { pos: { x: 7, y: 26 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    // Left side - maximize track width for better Turn 1 entry geometry
+    { pos: { x: 5, y: 23 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    { pos: { x: 5, y: 26 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
     
-    // Turn 1: Left to bottom (wide entry, late apex, early exit)
+    // Turn 1: Left to bottom (optimized for maximum corner radius)
     { pos: { x: 8, y: 28 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'left' },
-    { pos: { x: 12, y: 30 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'bottom' },
+    { pos: { x: 11, y: 31 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'bottom' },
     { pos: { x: 18, y: 29 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'bottom' },
     
     // Bottom straight - wide, fast section
