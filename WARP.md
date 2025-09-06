@@ -391,7 +391,9 @@ Enable `debugMode: true` in `src/features.ts` to get:
 - **[RELEASE_NOTES.md](./RELEASE_NOTES.md)** - Detailed release summaries with context and impact analysis
 - **[CHANGELOG.md](./CHANGELOG.md)** - Technical version history and structured changes
 - **[README.md](./README.md)** - User-facing documentation and game rules
+- **[COORDINATE_SYSTEM.md](./COORDINATE_SYSTEM.md)** - Graph paper grid coordinate system reference
 - **[DEBUG_VISUALIZATION.md](./DEBUG_VISUALIZATION.md)** - Debug visualization system guide
+- **[WAYPOINT_SYSTEM.md](./WAYPOINT_SYSTEM.md)** - Comprehensive waypoint and racing line architecture
 
 ### 🛠️ Automation Files
 - **`.githooks/`** - Pre-commit, pre-push, and commit-msg validation
