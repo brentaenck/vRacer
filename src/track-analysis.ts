@@ -138,46 +138,71 @@ export function analyzeTrack(
   
   // Generate optimal racing line waypoints for COUNTER-CLOCKWISE racing
   // Track bounds: outer (2,2)-(48,33), inner (12,10)-(38,25)
-  // This creates a smooth, wide racing line that maximizes speed and minimizes sharp turns
+  // Theoretical optimal racing line from racing analysis - maximizes speed and racing theory
   const optimalRacingLine: RacingLinePoint[] = [
-    // Start/finish area - optimized for maximum track width utilization
-    { pos: { x: 5, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    // LEFT SIDE STRAIGHT - Start area to Turn 1 approach
+    // Start area - wide positioning for optimal track width utilization
+    { pos: { x: 5, y: 20 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    // Left straight - pre-corner positioning
+    { pos: { x: 5, y: 24 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    // Approach to Turn 1 - prepare for braking
+    { pos: { x: 5, y: 27 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
     
-    // Left side - maximize track width for better Turn 1 entry geometry
-    { pos: { x: 5, y: 23 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
-    { pos: { x: 5, y: 26 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
-    
-    // Turn 1: Left to bottom (optimized for maximum corner radius)
-    { pos: { x: 8, y: 28 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'left' },
+    // TURN 1: Left to Bottom - Outside-Inside-Outside racing line
+    // Turn 1 entry - wide left positioning
+    { pos: { x: 6, y: 29 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'left' },
+    // Turn 1 apex - inner bottom corner (maximize radius)
     { pos: { x: 11, y: 31 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'bottom' },
-    { pos: { x: 18, y: 29 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'bottom' },
+    // Turn 1 exit - wide bottom positioning
+    { pos: { x: 16, y: 30 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'bottom' },
     
-    // Bottom straight - maximum speed on longest straight section
-    { pos: { x: 25, y: 29 }, targetSpeed: 5, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
-    { pos: { x: 32, y: 29 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
+    // BOTTOM STRAIGHT - Maximum speed section
+    // Early bottom straight - accelerate
+    { pos: { x: 20, y: 30 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
+    // Mid bottom straight - maximum speed
+    { pos: { x: 30, y: 30 }, targetSpeed: 5, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
+    // Late bottom straight - prepare for Turn 2
+    { pos: { x: 37, y: 29 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
     
-    // Turn 2: Bottom to right (optimized entry for better track width utilization)
-    { pos: { x: 39, y: 29 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'bottom' },
-    { pos: { x: 42, y: 25 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'right' },
-    { pos: { x: 43, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'right' },
+    // TURN 2: Bottom to Right - Wide entry, late apex, early exit
+    // Turn 2 entry - wide bottom positioning
+    { pos: { x: 39, y: 30 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'bottom' },
+    // Turn 2 apex - inner right corner
+    { pos: { x: 44, y: 26 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'right' },
+    // Turn 2 exit - wide right positioning
+    { pos: { x: 43, y: 22 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'right' },
     
-    // Right straight - maximize track width for consistent optimization
-    { pos: { x: 43, y: 17 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
-    { pos: { x: 43, y: 14 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    // RIGHT STRAIGHT - High speed maintenance
+    // Right straight - post Turn 2 acceleration
+    { pos: { x: 44, y: 20 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    // Right straight - maintain speed
+    { pos: { x: 44, y: 15 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    // Approach Turn 3 - prepare for braking
+    { pos: { x: 43, y: 10 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
     
-    // Turn 3: Right to top (wide entry, late apex, early exit)
-    { pos: { x: 38, y: 8 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'right' },
-    { pos: { x: 32, y: 5 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'top' },
-    { pos: { x: 25, y: 6 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'top' },
+    // TURN 3: Right to Top - Geometric optimization
+    // Turn 3 entry - wide right positioning
+    { pos: { x: 44, y: 8 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'right' },
+    // Turn 3 apex - inner top corner
+    { pos: { x: 39, y: 4 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'top' },
+    // Turn 3 exit - wide top positioning
+    { pos: { x: 34, y: 5 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'top' },
     
-    // Top straight - fast section across the top
-    { pos: { x: 20, y: 6 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
-    { pos: { x: 15, y: 6 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
+    // TOP STRAIGHT - Fast section across the top
+    // Top straight - post Turn 3 acceleration
+    { pos: { x: 30, y: 4 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
+    // Top straight - maintain speed
+    { pos: { x: 20, y: 4 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
+    // Approach Turn 4 - prepare for braking
+    { pos: { x: 12, y: 5 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
     
-    // Turn 4: Top to left (wide entry, late apex, early exit)
-    { pos: { x: 10, y: 8 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'top' },
-    { pos: { x: 6, y: 12 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'left' },
-    { pos: { x: 7, y: 16 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'left' }
+    // TURN 4: Top to Left - Complete the circuit
+    // Turn 4 entry - wide top positioning
+    { pos: { x: 11, y: 4 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'top' },
+    // Turn 4 apex - inner left corner
+    { pos: { x: 4, y: 9 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'left' },
+    // Turn 4 exit - wide left positioning
+    { pos: { x: 5, y: 14 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'left' }
   ]
   
   // Generate lap validation checkpoints for COUNTER-CLOCKWISE racing
