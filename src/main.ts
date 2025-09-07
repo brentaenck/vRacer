@@ -6,6 +6,7 @@ import { animationManager, AnimationUtils } from './animations'
 import { initializeTrackEditor, isEditorActive } from './track-editor-ui'
 import { setupEditorCanvas, drawEditorOverlay } from './track-editor-canvas'
 import { chooseAIMove } from './ai'
+import { initializeRacingLineUI, isRacingLineVisible, handleRacingLineKeyboardShortcut } from './racing-line-ui'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
@@ -52,6 +53,9 @@ initializeTrackEditor()
 
 // Initialize track editor canvas handlers
 setupEditorCanvas(canvas)
+
+// Initialize racing line UI system
+initializeRacingLineUI()
 
 
 // Check if it's an AI player's turn and schedule move
@@ -636,6 +640,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'd' || e.key === 'D') { debugToggle.checked = !debugToggle.checked; debugToggle.dispatchEvent(new Event('change')) }
+  if (e.key === 'l' || e.key === 'L') { handleRacingLineKeyboardShortcut() }
   
   // Improved controls: Undo functionality
   if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {

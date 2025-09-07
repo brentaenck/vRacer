@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug vRacer Racing Line Editor</title>
+    <link rel="stylesheet" href="css/editor.css">
+    <style>
+        #debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .debug-step { margin: 2px 0; }
+        .debug-error { color: #ff4444; }
+        .debug-success { color: #44ff44; }
+        .debug-info { color: #4444ff; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Debug Info Panel -->
+        <div id="debug-info">
+            <strong>DEBUG INFO:</strong>
+            <div id="debug-log">Initializing...</div>
+        </div>
+
+        <!-- Header -->
+        <header class="app-header">
+            <h1>vRacer Racing Line Editor (Debug)</h1>
+            <div class="header-controls">
+                <button onclick="window.forceRender()" class="btn btn-primary">Force Render</button>
+                <button onclick="window.debugInfo()" class="btn btn-secondary">Debug Info</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Canvas Area -->
+            <main class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="trackCanvas" width="1000" height="700"></canvas>
+                </div>
+                <div class="canvas-controls">
+                    <div class="control-group">
+                        <span>Status: <span id="status">Initializing...</span></span>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/track-renderer-fixed.js"></script>
+    
+    <script>
+        let debugLog = [];
+        let trackData = null;
+        let renderer = null;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.push(`[${timestamp}] ${message}`);
+            console.log(`[DEBUG] ${message}`);
+            
+            const debugDiv = document.getElementById('debug-log');
+            const statusDiv = document.getElementById('status');
+            
+            if (debugDiv) {
+                debugDiv.innerHTML = debugLog.slice(-10).map(msg => 
+                    `<div class="debug-step debug-${type}">${msg}</div>`
+                ).join('');
+            }
+            
+            if (statusDiv) {
+                statusDiv.textContent = message;
+            }
+        }
+
+        function checkDependencies() {
+            log('Checking dependencies...', 'info');
+            
+            if (!window.EditorUtils) {
+                log('ERROR: EditorUtils not found', 'error');
+                return false;
+            }
+            
+            if (!window.EditorUtils.Vec) {
+                log('ERROR: Vec class not found', 'error');
+                return false;
+            }
+            
+            if (!window.TrackRenderer) {
+                log('ERROR: TrackRenderer not found', 'error');
+                return false;
+            }
+            
+            log('All dependencies found', 'success');
+            return true;
+        }
+
+        async function initializeEditor() {
+            log('Starting initialization...', 'info');
+            
+            // Check dependencies
+            if (!checkDependencies()) {
+                setTimeout(initializeEditor, 100);
+                return;
+            }
+            
+            // Get canvas
+            const canvas = document.getElementById('trackCanvas');
+            if (!canvas) {
+                log('ERROR: Canvas not found', 'error');
+                return;
+            }
+            log('Canvas found', 'success');
+            
+            // Test canvas rendering
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(10, 10, 50, 30);
+            ctx.fillStyle = '#000';
+            ctx.font = '16px Arial';
+            ctx.fillText('Canvas Test', 70, 30);
+            log('Canvas test drawing complete', 'success');
+            
+            // Initialize renderer
+            try {
+                renderer = new TrackRenderer(canvas);
+                log('TrackRenderer created', 'success');
+            } catch (error) {
+                log(`ERROR creating renderer: ${error.message}`, 'error');
+                return;
+            }
+            
+            // Load data
+            try {
+                log('Loading track data...', 'info');
+                const response = await fetch('data/track-geometry.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                trackData = await response.json();
+                log(`Data loaded: ${trackData.metadata.name}`, 'success');
+                log(`Waypoints: ${trackData.racingLine.waypoints.length}`, 'info');
+                
+                // Load data into renderer
+                renderer.loadTrackData(trackData);
+                log('Data loaded into renderer', 'success');
+                
+                // Force render
+                renderer.render();
+                log('Initial render called', 'success');
+                
+                // Start render loop
+                startRenderLoop();
+                log('Render loop started', 'success');
+                
+            } catch (error) {
+                log(`ERROR loading data: ${error.message}`, 'error');
+            }
+        }
+
+        function startRenderLoop() {
+            let frameCount = 0;
+            function renderFrame() {
+                if (renderer) {
+                    renderer.render();
+                    frameCount++;
+                    
+                    // Log every 60 frames
+                    if (frameCount % 60 === 0) {
+                        log(`Rendered ${frameCount} frames`, 'info');
+                    }
+                }
+                requestAnimationFrame(renderFrame);
+            }
+            renderFrame();
+        }
+
+        // Global debug functions
+        window.forceRender = function() {
+            log('Force render requested...', 'info');
+            if (renderer) {
+                renderer.render();
+                log('Force render executed', 'success');
+            } else {
+                log('No renderer available', 'error');
+            }
+        };
+
+        window.debugInfo = function() {
+            log('=== DEBUG INFO ===', 'info');
+            log(`Dependencies: ${!!window.EditorUtils}`, 'info');
+            log(`TrackRenderer: ${!!window.TrackRenderer}`, 'info');
+            log(`Renderer instance: ${!!renderer}`, 'info');
+            log(`Track data: ${!!trackData}`, 'info');
+            
+            if (trackData) {
+                log(`Track outer: ${trackData.track.outer.length} points`, 'info');
+                log(`Racing line: ${trackData.racingLine.waypoints.length} points`, 'info');
+            }
+            
+            if (renderer) {
+                log(`Viewport scale: ${renderer.viewport.scale}`, 'info');
+                log(`Show track: ${renderer.showTrackBounds}`, 'info');
+                log(`Show racing line: ${renderer.showRacingLine}`, 'info');
+            }
+        };
+
+        // Start when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            log('DOM ready, starting initialization...', 'info');
+            setTimeout(initializeEditor, 100);
+        });
+
+        // Also start immediately in case DOM is already ready
+        if (document.readyState === 'complete') {
+            log('Document already complete, starting...', 'info');
+            setTimeout(initializeEditor, 100);
+        }
+    </script>
+</body>
+</html>

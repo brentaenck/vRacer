@@ -3,7 +3,8 @@ import { isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { hudManager, HUDData } from './hud'
-import { createTrackAnalysis, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis } from './track-analysis'
+import { createTrackAnalysisWithCustomLine, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
+import { isRacingLineVisible } from './racing-line-ui'
 
 // Individual car state
 export interface Car {
@@ -1056,6 +1057,9 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
 
     // Directional arrows to show racing direction
     drawDirectionalArrows(ctx, legacyState, g)
+    
+    // Racing line overlay (if enabled)
+    drawRacingLine(ctx, legacyState, g)
 
     // Trail
     ctx.strokeStyle = '#9cf'
@@ -1172,6 +1176,9 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
 
     // Directional arrows to show racing direction
     drawDirectionalArrows(ctx, multiCarState, g)
+    
+    // Racing line overlay (if enabled)
+    drawRacingLine(ctx, multiCarState, g)
     
     // Draw checkpoint lines when in debug mode
     if (isFeatureEnabled('debugMode')) {
@@ -1379,6 +1386,87 @@ function drawDirectionalArrows(ctx: CanvasRenderingContext2D, state: GameState, 
   }
   
   ctx.restore()
+}
+
+function drawRacingLine(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
+  if (!isRacingLineVisible()) return
+  
+  try {
+    // Get track analysis with custom racing line if available
+    const outer = isMultiCarGame(state) ? state.outer : (state as LegacyGameState).outer
+    const inner = isMultiCarGame(state) ? state.inner : (state as LegacyGameState).inner
+    const start = isMultiCarGame(state) ? state.start : (state as LegacyGameState).start
+    
+    const trackAnalysis = createTrackAnalysisWithCustomLine(outer, inner, start)
+    const racingLine = trackAnalysis.optimalRacingLine
+    
+    if (racingLine.length < 2) return
+    
+    ctx.save()
+    
+    // Draw racing line path
+    ctx.strokeStyle = '#00ff00' // Green racing line
+    ctx.lineWidth = 3
+    ctx.globalAlpha = 0.7
+    ctx.setLineDash([8, 4]) // Dashed line to distinguish from trails
+    
+    ctx.beginPath()
+    const firstPoint = racingLine[0]!
+    ctx.moveTo(firstPoint.pos.x * g, firstPoint.pos.y * g)
+    
+    for (let i = 1; i < racingLine.length; i++) {
+      const point = racingLine[i]!
+      ctx.lineTo(point.pos.x * g, point.pos.y * g)
+    }
+    
+    // Connect back to start for closed loop
+    ctx.lineTo(firstPoint.pos.x * g, firstPoint.pos.y * g)
+    ctx.stroke()
+    
+    // Draw waypoints with different colors based on type
+    ctx.setLineDash([]) // Solid for waypoints
+    ctx.globalAlpha = 0.9
+    
+    for (const point of racingLine) {
+      let color: string
+      let radius = 3
+      
+      switch (point.cornerType) {
+        case 'entry':
+          color = '#ff9800' // Orange for corner entry
+          radius = 4
+          break
+        case 'apex':
+          color = '#f44336' // Red for apex
+          radius = 5
+          break
+        case 'exit':
+          color = '#4caf50' // Green for corner exit
+          radius = 4
+          break
+        default: // straight
+          color = '#2196f3' // Blue for straights
+          radius = 3
+      }
+      
+      // Draw waypoint
+      ctx.beginPath()
+      ctx.arc(point.pos.x * g, point.pos.y * g, radius, 0, 2 * Math.PI)
+      ctx.fillStyle = color
+      ctx.fill()
+      
+      // Add brake zone indicator
+      if (point.brakeZone) {
+        ctx.strokeStyle = '#ff5722' // Deep orange for brake zones
+        ctx.lineWidth = 2
+        ctx.stroke()
+      }
+    }
+    
+    ctx.restore()
+  } catch (error) {
+    console.error('🏁 Error drawing racing line:', error)
+  }
 }
 
 function drawArrow(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, size: number, g: number) {
@@ -1634,7 +1722,7 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
   ctx.save()
   
   // Create track analysis to get consistent checkpoint data
-  const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+  const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   const checkpoints = trackAnalysis.lapValidationCheckpoints
   
   // Draw each checkpoint line with different colors for identification
@@ -1675,7 +1763,7 @@ function drawAIDebugVisualization(ctx: CanvasRenderingContext2D, state: MultiCar
   
   try {
     // Create track analysis for consistent racing line data
-    const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+    const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
     
     // Draw racing line visualization using track analysis
     drawRacingLineVisualization(ctx, trackAnalysis.optimalRacingLine, g)
@@ -1781,7 +1869,7 @@ function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: 
 // Draw racing line using the single source of truth from track-analysis.ts
 function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
   // Use the centralized track analysis - single source of truth
-  const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+  const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   const racingLine = trackAnalysis.optimalRacingLine
   
   ctx.save()
@@ -1853,7 +1941,7 @@ function drawAITargetVisualization(ctx: CanvasRenderingContext2D, car: any, play
     let currentTarget
     if (state) {
       // Create track analysis to use the same targeting logic as the AI
-      const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+      const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
       currentTarget = findNearestRacingLinePoint(car.pos, trackAnalysis)
     } else {
       // Fallback to first waypoint if no state available

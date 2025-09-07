@@ -323,6 +323,37 @@
             </section>
             
             <section class="config-section">
+              <h3>🏁 Racing Line</h3>
+              <div class="config-group">
+                <label class="config-toggle">
+                  <input id="racingLineToggle" type="checkbox" />
+                  <span class="toggle-slider"></span>
+                  <div class="toggle-info">
+                    <span class="toggle-label">Show Racing Line</span>
+                    <span class="toggle-desc">Display optimal racing path overlay</span>
+                  </div>
+                  <span class="shortcut">L</span>
+                </label>
+                
+                <div class="racing-line-controls">
+                  <button id="importRacingLineBtn" class="btn-import">
+                    📁 Import Racing Line
+                  </button>
+                  <button id="clearRacingLineBtn" class="btn-clear" title="Clear custom racing line and use default">
+                    🗑️ Clear Custom
+                  </button>
+                  <button id="openRacingLineEditorBtn" class="btn-editor" title="Open Racing Line Editor">
+                    ✏️ Open Editor
+                  </button>
+                </div>
+                
+                <div id="racingLineStatus" class="racing-line-status">
+                  <span id="racingLineInfo">Using default racing line</span>
+                </div>
+              </div>
+            </section>
+            
+            <section class="config-section">
               <h3>🐛 Developer Options</h3>
               <div class="config-group">
                 <label class="config-toggle">

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #222; 
+            color: #fff; 
+            padding: 20px; 
+        }
+        #canvas { 
+            border: 2px solid #555; 
+            background: #f8f9fa; 
+            display: block; 
+            margin: 20px 0; 
+        }
+        .test-result { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+        }
+        .pass { background: #004d00; color: #00ff00; }
+        .fail { background: #4d0000; color: #ff0000; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript & Canvas Test</h1>
+    <div id="results">
+        <div class="test-result">Testing JavaScript execution...</div>
+    </div>
+    
+    <canvas id="canvas" width="400" height="200"></canvas>
+    
+    <script>
+        console.log('JavaScript is running!');
+        
+        const results = document.getElementById('results');
+        
+        function addResult(message, pass) {
+            const div = document.createElement('div');
+            div.className = `test-result ${pass ? 'pass' : 'fail'}`;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+        
+        // Test 1: Basic JavaScript
+        try {
+            addResult('✓ JavaScript execution: PASS', true);
+        } catch (e) {
+            addResult('✗ JavaScript execution: FAIL - ' + e.message, false);
+        }
+        
+        // Test 2: DOM access
+        try {
+            const canvas = document.getElementById('canvas');
+            if (canvas) {
+                addResult('✓ DOM access: PASS', true);
+            } else {
+                addResult('✗ DOM access: FAIL - Canvas not found', false);
+            }
+        } catch (e) {
+            addResult('✗ DOM access: FAIL - ' + e.message, false);
+        }
+        
+        // Test 3: Canvas rendering
+        try {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw test shapes
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(10, 10, 100, 50);
+            
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.arc(200, 35, 25, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#0000ff';
+            ctx.fillRect(250, 10, 50, 50);
+            
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.fillText('Canvas Working!', 10, 80);
+            
+            addResult('✓ Canvas rendering: PASS', true);
+        } catch (e) {
+            addResult('✗ Canvas rendering: FAIL - ' + e.message, false);
+        }
+        
+        // Test 4: External script loading
+        setTimeout(() => {
+            try {
+                if (window.EditorUtils) {
+                    addResult('✓ External script (utils.js): PASS', true);
+                } else {
+                    addResult('✗ External script (utils.js): FAIL - Not loaded', false);
+                }
+            } catch (e) {
+                addResult('✗ External script test: FAIL - ' + e.message, false);
+            }
+        }, 1000);
+    </script>
+    
+    <!-- Test external script loading -->
+    <script src="js/utils.js"></script>
+</body>
+</html>

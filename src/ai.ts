@@ -15,13 +15,13 @@
 
 import { isFeatureEnabled } from './features'
 import { getCurrentCar, getCurrentPlayer, isMultiCarGame, legalStepOptions, pathLegal, stepOptions, pointInPoly, type GameState } from './game'
-import { createTrackAnalysis, getExpectedRacingDirection as getExpectedDirection, findNearestRacingLinePoint, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
+import { createTrackAnalysisWithCustomLine, getExpectedRacingDirection as getExpectedDirection, findNearestRacingLinePoint, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
 import type { Vec } from './geometry'
 
 // Use unified track analysis for consistent racing line
 function computeRacingLine(state: GameState): RacingLinePoint[] {
   // Create track analysis - single source of truth
-  const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+  const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   
   // Convert unified racing line format to AI format for backward compatibility
   return trackAnalysis.optimalRacingLine.map(point => ({
@@ -213,7 +213,7 @@ function planPath(
     const currentCar = getCurrentCar(state)!
     
     // Create track analysis for consistent direction checking
-    const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+    const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
     const expectedDirection = getExpectedDirection(currentCar.pos, trackAnalysis)
     const velocityAlignment = move.vel.x * expectedDirection.x + move.vel.y * expectedDirection.y
     const futureSpeed = Math.hypot(move.vel.x, move.vel.y)
@@ -520,7 +520,7 @@ function scoreSimplifiedMove(
   let score = 0
   
   // 1. PROGRESS FACTOR: Encourage movement in the racing direction
-  const trackAnalysis = createTrackAnalysis(state.outer, state.inner, state.start)
+  const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   const expectedDirection = getExpectedDirection(currentCar.pos, trackAnalysis)
   const velocityAlignment = velAfter.x * expectedDirection.x + velAfter.y * expectedDirection.y
   

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Racing Line Editor</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #222; color: #fff; }
+        #canvas { border: 2px solid #555; background: #f8f9fa; }
+        #debug { margin-top: 20px; padding: 10px; background: #333; border-radius: 4px; }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+        .info { color: #4444ff; }
+    </style>
+</head>
+<body>
+    <h1>Debug Racing Line Editor</h1>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <div id="debug">
+        <h3>Debug Information:</h3>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        
+        function debugLog(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(div);
+            console.log(message);
+        }
+
+        // Test canvas
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        debugLog('Canvas initialized', 'success');
+        
+        // Test basic drawing
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillRect(10, 10, 50, 50);
+        ctx.fillStyle = '#000';
+        ctx.font = '16px Arial';
+        ctx.fillText('Canvas Test', 70, 35);
+        
+        debugLog('Basic canvas drawing test complete', 'success');
+
+        // Test data loading
+        async function testDataLoading() {
+            try {
+                debugLog('Attempting to fetch track data...', 'info');
+                const response = await fetch('data/track-geometry.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                debugLog('Fetch successful, parsing JSON...', 'success');
+                const data = await response.json();
+                
+                debugLog(`Data loaded: ${data.metadata.name}`, 'success');
+                debugLog(`Track outer points: ${data.track.outer.length}`, 'info');
+                debugLog(`Track inner points: ${data.track.inner.length}`, 'info');
+                debugLog(`Racing line waypoints: ${data.racingLine.waypoints.length}`, 'info');
+                
+                // Test track drawing
+                drawTrack(data);
+                
+            } catch (error) {
+                debugLog(`Error loading data: ${error.message}`, 'error');
+            }
+        }
+
+        function drawTrack(data) {
+            try {
+                debugLog('Starting track drawing...', 'info');
+                
+                // Clear canvas
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Simple scaling - fit track to canvas
+                const bounds = data.track.bounds.track;
+                const trackWidth = bounds.maxX - bounds.minX;
+                const trackHeight = bounds.maxY - bounds.minY;
+                
+                const scaleX = (canvas.width - 100) / trackWidth;
+                const scaleY = (canvas.height - 100) / trackHeight;
+                const scale = Math.min(scaleX, scaleY);
+                
+                const offsetX = 50 - bounds.minX * scale;
+                const offsetY = 50 - bounds.minY * scale;
+                
+                debugLog(`Scale: ${scale.toFixed(2)}, Offset: ${offsetX.toFixed(1)}, ${offsetY.toFixed(1)}`, 'info');
+                
+                // Draw outer track boundary
+                ctx.beginPath();
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = 3;
+                
+                const outer = data.track.outer;
+                ctx.moveTo(outer[0].x * scale + offsetX, outer[0].y * scale + offsetY);
+                for (let i = 1; i < outer.length; i++) {
+                    ctx.lineTo(outer[i].x * scale + offsetX, outer[i].y * scale + offsetY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                
+                // Draw inner track boundary
+                ctx.beginPath();
+                const inner = data.track.inner;
+                ctx.moveTo(inner[0].x * scale + offsetX, inner[0].y * scale + offsetY);
+                for (let i = 1; i < inner.length; i++) {
+                    ctx.lineTo(inner[i].x * scale + offsetX, inner[i].y * scale + offsetY);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                
+                // Draw racing line
+                ctx.beginPath();
+                ctx.strokeStyle = '#4CAF50';
+                ctx.lineWidth = 2;
+                
+                const waypoints = data.racingLine.waypoints;
+                if (waypoints.length > 0) {
+                    ctx.moveTo(waypoints[0].pos.x * scale + offsetX, waypoints[0].pos.y * scale + offsetY);
+                    for (let i = 1; i < waypoints.length; i++) {
+                        ctx.lineTo(waypoints[i].pos.x * scale + offsetX, waypoints[i].pos.y * scale + offsetY);
+                    }
+                }
+                ctx.stroke();
+                
+                // Draw waypoints
+                waypoints.forEach((wp, index) => {
+                    const x = wp.pos.x * scale + offsetX;
+                    const y = wp.pos.y * scale + offsetY;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#FF4444';
+                    ctx.fill();
+                });
+                
+                debugLog(`Track drawn successfully with ${waypoints.length} waypoints`, 'success');
+                
+            } catch (error) {
+                debugLog(`Error drawing track: ${error.message}`, 'error');
+            }
+        }
+
+        // Start the test
+        debugLog('Starting debug test...', 'info');
+        testDataLoading();
+    </script>
+</body>
+</html>

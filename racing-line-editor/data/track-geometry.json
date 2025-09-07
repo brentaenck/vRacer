@@ -1,0 +1,285 @@
+{
+  "metadata": {
+    "name": "vRacer Default Track",
+    "description": "Simple rounded rectangle track from vRacer game",
+    "gridSize": 20,
+    "version": "1.0.0",
+    "extracted": "2025-01-06",
+    "coordinateSystem": "Grid units (20px per unit in game)"
+  },
+  "track": {
+    "outer": [
+      { "x": 2, "y": 2 },
+      { "x": 48, "y": 2 },
+      { "x": 48, "y": 33 },
+      { "x": 2, "y": 33 }
+    ],
+    "inner": [
+      { "x": 12, "y": 10 },
+      { "x": 38, "y": 10 },
+      { "x": 38, "y": 25 },
+      { "x": 12, "y": 25 }
+    ],
+    "startLine": {
+      "a": { "x": 2, "y": 18 },
+      "b": { "x": 12, "y": 18 }
+    },
+    "bounds": {
+      "track": {
+        "minX": 2,
+        "maxX": 48,
+        "minY": 2,
+        "maxY": 33
+      },
+      "inner": {
+        "minX": 12,
+        "maxX": 38,
+        "minY": 10,
+        "maxY": 25
+      }
+    }
+  },
+  "racingLine": {
+    "direction": "counter-clockwise",
+    "waypoints": [
+      {
+        "pos": { "x": 5, "y": 20 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "left",
+        "comment": "LEFT SIDE STRAIGHT - Start area to Turn 1 approach"
+      },
+      {
+        "pos": { "x": 5, "y": 24 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "left",
+        "comment": "Left straight - pre-corner positioning"
+      },
+      {
+        "pos": { "x": 5, "y": 27 },
+        "targetSpeed": 3,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "left",
+        "comment": "Approach to Turn 1 - prepare for braking"
+      },
+      {
+        "pos": { "x": 6, "y": 29 },
+        "targetSpeed": 2,
+        "brakeZone": true,
+        "cornerType": "entry",
+        "safeZone": "left",
+        "comment": "TURN 1: Left to Bottom - Outside-Inside-Outside racing line - Turn 1 entry - wide left positioning"
+      },
+      {
+        "pos": { "x": 11, "y": 31 },
+        "targetSpeed": 2,
+        "brakeZone": false,
+        "cornerType": "apex",
+        "safeZone": "bottom",
+        "comment": "Turn 1 apex - inner bottom corner (maximize radius)"
+      },
+      {
+        "pos": { "x": 16, "y": 30 },
+        "targetSpeed": 3,
+        "brakeZone": false,
+        "cornerType": "exit",
+        "safeZone": "bottom",
+        "comment": "Turn 1 exit - wide bottom positioning"
+      },
+      {
+        "pos": { "x": 20, "y": 30 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "bottom",
+        "comment": "BOTTOM STRAIGHT - Maximum speed section - Early bottom straight - accelerate"
+      },
+      {
+        "pos": { "x": 30, "y": 30 },
+        "targetSpeed": 5,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "bottom",
+        "comment": "Mid bottom straight - maximum speed"
+      },
+      {
+        "pos": { "x": 37, "y": 29 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "bottom",
+        "comment": "Late bottom straight - prepare for Turn 2"
+      },
+      {
+        "pos": { "x": 39, "y": 30 },
+        "targetSpeed": 2,
+        "brakeZone": true,
+        "cornerType": "entry",
+        "safeZone": "bottom",
+        "comment": "TURN 2: Bottom to Right - Wide entry, late apex, early exit - Turn 2 entry - wide bottom positioning"
+      },
+      {
+        "pos": { "x": 44, "y": 26 },
+        "targetSpeed": 2,
+        "brakeZone": false,
+        "cornerType": "apex",
+        "safeZone": "right",
+        "comment": "Turn 2 apex - inner right corner"
+      },
+      {
+        "pos": { "x": 43, "y": 22 },
+        "targetSpeed": 3,
+        "brakeZone": false,
+        "cornerType": "exit",
+        "safeZone": "right",
+        "comment": "Turn 2 exit - wide right positioning"
+      },
+      {
+        "pos": { "x": 44, "y": 20 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "right",
+        "comment": "RIGHT STRAIGHT - High speed maintenance - Right straight - post Turn 2 acceleration"
+      },
+      {
+        "pos": { "x": 44, "y": 15 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "right",
+        "comment": "Right straight - maintain speed"
+      },
+      {
+        "pos": { "x": 43, "y": 10 },
+        "targetSpeed": 3,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "right",
+        "comment": "Approach Turn 3 - prepare for braking"
+      },
+      {
+        "pos": { "x": 44, "y": 8 },
+        "targetSpeed": 2,
+        "brakeZone": true,
+        "cornerType": "entry",
+        "safeZone": "right",
+        "comment": "TURN 3: Right to Top - Geometric optimization - Turn 3 entry - wide right positioning"
+      },
+      {
+        "pos": { "x": 39, "y": 4 },
+        "targetSpeed": 2,
+        "brakeZone": false,
+        "cornerType": "apex",
+        "safeZone": "top",
+        "comment": "Turn 3 apex - inner top corner"
+      },
+      {
+        "pos": { "x": 34, "y": 5 },
+        "targetSpeed": 3,
+        "brakeZone": false,
+        "cornerType": "exit",
+        "safeZone": "top",
+        "comment": "Turn 3 exit - wide top positioning"
+      },
+      {
+        "pos": { "x": 30, "y": 4 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "top",
+        "comment": "TOP STRAIGHT - Fast section across the top - Top straight - post Turn 3 acceleration"
+      },
+      {
+        "pos": { "x": 20, "y": 4 },
+        "targetSpeed": 4,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "top",
+        "comment": "Top straight - maintain speed"
+      },
+      {
+        "pos": { "x": 12, "y": 5 },
+        "targetSpeed": 3,
+        "brakeZone": false,
+        "cornerType": "straight",
+        "safeZone": "top",
+        "comment": "Approach Turn 4 - prepare for braking"
+      },
+      {
+        "pos": { "x": 11, "y": 4 },
+        "targetSpeed": 2,
+        "brakeZone": true,
+        "cornerType": "entry",
+        "safeZone": "top",
+        "comment": "TURN 4: Top to Left - Complete the circuit - Turn 4 entry - wide top positioning"
+      },
+      {
+        "pos": { "x": 4, "y": 9 },
+        "targetSpeed": 2,
+        "brakeZone": false,
+        "cornerType": "apex",
+        "safeZone": "left",
+        "comment": "Turn 4 apex - inner left corner"
+      },
+      {
+        "pos": { "x": 5, "y": 14 },
+        "targetSpeed": 3,
+        "brakeZone": false,
+        "cornerType": "exit",
+        "safeZone": "left",
+        "comment": "Turn 4 exit - wide left positioning"
+      }
+    ]
+  },
+  "safeZones": [
+    {
+      "name": "left",
+      "bounds": {
+        "minX": 3,
+        "maxX": 11,
+        "minY": 3,
+        "maxY": 32
+      },
+      "direction": { "x": 0.3, "y": 1 },
+      "description": "Left side of track - mainly downward for counter-clockwise"
+    },
+    {
+      "name": "bottom",
+      "bounds": {
+        "minX": 3,
+        "maxX": 47,
+        "minY": 26,
+        "maxY": 32
+      },
+      "direction": { "x": 1, "y": -0.3 },
+      "description": "Bottom side of track - mainly rightward for counter-clockwise"
+    },
+    {
+      "name": "right",
+      "bounds": {
+        "minX": 39,
+        "maxX": 47,
+        "minY": 3,
+        "maxY": 32
+      },
+      "direction": { "x": -0.3, "y": -1 },
+      "description": "Right side of track - mainly upward for counter-clockwise"
+    },
+    {
+      "name": "top",
+      "bounds": {
+        "minX": 3,
+        "maxX": 47,
+        "minY": 3,
+        "maxY": 9
+      },
+      "direction": { "x": -1, "y": 0.3 },
+      "description": "Top side of track - mainly leftward for counter-clockwise"
+    }
+  ]
+}

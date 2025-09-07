@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml)
 [![Deploy](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml)
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/brentaenck/vRacer/releases/tag/v2.0.0)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/brentaenck/vRacer/releases/tag/v3.0.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)** | 🏁 **[Latest Release v2.0.0](https://github.com/brentaenck/vRacer/releases/tag/v2.0.0)**
+🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)** | 🏁 **[Latest Release v3.0.0](https://github.com/brentaenck/vRacer/releases/tag/v3.0.0)**
 
 Quick start
 - Ensure you have Node via nvm
@@ -20,8 +20,10 @@ Quick start
   - npm run preview
 
 What is this?
-- A minimal canvas-based implementation of the vector race game
+- A comprehensive canvas-based implementation of the vector race game
 - Turn-based movement with velocity and acceleration on a grid
+- Complete racing line editor for creating custom racing strategies
+- AI opponents that adapt to your custom racing lines
 - Click a candidate next position to choose your acceleration
 
 Controls
@@ -29,7 +31,9 @@ Controls
 - R: Reset race
 - G: Toggle grid
 - C: Toggle candidate overlay
-- H: Toggle help
+- L: Toggle racing line overlay (v3.0+)
+- D: Toggle debug mode
+- U or Ctrl+Z: Undo last move
 
 Rules (simplified)
 - Start at a start cell with velocity (0,0)
@@ -126,20 +130,50 @@ This repository uses custom git hooks to ensure code quality:
 - Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `release`
 - Example: `feat(ai): improve collision detection`
 
-### Current Features (v2.0.0)
-✅ **Complete multi-car racing with 2-player support**  
+### Current Features (v3.0.0)
+✅ **Complete racing line editor** (standalone web-based editor with drag-and-drop)  
+✅ **Custom racing line integration** (import/export, AI adaptation)  
+✅ **Multi-car racing** (up to 8 players with AI support)  
 ✅ **Enhanced controls** (keyboard, mouse, undo system)  
-✅ **Visual polish** (60 FPS animations, particle effects)  
-✅ **Developer tools** (performance metrics, debug mode)  
-✅ **Professional racing** (3 laps, checkered finish line)  
-✅ **Modern UI architecture** (DOM-based HUD, responsive design)  
+✅ **Visual polish** (60 FPS animations, particle effects, racing line overlays)  
+✅ **Developer tools** (performance metrics, debug mode, racing line visualization)  
+✅ **Professional racing** (3 laps, checkered finish line, lap tracking)  
+✅ **Modern UI architecture** (DOM-based HUD, responsive design, modal systems)  
 ✅ **Car collision detection** (multi-car competitive racing)  
+✅ **AI players** (3 difficulty levels with custom racing line support)  
+
+## 🎨 Racing Line Editor (v3.0+)
+
+v3.0.0 introduces a complete racing line editor system:
+
+### **🏗️ Standalone Editor**
+- **Interactive track visualization** with precise grid coordinates
+- **Drag-and-drop waypoint editing** with real-time feedback
+- **Grid snapping system** for precise waypoint placement
+- **Property editor** for speed, brake zones, and corner types
+- **Undo/redo support** with full history management
+- **Live TypeScript code generation** for integration
+- **Export/import system** with JSON format validation
+
+### **🔗 vRacer Integration**
+- **One-click import** of custom racing lines via configuration modal
+- **Visual overlay** with color-coded waypoints and speed indicators
+- **"L" key toggle** for racing line visibility
+- **Direct editor access** from main game interface
+- **AI adaptation** - AI players use your custom racing lines instantly
+
+### **🎯 Complete Workflow**
+1. **Design** racing lines in the standalone editor
+2. **Export** as JSON with optimized waypoint data
+3. **Import** into vRacer via the configuration modal
+4. **Test** against AI opponents using your racing lines
+5. **Iterate** and refine for optimal performance
 
 ### Planned Features
 *See [RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md) for detailed roadmap:*
-- **v2.1.0:** Visual track editor and custom tracks
-- **v2.2.0:** AI opponents and advanced physics
-- **v3.0.0:** Multiplayer networking and tournaments
+- **v3.1.0:** Multiple racing lines per track and racing line library
+- **v3.2.0:** Advanced track editor with custom track creation
+- **v4.0.0:** Multiplayer networking and tournament systems
 
 License
 - MIT

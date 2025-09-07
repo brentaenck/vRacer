@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vRacer Racing Line Editor</title>
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>vRacer Racing Line Editor</h1>
+            <div class="header-controls">
+                <button id="loadBtn" class="btn btn-secondary">Load Racing Line</button>
+                <button id="renderBtn" class="btn btn-primary">Render Track</button>
+                <button id="exportBtn" class="btn btn-primary">Export Code</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar - Track Controls -->
+            <aside class="sidebar left-sidebar">
+                <div class="panel">
+                    <h3>Track View</h3>
+                    <div class="control-group">
+                        <label><input type="checkbox" id="showGrid" checked> Show Grid</label>
+                        <label><input type="checkbox" id="showRacingLine" checked> Show Racing Line</label>
+                        <label><input type="checkbox" id="showWaypoints" checked> Show Waypoints</label>
+                        <label><input type="checkbox" id="showTrackBounds" checked> Show Track Bounds</label>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Canvas Area -->
+            <main class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="trackCanvas" width="1000" height="700"></canvas>
+                </div>
+                <div class="canvas-controls">
+                    <div class="control-group">
+                        <span>Status: <span id="status">Ready</span></span>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar - Stats -->
+            <aside class="sidebar right-sidebar">
+                <div class="panel">
+                    <h3>Racing Line Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Waypoints:</span>
+                            <span id="totalWaypoints" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Speed:</span>
+                            <span id="avgSpeed" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom Panel - Code Output -->
+        <section class="bottom-panel">
+            <div class="panel-header">
+                <h3>Generated TypeScript Code</h3>
+                <div class="panel-controls">
+                    <button id="copyCodeBtn" class="btn btn-primary btn-small">Copy to Clipboard</button>
+                </div>
+            </div>
+            <div class="code-container">
+                <pre id="generatedCode" class="code-preview"><code>// Racing line will be generated here...</code></pre>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Simple, direct implementation
+        let trackData = null;
+        let racingLine = [];
+        
+        function updateStatus(message) {
+            console.log('[STATUS]', message);
+            const statusEl = document.getElementById('status');
+            if (statusEl) statusEl.textContent = message;
+        }
+
+        function updateStats() {
+            const totalEl = document.getElementById('totalWaypoints');
+            const avgEl = document.getElementById('avgSpeed');
+            
+            if (totalEl) totalEl.textContent = racingLine.length.toString();
+            
+            if (racingLine.length > 0) {
+                const avgSpeed = (racingLine.reduce((sum, wp) => sum + wp.targetSpeed, 0) / racingLine.length).toFixed(1);
+                if (avgEl) avgEl.textContent = avgSpeed;
+            } else {
+                if (avgEl) avgEl.textContent = '0';
+            }
+        }
+
+        function generateCode() {
+            const codeEl = document.getElementById('generatedCode');
+            if (!codeEl || racingLine.length === 0) return;
+            
+            let code = 'const optimalRacingLine: RacingLinePoint[] = [\n';
+            racingLine.forEach((waypoint, index) => {
+                code += `    { pos: { x: ${waypoint.pos.x}, y: ${waypoint.pos.y} }, `;
+                code += `targetSpeed: ${waypoint.targetSpeed}, `;
+                code += `brakeZone: ${waypoint.brakeZone}, `;
+                code += `cornerType: '${waypoint.cornerType}', `;
+                code += `safeZone: '${waypoint.safeZone}' }`;
+                if (index < racingLine.length - 1) code += ',';
+                code += '\n';
+            });
+            code += '];';
+            
+            codeEl.innerHTML = `<code>${code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code>`;
+        }
+
+        async function loadTrackData() {
+            try {
+                updateStatus('Loading track data...');
+                
+                const response = await fetch('data/track-geometry.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                trackData = await response.json();
+                racingLine = trackData.racingLine.waypoints.map(wp => ({
+                    pos: { x: wp.pos.x, y: wp.pos.y },
+                    targetSpeed: wp.targetSpeed,
+                    brakeZone: wp.brakeZone,
+                    cornerType: wp.cornerType,
+                    safeZone: wp.safeZone,
+                    comment: wp.comment || ''
+                }));
+                
+                updateStatus(`Loaded: ${trackData.metadata.name} (${racingLine.length} waypoints)`);
+                updateStats();
+                generateCode();
+                
+                return true;
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`);
+                console.error('Load error:', error);
+                return false;
+            }
+        }
+
+        function renderTrack() {
+            if (!trackData) {
+                updateStatus('No track data loaded');
+                return;
+            }
+            
+            updateStatus('Rendering track...');
+            
+            const canvas = document.getElementById('trackCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate scale and offset
+            const bounds = trackData.track.bounds.track;
+            const trackWidth = bounds.maxX - bounds.minX;
+            const trackHeight = bounds.maxY - bounds.minY;
+            
+            const padding = 50;
+            const scaleX = (canvas.width - padding * 2) / trackWidth;
+            const scaleY = (canvas.height - padding * 2) / trackHeight;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const offsetX = (canvas.width - trackWidth * scale) / 2 - bounds.minX * scale;
+            const offsetY = (canvas.height - trackHeight * scale) / 2 - bounds.minY * scale;
+            
+            // Helper function to convert world to canvas coords
+            function worldToCanvas(worldPos) {
+                return {
+                    x: worldPos.x * scale + offsetX,
+                    y: worldPos.y * scale + offsetY
+                };
+            }
+            
+            // Draw track bounds if enabled
+            if (document.getElementById('showTrackBounds').checked) {
+                // Draw track surface
+                ctx.save();
+                
+                // Fill outer area
+                ctx.beginPath();
+                const outer = trackData.track.outer;
+                const outerCanvas = worldToCanvas(outer[0]);
+                ctx.moveTo(outerCanvas.x, outerCanvas.y);
+                for (let i = 1; i < outer.length; i++) {
+                    const p = worldToCanvas(outer[i]);
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = '#4a5568';
+                ctx.fill();
+                
+                // Cut out inner area
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                const inner = trackData.track.inner;
+                const innerCanvas = worldToCanvas(inner[0]);
+                ctx.moveTo(innerCanvas.x, innerCanvas.y);
+                for (let i = 1; i < inner.length; i++) {
+                    const p = worldToCanvas(inner[i]);
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.restore();
+                
+                // Draw boundaries
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = 3;
+                
+                // Outer boundary
+                ctx.beginPath();
+                const outerStart = worldToCanvas(outer[0]);
+                ctx.moveTo(outerStart.x, outerStart.y);
+                for (let i = 1; i < outer.length; i++) {
+                    const p = worldToCanvas(outer[i]);
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                
+                // Inner boundary
+                ctx.beginPath();
+                const innerStart = worldToCanvas(inner[0]);
+                ctx.moveTo(innerStart.x, innerStart.y);
+                for (let i = 1; i < inner.length; i++) {
+                    const p = worldToCanvas(inner[i]);
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+            
+            // Draw start/finish line
+            const startLine = trackData.track.startLine;
+            const startA = worldToCanvas(startLine.a);
+            const startB = worldToCanvas(startLine.b);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(startA.x, startA.y);
+            ctx.lineTo(startB.x, startB.y);
+            ctx.stroke();
+            
+            // Draw racing line if enabled
+            if (document.getElementById('showRacingLine').checked && racingLine.length > 1) {
+                ctx.strokeStyle = '#4CAF50';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                const firstPoint = worldToCanvas(racingLine[0].pos);
+                ctx.moveTo(firstPoint.x, firstPoint.y);
+                
+                for (let i = 1; i < racingLine.length; i++) {
+                    const point = worldToCanvas(racingLine[i].pos);
+                    ctx.lineTo(point.x, point.y);
+                }
+                
+                // Connect back to start
+                ctx.lineTo(firstPoint.x, firstPoint.y);
+                ctx.stroke();
+            }
+            
+            // Draw waypoints if enabled
+            if (document.getElementById('showWaypoints').checked) {
+                racingLine.forEach((waypoint, index) => {
+                    const canvasPos = worldToCanvas(waypoint.pos);
+                    
+                    let color;
+                    switch (waypoint.cornerType) {
+                        case 'straight': color = '#2196F3'; break; // Blue
+                        case 'entry': color = '#FF9800'; break;    // Orange
+                        case 'apex': color = '#F44336'; break;     // Red
+                        case 'exit': color = '#4CAF50'; break;     // Green
+                        default: color = '#9E9E9E';
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(canvasPos.x, canvasPos.y, 6, 0, 2 * Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    
+                    if (waypoint.brakeZone) {
+                        ctx.strokeStyle = '#FF5722';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                });
+            }
+            
+            // Draw grid if enabled
+            if (document.getElementById('showGrid').checked) {
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 0.5;
+                
+                const gridSpacing = 1;
+                const minX = Math.floor(bounds.minX - 2);
+                const maxX = Math.ceil(bounds.maxX + 2);
+                const minY = Math.floor(bounds.minY - 2);
+                const maxY = Math.ceil(bounds.maxY + 2);
+                
+                for (let x = minX; x <= maxX; x += gridSpacing) {
+                    const startPos = worldToCanvas({ x: x, y: minY });
+                    const endPos = worldToCanvas({ x: x, y: maxY });
+                    ctx.beginPath();
+                    ctx.moveTo(startPos.x, startPos.y);
+                    ctx.lineTo(endPos.x, endPos.y);
+                    ctx.stroke();
+                }
+                
+                for (let y = minY; y <= maxY; y += gridSpacing) {
+                    const startPos = worldToCanvas({ x: minX, y: y });
+                    const endPos = worldToCanvas({ x: maxX, y: y });
+                    ctx.beginPath();
+                    ctx.moveTo(startPos.x, startPos.y);
+                    ctx.lineTo(endPos.x, endPos.y);
+                    ctx.stroke();
+                }
+            }
+            
+            updateStatus(`Track rendered successfully (${racingLine.length} waypoints)`);
+        }
+
+        async function copyToClipboard() {
+            const codeEl = document.getElementById('generatedCode');
+            if (codeEl) {
+                try {
+                    await navigator.clipboard.writeText(codeEl.textContent);
+                    updateStatus('Code copied to clipboard!');
+                } catch (err) {
+                    updateStatus('Failed to copy code');
+                }
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateStatus('Initializing...');
+            
+            // Load data and render automatically
+            const loaded = await loadTrackData();
+            if (loaded) {
+                renderTrack();
+            }
+            
+            // Set up button handlers
+            document.getElementById('renderBtn').addEventListener('click', renderTrack);
+            document.getElementById('copyCodeBtn').addEventListener('click', copyToClipboard);
+            
+            // Set up checkboxes to re-render when changed
+            ['showGrid', 'showRacingLine', 'showWaypoints', 'showTrackBounds'].forEach(id => {
+                document.getElementById(id).addEventListener('change', renderTrack);
+            });
+            
+            updateStatus('Ready - Track should be visible');
+        });
+    </script>
+</body>
+</html>

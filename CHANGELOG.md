@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [3.0.0] - 2025-01-07
+
+### 🎨 **MAJOR: Racing Line Editor & Custom Racing Line Integration**
+
+#### 🏁 Added
+- **Complete Racing Line Editor System**
+  - Standalone web-based racing line editor with interactive track visualization
+  - Phase 2 interactive features: waypoint selection, dragging, insertion, and editing
+  - Grid snapping system for precise waypoint placement
+  - Property editor for waypoint attributes (speed, brake zone, corner type)
+  - Undo/redo support for waypoint management
+  - Live TypeScript code generation for racing line data
+  - Export/import functionality with JSON format
+
+- **Custom Racing Line Integration in vRacer**
+  - Import custom racing lines from JSON files via UI controls
+  - Racing line visualization overlay with color-coded waypoints
+  - Toggle racing line visibility with "L" keyboard shortcut
+  - Launch racing line editor directly from main game
+  - Global custom racing line state management
+
+- **AI Integration with Custom Racing Lines**
+  - AI players now use imported custom racing lines instead of hardcoded defaults
+  - Enhanced AI decision-making based on user-optimized racing paths
+  - Seamless integration with existing AI difficulty levels
+  - All AI pathfinding updated to leverage custom track analysis
+
+#### 🎯 Improved
+- **Track Analysis System**: Extended with custom racing line support
+- **User Experience**: Complete workflow from racing line design to AI implementation
+- **Developer Tools**: Powerful racing line optimization capabilities
+- **Game Customization**: Players can create and test optimal racing strategies
+
+#### 🔧 Technical
+- New `racing-line-ui.ts` module for import/export functionality
+- Updated `track-analysis.ts` with `createTrackAnalysisWithCustomLine()` function
+- Enhanced `game.ts` with racing line overlay rendering (`drawRacingLine()`)
+- Global racing line state management with JSON validation
+- Backward compatibility maintained with default racing line fallback
+- TypeScript integration throughout racing line editor
+
+### 📚 Documentation
+- Comprehensive racing line editor documentation
+- Integration guides for custom racing line workflow
+- Technical API documentation for racing line data structures
+
+---
+
 ## [2.3.0] - 2025-01-05
 
 ### 🏁 Added
