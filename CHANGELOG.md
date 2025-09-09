@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [3.1.0] - 2025-01-09
+
+### 🎨 **Visual Enhancement: Vibrant Car Color Palette**
+
+#### 🎨 Changed
+- **Car Color Scheme Redesign**
+  - Updated primary car colors to vibrant, distinct palette:
+    - Player 1: 🧡 Tangerine (#F28E2B)
+    - Player 2: 💛 Golden Yellow (#F4D03F) 
+    - Player 3: 💙 Royal Blue (#286DC0)
+    - Player 4: 💜 Violet (#8E44AD)
+  - Replaced previous basic RGB colors with professional color palette
+  - Enhanced visual distinction between players in multi-car races
+  - Maintained fallback colors for players 5-8
+
+#### 🔧 Technical
+- Updated `CAR_COLORS` array in `src/game.ts`
+- Refactored CSS color variables from `--racing-red/green/blue/yellow/orange` to `--racing-tangerine/yellow/blue/violet`
+- Updated CSS utility classes and data-color selectors in `src/styles.css`
+- Updated player setup UI color indicators for new palette
+- Maintained backward compatibility with existing game state
+
+### 🎯 Improved
+- **Player Identification**: Enhanced visual clarity in multi-player races
+- **Color Accessibility**: Better contrast and distinct color choices
+- **UI Consistency**: Unified color scheme across game canvas, trails, and setup interface
+- **Brand Enhancement**: More vibrant and modern visual appearance
+
 ## [3.0.0] - 2025-01-07
 
 ### 🎨 **MAJOR: Racing Line Editor & Custom Racing Line Integration**

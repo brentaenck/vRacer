@@ -3,34 +3,37 @@
    ======================================== */
 
 :root {
-  /* Color Palette */
-  --bg-primary: #0a0a0b;
-  --bg-secondary: #161618;
-  --bg-tertiary: #1e1e20;
-  --bg-accent: #2a2a2d;
+  /* Paper-Based Color Palette */
+  --paper-bg: #fefef8;           /* Cream paper background */
+  --paper-aged: #f9f7f1;        /* Slightly aged paper */
+  --paper-shadow: #e8e6e0;      /* Paper shadow/depth */
+  --paper-border: #d5d3cd;      /* Paper border lines */
   
-  --text-primary: #ffffff;
-  --text-secondary: #b0b0b0;
-  --text-muted: #808080;
-  --text-accent: #00d4ff;
+  --pencil-dark: #2c2c2c;       /* Dark pencil/ink */
+  --pencil-medium: #5a5a5a;     /* Medium pencil */
+  --pencil-light: #8a8a8a;      /* Light pencil */
+  --pencil-blue: #4a90e2;       /* Blue pencil (for grid) */
+  --pencil-red: #e74c3c;        /* Red pencil */
+  --pencil-green: #27ae60;      /* Green pencil */
   
-  --border-primary: #333336;
-  --border-secondary: #404045;
-  --border-accent: #00d4ff;
+  --graph-blue: #a8c8e8;        /* Graph paper blue lines */
+  --graph-major: #7db4d8;       /* Major grid lines */
   
-  --racing-red: #ff4444;
-  --racing-green: #44ff44;
-  --racing-blue: #4488ff;
-  --racing-yellow: #ffcc00;
-  --racing-orange: #ff8844;
+  /* Hand-drawn colored pencil racing colors */
+  --racing-tangerine: #F28E2B;  /* 🧡 Tangerine colored pencil */
+  --racing-yellow: #F4D03F;     /* 💛 Golden Yellow colored pencil */
+  --racing-blue: #286DC0;       /* 💙 Royal Blue colored pencil */
+  --racing-violet: #8E44AD;     /* 💜 Violet colored pencil */
+  --racing-red: #dc2626;        /* Red colored pencil (fallback) */
   
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --error: #ef4444;
+  --success: #059669;           /* Success green */
+  --warning: #d97706;           /* Warning orange */
+  --error: #dc2626;             /* Error red */
   
-  /* Typography */
-  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Hand-drawn Typography */
+  --font-primary: 'Architects Daughter', 'Kalam', cursive, sans-serif;
+  --font-heading: 'Caveat', 'Patrick Hand', cursive, sans-serif;
+  --font-mono: 'Kalam', 'Architects Daughter', monospace, cursive;
   
   /* Spacing */
   --spacing-xs: 4px;
@@ -57,7 +60,23 @@
   --transition-normal: 0.25s ease-out;
   --transition-slow: 0.4s ease-out;
   
-  color-scheme: dark;
+  color-scheme: light; /* Changed from dark to light for paper theme */
+}
+
+/* Add paper aging effects */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(139, 69, 19, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(160, 82, 45, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 40% 70%, rgba(139, 69, 19, 0.01) 0%, transparent 50%);
+  z-index: -1;
 }
 
 /* ========================================
@@ -76,11 +95,23 @@ html, body, #app {
 
 body {
   font-family: var(--font-primary);
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--paper-bg);
+  background-image: 
+    /* Subtle paper texture */
+    radial-gradient(circle at 1px 1px, var(--paper-aged) 1px, transparent 0),
+    /* Graph paper grid - minor lines */
+    linear-gradient(var(--graph-blue) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-blue) 1px, transparent 1px);
+  background-size: 
+    25px 25px,  /* Paper texture */
+    20px 20px,  /* Vertical grid lines */
+    20px 20px;  /* Horizontal grid lines */
+  color: var(--pencil-dark);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Add subtle paper texture */
+  position: relative;
 }
 
 #app {
@@ -98,21 +129,37 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--bg-secondary);
-  border-bottom: 2px solid var(--border-primary);
-  box-shadow: var(--shadow-md);
+  background: var(--paper-aged);
+  /* Hand-drawn border effect */
+  border-bottom: 3px solid var(--pencil-dark);
+  border-image: repeating-linear-gradient(
+    90deg,
+    var(--pencil-dark) 0px,
+    var(--pencil-dark) 2px,
+    transparent 2px,
+    transparent 4px
+  ) 3;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  /* Slight paper texture overlay */
+  background-image: radial-gradient(circle at 2px 2px, var(--paper-shadow) 1px, transparent 0);
+  background-size: 30px 30px;
 }
 
 header h1 {
-  font-size: 28px;
+  font-family: var(--font-heading);
+  font-size: 32px;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(135deg, var(--text-accent), var(--racing-blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
-  letter-spacing: -0.5px;
+  color: var(--pencil-dark);
+  /* Hand-drawn text effect */
+  text-shadow: 
+    1px 1px 0px var(--pencil-medium),
+    -1px -1px 0px var(--paper-shadow);
+  letter-spacing: 1px;
+  /* Slight irregular spacing to simulate hand lettering */
+  transform: rotate(-0.5deg);
+  position: relative;
 }
 
 .controls {
@@ -127,23 +174,35 @@ header h1 {
 
 button {
   font-family: var(--font-primary);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
   padding: var(--spacing-sm) var(--spacing-lg);
-  background: var(--bg-accent);
-  color: var(--text-primary);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-md);
+  background: var(--paper-aged);
+  color: var(--pencil-dark);
+  /* Hand-drawn border */
+  border: 2px solid var(--pencil-dark);
+  border-radius: 6px;
   cursor: pointer;
   transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 0 5px rgba(0, 0, 0, 0.05);
+  position: relative;
+  /* Slight rotation for hand-drawn effect */
+  transform: rotate(-0.2deg);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-shadow) 0.5px, transparent 0);
+  background-size: 15px 15px;
 }
 
 button:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--border-accent);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  background: var(--paper-bg);
+  border-color: var(--pencil-blue);
+  box-shadow: 
+    3px 3px 6px rgba(0, 0, 0, 0.15),
+    inset 0 0 8px rgba(0, 0, 0, 0.03);
+  transform: rotate(0.1deg) translateY(-1px);
+  color: var(--pencil-blue);
 }
 
 button:active {
@@ -158,23 +217,32 @@ button:focus {
 
 /* Header reset button styling */
 .btn-reset-header {
-  background: linear-gradient(135deg, var(--success), #16a34a);
-  border-color: var(--success);
-  color: white;
+  background: var(--paper-bg);
+  border: 2px solid var(--success);
+  color: var(--success);
   padding: var(--spacing-xs) var(--spacing-md);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  border-radius: var(--radius-md);
+  border-radius: 6px;
+  transform: rotate(0.3deg);
+  box-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 0 5px rgba(5, 150, 105, 0.1);
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-aged) 0.5px, transparent 0);
+  background-size: 12px 12px;
 }
 
 .btn-reset-header:hover {
-  background: linear-gradient(135deg, #16a34a, #15803d);
-  border-color: #16a34a;
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
-  transform: translateY(-1px);
+  background: var(--paper-aged);
+  border-color: var(--pencil-green);
+  color: var(--pencil-green);
+  box-shadow: 
+    3px 3px 6px rgba(0, 0, 0, 0.15),
+    inset 0 0 8px rgba(5, 150, 105, 0.15);
+  transform: rotate(-0.1deg) translateY(-1px);
 }
 
 .btn-reset-header .btn-icon {
@@ -269,11 +337,28 @@ main {
 #canvas {
   width: 100%;
   height: 100%;
-  background: var(--bg-primary);
-  border: 2px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  background: var(--paper-bg);
+  /* Hand-drawn border effect */
+  border: 3px solid var(--pencil-dark);
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.15),
+    inset 0 0 20px rgba(0, 0, 0, 0.05); /* Inner paper shadow */
   transition: border-color var(--transition-normal);
+  position: relative;
+  /* Graph paper texture overlay */
+  background-image: 
+    /* Major grid lines every 100px */
+    linear-gradient(var(--graph-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-major) 1px, transparent 1px),
+    /* Minor grid lines every 20px */
+    linear-gradient(var(--graph-blue) 0.5px, transparent 0.5px),
+    linear-gradient(90deg, var(--graph-blue) 0.5px, transparent 0.5px);
+  background-size: 
+    100px 100px,  /* Major vertical lines */
+    100px 100px,  /* Major horizontal lines */
+    20px 20px,    /* Minor vertical lines */
+    20px 20px;    /* Minor horizontal lines */
 }
 
 #canvas:hover {
@@ -291,13 +376,18 @@ main {
    ======================================== */
 
 #sidebar {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
+  background: var(--paper-aged);
+  border: 2px solid var(--pencil-dark);
+  border-radius: 8px;
   padding: var(--spacing-lg);
   overflow-y: auto;
-  box-shadow: var(--shadow-md);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    inset 0 0 15px rgba(0, 0, 0, 0.03);
   position: relative;
+  /* Paper texture */
+  background-image: radial-gradient(circle at 2px 2px, var(--paper-shadow) 1px, transparent 0);
+  background-size: 25px 25px;
 }
 
 /* Hide sidebar content when editor is active */
@@ -310,12 +400,22 @@ main {
 }
 
 #sidebar h2 {
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
   margin: 0 0 var(--spacing-md) 0;
-  color: var(--text-primary);
-  border-bottom: 2px solid var(--border-primary);
+  color: var(--pencil-dark);
+  /* Hand-drawn underline */
+  border-bottom: 2px solid var(--pencil-dark);
+  border-image: repeating-linear-gradient(
+    90deg,
+    var(--pencil-dark) 0px,
+    var(--pencil-dark) 3px,
+    transparent 3px,
+    transparent 6px
+  ) 2;
   padding-bottom: var(--spacing-sm);
+  transform: rotate(-0.3deg);
 }
 
 #sidebar h2:not(:first-child) {
@@ -405,11 +505,11 @@ footer small {
    Utility Classes
    ======================================== */
 
-.racing-red { color: var(--racing-red) !important; }
-.racing-green { color: var(--racing-green) !important; }
-.racing-blue { color: var(--racing-blue) !important; }
+.racing-tangerine { color: var(--racing-tangerine) !important; }
 .racing-yellow { color: var(--racing-yellow) !important; }
-.racing-orange { color: var(--racing-orange) !important; }
+.racing-blue { color: var(--racing-blue) !important; }
+.racing-violet { color: var(--racing-violet) !important; }
+.racing-red { color: var(--racing-red) !important; }
 
 .text-accent { color: var(--text-accent) !important; }
 .text-success { color: var(--success) !important; }
@@ -554,22 +654,30 @@ footer small {
 }
 
 .version {
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--bg-accent);
-  color: var(--text-secondary);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  background: var(--paper-aged);
+  color: var(--pencil-medium);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 2px solid var(--pencil-light);
+  /* Hand-drawn badge effect */
+  transform: rotate(0.5deg);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .tagline {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--pencil-medium);
   margin: 0;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-transform: lowercase;
+  /* Hand-lettered style */
+  transform: rotate(-0.3deg);
+  opacity: 0.8;
 }
 
 .control-group {
@@ -845,11 +953,11 @@ kbd {
    Hamburger Menu & Configuration Dialog
    ======================================== */
 
-/* Hamburger Menu Button */
+/* Hamburger Menu Button - Paper Theme */
 .btn-config {
-  background: var(--bg-accent);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-md);
+  background: var(--paper-aged);
+  border: 2px solid var(--pencil-dark);
+  border-radius: 6px;
   padding: var(--spacing-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -859,13 +967,19 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Hand-drawn style */
+  transform: rotate(-0.2deg);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-shadow) 0.5px, transparent 0);
+  background-size: 10px 10px;
 }
 
 .btn-config:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--border-accent);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  background: var(--paper-bg);
+  border-color: var(--pencil-blue);
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+  transform: rotate(0.1deg) translateY(-1px);
 }
 
 .btn-config:active {
@@ -884,23 +998,27 @@ kbd {
 .hamburger-line {
   width: 100%;
   height: 2px;
-  background: var(--text-primary);
+  background: var(--pencil-dark);
   border-radius: 2px;
   transition: all var(--transition-fast);
+  /* Hand-drawn line effect */
+  box-shadow: 0 0 1px var(--pencil-medium);
 }
 
 .btn-config:hover .hamburger-line {
-  background: var(--text-accent);
+  background: var(--pencil-blue);
+  box-shadow: 0 0 2px var(--pencil-blue);
 }
 
-/* Configuration Modal */
+/* Configuration Modal - Paper Theme */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
+  /* Paper-themed semi-transparent background */
+  background: rgba(254, 254, 248, 0.95);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -909,6 +1027,10 @@ kbd {
   opacity: 0;
   visibility: hidden;
   transition: all var(--transition-normal);
+  /* Add subtle paper texture to overlay */
+  background-image: 
+    radial-gradient(circle at 2px 2px, var(--paper-aged) 1px, transparent 0);
+  background-size: 30px 30px;
 }
 
 .modal-overlay.show {
@@ -917,16 +1039,24 @@ kbd {
 }
 
 .modal-content {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.5);
+  background: var(--paper-bg);
+  /* Hand-drawn border effect */
+  border: 3px solid var(--pencil-dark);
+  border-radius: 8px;
+  box-shadow: 
+    4px 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 0 20px rgba(0, 0, 0, 0.03);
   width: 90%;
   max-width: 480px;
   max-height: 80vh;
   overflow-y: auto;
   transform: scale(0.9) translateY(20px);
   transition: all var(--transition-normal);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-aged) 1px, transparent 0);
+  background-size: 20px 20px;
+  /* Slight hand-drawn rotation */
+  position: relative;
 }
 
 .modal-overlay.show .modal-content {
@@ -938,27 +1068,40 @@ kbd {
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-xl);
-  border-bottom: 1px solid var(--border-primary);
+  /* Hand-drawn border */
+  border-bottom: 2px solid var(--pencil-dark);
+  border-image: repeating-linear-gradient(
+    90deg,
+    var(--pencil-dark) 0px,
+    var(--pencil-dark) 3px,
+    transparent 3px,
+    transparent 6px
+  ) 2;
+  background: var(--paper-aged);
 }
 
 .modal-header h2 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--pencil-dark);
   margin: 0;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  /* Hand-lettered style */
+  transform: rotate(-0.2deg);
+  text-shadow: 1px 1px 0px var(--paper-shadow);
 }
 
 .btn-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
+  background: var(--paper-aged);
+  border: 2px solid var(--pencil-medium);
+  color: var(--pencil-medium);
   font-size: 24px;
   cursor: pointer;
   padding: var(--spacing-xs);
-  border-radius: var(--radius-md);
+  border-radius: 4px;
   transition: all var(--transition-fast);
   line-height: 1;
   width: 32px;
@@ -966,11 +1109,16 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Hand-drawn style */
+  transform: rotate(0.3deg);
+  font-family: var(--font-mono);
 }
 
 .btn-close:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
+  background: var(--paper-bg);
+  color: var(--pencil-red);
+  border-color: var(--pencil-red);
+  transform: rotate(-0.2deg);
 }
 
 .modal-body {
@@ -987,15 +1135,25 @@ kbd {
 }
 
 .config-section h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--pencil-dark);
   margin: 0;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   padding-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--border-secondary);
+  /* Hand-drawn underline */
+  border-bottom: 2px solid var(--pencil-dark);
+  border-image: repeating-linear-gradient(
+    90deg,
+    var(--pencil-dark) 0px,
+    var(--pencil-dark) 2px,
+    transparent 2px,
+    transparent 4px
+  ) 2;
+  transform: rotate(-0.1deg);
 }
 
 .config-group {
@@ -1029,17 +1187,22 @@ kbd {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Toggle switches */
+/* Toggle switches - Paper Theme */
 .config-toggle {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-lg);
+  background: var(--paper-aged);
+  border: 2px solid var(--pencil-light);
+  border-radius: 6px;
   cursor: pointer;
   transition: all var(--transition-fast);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-shadow) 0.5px, transparent 0);
+  background-size: 12px 12px;
+  /* Slight hand-drawn rotation */
+  transform: rotate(0.1deg);
   position: relative;
 }
 
@@ -1627,13 +1790,19 @@ kbd {
    ============================================================================= */
 
 .race-settings-panel {
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-lg);
+  background: var(--paper-aged);
+  border-radius: 8px;
   padding: var(--spacing-lg);
-  border: 1px solid var(--border-secondary);
+  border: 2px solid var(--pencil-dark);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-shadow) 0.5px, transparent 0);
+  background-size: 15px 15px;
+  /* Hand-drawn style */
+  transform: rotate(0.1deg);
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .settings-section,
@@ -1645,15 +1814,25 @@ kbd {
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--pencil-dark);
   margin: 0;
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  border-bottom: 1px solid var(--border-primary);
+  /* Hand-drawn underline */
+  border-bottom: 2px solid var(--pencil-dark);
+  border-image: repeating-linear-gradient(
+    90deg,
+    var(--pencil-dark) 0px,
+    var(--pencil-dark) 2px,
+    transparent 2px,
+    transparent 4px
+  ) 2;
   padding-bottom: var(--spacing-xs);
+  transform: rotate(-0.1deg);
 }
 
 /* Settings Group */
@@ -1668,7 +1847,7 @@ kbd {
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing-md);
-  color: var(--text-primary);
+  color: var(--pencil-dark);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -1682,15 +1861,18 @@ kbd {
 }
 
 .setting-select {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-secondary);
-  color: var(--text-primary);
+  background: var(--paper-bg);
+  border: 2px solid var(--pencil-medium);
+  color: var(--pencil-dark);
   padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   font-size: 13px;
   font-family: var(--font-primary);
   min-width: 120px;
   transition: all var(--transition-fast);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-aged) 0.5px, transparent 0);
+  background-size: 10px 10px;
 }
 
 .setting-select:focus {
@@ -1707,11 +1889,11 @@ kbd {
 }
 
 .preset-btn {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-secondary);
-  color: var(--text-primary);
+  background: var(--paper-aged);
+  border: 2px solid var(--pencil-light);
+  color: var(--pencil-dark);
   padding: var(--spacing-sm);
-  border-radius: var(--radius-md);
+  border-radius: 6px;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
@@ -1719,13 +1901,20 @@ kbd {
   align-items: center;
   gap: var(--spacing-xs);
   font-family: var(--font-primary);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-shadow) 0.5px, transparent 0);
+  background-size: 12px 12px;
+  /* Hand-drawn style */
+  transform: rotate(0.1deg);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .preset-btn:hover {
-  background: var(--bg-accent);
-  border-color: var(--text-accent);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  background: var(--paper-bg);
+  border-color: var(--pencil-blue);
+  color: var(--pencil-blue);
+  transform: rotate(-0.1deg) translateY(-1px);
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.12);
 }
 
 .preset-btn.active {
@@ -1806,27 +1995,33 @@ kbd {
   flex: 1;
 }
 
-/* Player Card Components */
+/* Player Card Components - Paper Theme */
 .player-card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-lg);
+  background: var(--paper-aged);
+  border: 2px solid var(--pencil-dark);
+  border-radius: 8px;
   overflow: hidden;
   transition: all var(--transition-fast);
   display: flex;
   flex-direction: column;
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-shadow) 0.5px, transparent 0);
+  background-size: 12px 12px;
+  /* Hand-drawn style */
+  transform: rotate(0.1deg);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .player-card:hover {
-  border-color: var(--border-accent);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
+  border-color: var(--pencil-blue);
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+  transform: rotate(-0.1deg) translateY(-1px);
 }
 
 .player-card-header {
-  background: var(--bg-accent);
+  background: var(--paper-bg);
   padding: var(--spacing-sm) var(--spacing-md);
-  border-bottom: 1px solid var(--border-secondary);
+  border-bottom: 2px solid var(--pencil-dark);
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -1841,27 +2036,28 @@ kbd {
   flex-shrink: 0;
 }
 
-.player-color[data-color="#ff4444"] {
-  background: var(--racing-red);
+.player-color[data-color="#F28E2B"] {
+  background: var(--racing-tangerine);
 }
 
-.player-color[data-color="#44ff44"] {
-  background: var(--racing-green);
+.player-color[data-color="#F4D03F"] {
+  background: var(--racing-yellow);
 }
 
-.player-color[data-color="#4488ff"] {
+.player-color[data-color="#286DC0"] {
   background: var(--racing-blue);
 }
 
-.player-color[data-color="#ffcc00"] {
-  background: var(--racing-yellow);
+.player-color[data-color="#8E44AD"] {
+  background: var(--racing-violet);
 }
 
 .player-number {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--pencil-dark);
   margin: 0;
+  font-family: var(--font-primary);
 }
 
 .player-card-body {
@@ -1873,15 +2069,18 @@ kbd {
 }
 
 .player-name {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-secondary);
-  color: var(--text-primary);
+  background: var(--paper-bg);
+  border: 2px solid var(--pencil-medium);
+  color: var(--pencil-dark);
   padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   font-size: 13px;
   font-family: var(--font-primary);
   width: 100%;
   transition: all var(--transition-fast);
+  /* Paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-aged) 0.5px, transparent 0);
+  background-size: 8px 8px;
 }
 
 .player-name:focus {

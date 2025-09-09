@@ -113,14 +113,14 @@ export function isLegacyGame(state: GameState): state is LegacyGameState {
 
 // Car colors for multiplayer
 const CAR_COLORS = [
-  '#ff4444', // Red
-  '#44ff44', // Green  
-  '#4444ff', // Blue
-  '#ffff44', // Yellow
-  '#ff44ff', // Magenta
-  '#44ffff', // Cyan
-  '#ff8844', // Orange
-  '#8844ff', // Purple
+  '#F28E2B', // 🧡 Tangerine
+  '#F4D03F', // 💛 Golden Yellow  
+  '#286DC0', // 💙 Royal Blue
+  '#8E44AD', // 💜 Violet
+  '#ff44ff', // Magenta (fallback)
+  '#44ffff', // Cyan (fallback)
+  '#ff8844', // Orange (fallback)
+  '#34495e', // Dark gray (fallback)
 ]
 
 // Create a new car instance
@@ -1031,26 +1031,21 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.clearRect(0, 0, W, H)
 
-    // Background
-    ctx.fillStyle = '#0b0b0b'
+    // Paper background with subtle texture
+    ctx.fillStyle = '#fefef8'  // Cream paper
     ctx.fillRect(0, 0, W, H)
-
-    // Basic grid behind track (only if not using enhanced grid)
-    if (legacyState.showGrid && !isFeatureEnabled('graphPaperGrid')) {
-      ctx.strokeStyle = '#222'
-      ctx.lineWidth = 1
-      for (let x = 0; x <= W; x += g) { line(ctx, x, 0, x, H) }
-      for (let y = 0; y <= H; y += g) { line(ctx, 0, y, W, y) }
-    }
-
-    // Track polygons
-    drawPoly(ctx, legacyState.outer, g, '#555', '#111')
-    drawPoly(ctx, legacyState.inner, g, '#555', '#0b0b0b', true)
     
-    // Enhanced grid overlaid on track (if enabled)
-    if (legacyState.showGrid && isFeatureEnabled('graphPaperGrid')) {
-      drawEnhancedGrid(ctx, W, H, g)
+    // Add subtle paper fiber texture
+    drawPaperTexture(ctx, W, H)
+
+    // Coordinate labels (grid numbers only - CSS provides grid lines)
+    if (legacyState.showGrid) {
+      drawCoordinateLabels(ctx, W, H, g)
     }
+
+    // Track with proper hole cutout
+    drawTrackWithHole(ctx, legacyState.outer, legacyState.inner, g)
+    
 
     // Start/Finish line - checkered flag pattern
     drawCheckeredStartLine(ctx, legacyState.start, g)
@@ -1061,17 +1056,14 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     // Racing line overlay (if enabled)
     drawRacingLine(ctx, legacyState, g)
 
-    // Trail
-    ctx.strokeStyle = '#9cf'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    const t0 = legacyState.trail[0]!
-    ctx.moveTo(t0.x * g, t0.y * g)
-    for (let i = 1; i < legacyState.trail.length; i++) {
-      const p = legacyState.trail[i]!
-      ctx.lineTo(p.x * g, p.y * g)
+    // Trail with colored pencil effect
+    if (legacyState.trail.length > 1) {
+      for (let i = 0; i < legacyState.trail.length - 1; i++) {
+        const p1 = legacyState.trail[i]!
+        const p2 = legacyState.trail[i + 1]!
+        drawColoredPencilLine(ctx, p1.x * g, p1.y * g, p2.x * g, p2.y * g, '#4169E1', 2) // Royal blue pencil
+      }
     }
-    ctx.stroke()
 
     // Candidates with improved controls visual feedback
     if (legacyState.showCandidates && !legacyState.crashed && !legacyState.finished) {
@@ -1109,8 +1101,9 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       }
     }
 
-    // Car
-    drawNode(ctx, legacyState.pos, g, legacyState.crashed ? '#f66' : '#ff0', 6)
+    // Car with colored pencil effect
+    const carColor = legacyState.crashed ? '#DC143C' : '#FFD700' // Crimson or gold pencil
+    drawColoredPencilDot(ctx, legacyState.pos.x * g, legacyState.pos.y * g, 6, carColor)
     
     // Particles (if animations are enabled)
     if (isFeatureEnabled('animations')) {
@@ -1150,26 +1143,21 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.clearRect(0, 0, W, H)
 
-    // Background
-    ctx.fillStyle = '#0b0b0b'
+    // Paper background with subtle texture
+    ctx.fillStyle = '#fefef8'  // Cream paper
     ctx.fillRect(0, 0, W, H)
-
-    // Basic grid behind track (only if not using enhanced grid)
-    if (multiCarState.showGrid && !isFeatureEnabled('graphPaperGrid')) {
-      ctx.strokeStyle = '#222'
-      ctx.lineWidth = 1
-      for (let x = 0; x <= W; x += g) { line(ctx, x, 0, x, H) }
-      for (let y = 0; y <= H; y += g) { line(ctx, 0, y, W, y) }
-    }
-
-    // Track polygons
-    drawPoly(ctx, multiCarState.outer, g, '#555', '#111')
-    drawPoly(ctx, multiCarState.inner, g, '#555', '#0b0b0b', true)
     
-    // Enhanced grid overlaid on track (if enabled)
-    if (multiCarState.showGrid && isFeatureEnabled('graphPaperGrid')) {
-      drawEnhancedGrid(ctx, W, H, g)
+    // Add subtle paper fiber texture
+    drawPaperTexture(ctx, W, H)
+
+    // Coordinate labels (grid numbers only - CSS provides grid lines)
+    if (multiCarState.showGrid) {
+      drawCoordinateLabels(ctx, W, H, g)
     }
+
+    // Track with proper hole cutout
+    drawTrackWithHole(ctx, multiCarState.outer, multiCarState.inner, g)
+    
 
     // Start/Finish line - checkered flag pattern
     drawCheckeredStartLine(ctx, multiCarState.start, g)
@@ -1570,6 +1558,114 @@ function drawCheckeredStartLine(ctx: CanvasRenderingContext2D, startLine: Segmen
   ctx.restore()
 }
 
+// Colored pencil polygon drawing
+function drawColoredPencilPoly(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string, fill: string, hole = false) {
+  ctx.save()
+  
+  // Fill the polygon first with slightly irregular fill (only for non-holes)
+  if (!hole) {
+    ctx.fillStyle = fill
+    ctx.globalAlpha = 0.7
+    ctx.beginPath()
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i]
+      if (!p) continue
+      const x = p.x * g + (Math.random() - 0.5) * 0.3 // Slight jitter
+      const y = p.y * g + (Math.random() - 0.5) * 0.3
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+    }
+    ctx.closePath()
+    ctx.fill()
+  }
+  
+  // Draw the border with colored pencil effect
+  ctx.restore()
+  ctx.save()
+  
+  for (let i = 0; i < poly.length; i++) {
+    const p1 = poly[i]
+    const p2 = poly[(i + 1) % poly.length]
+    if (!p1 || !p2) continue
+    
+    drawColoredPencilLine(
+      ctx,
+      p1.x * g,
+      p1.y * g,
+      p2.x * g,
+      p2.y * g,
+      stroke,
+      3
+    )
+  }
+  
+  ctx.restore()
+}
+
+// Special function for drawing track with proper hole cutout
+function drawTrackWithHole(ctx: CanvasRenderingContext2D, outer: Vec[], inner: Vec[], g: number) {
+  ctx.save()
+  
+  // Use composite operation to create proper hole
+  ctx.globalCompositeOperation = 'source-over'
+  
+  // First, fill the outer track area with light graphite pencil
+  ctx.fillStyle = '#C0C0C0' // Light graphite pencil track surface
+  ctx.globalAlpha = 0.6
+  ctx.beginPath()
+  for (let i = 0; i < outer.length; i++) {
+    const p = outer[i]
+    if (!p) continue
+    const x = p.x * g + (Math.random() - 0.5) * 0.3 // Slight jitter
+    const y = p.y * g + (Math.random() - 0.5) * 0.3
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fill()
+  
+  // Cut out the inner hole - this removes the track surface to show paper background
+  ctx.globalCompositeOperation = 'destination-out'
+  ctx.globalAlpha = 1.0
+  ctx.beginPath()
+  for (let i = 0; i < inner.length; i++) {
+    const p = inner[i]
+    if (!p) continue
+    const x = p.x * g + (Math.random() - 0.5) * 0.3 // Slight jitter
+    const y = p.y * g + (Math.random() - 0.5) * 0.3
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fill()
+  
+  ctx.restore()
+  
+  // Now draw the borders with dark graphite pencil effect
+  drawColoredPencilPolyBorder(ctx, outer, g, '#4A4A4A') // Dark graphite border for outer
+  drawColoredPencilPolyBorder(ctx, inner, g, '#4A4A4A') // Dark graphite border for inner
+}
+
+// Helper function to draw just the border
+function drawColoredPencilPolyBorder(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string) {
+  ctx.save()
+  
+  for (let i = 0; i < poly.length; i++) {
+    const p1 = poly[i]
+    const p2 = poly[(i + 1) % poly.length]
+    if (!p1 || !p2) continue
+    
+    drawColoredPencilLine(
+      ctx,
+      p1.x * g,
+      p1.y * g,
+      p2.x * g,
+      p2.y * g,
+      stroke,
+      3
+    )
+  }
+  
+  ctx.restore()
+}
+
 function drawPoly(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string, fill: string, hole = false) {
   ctx.save()
   ctx.strokeStyle = stroke
@@ -1599,120 +1695,134 @@ function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number,
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
 }
 
-// Enhanced grid drawing function with coordinate indicators
-function drawEnhancedGrid(ctx: CanvasRenderingContext2D, W: number, H: number, g: number) {
+// Paper texture effect
+function drawPaperTexture(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.save()
+  
+  // Create subtle paper fiber texture using noise
+  const imageData = ctx.createImageData(width, height)
+  const data = imageData.data
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const noise = Math.random() * 10 - 5 // Random -5 to +5
+    const baseColor = 254 + noise // Slight variation from #fefef8
+    
+    data[i] = Math.max(240, Math.min(255, baseColor))     // R
+    data[i + 1] = Math.max(240, Math.min(255, baseColor)) // G  
+    data[i + 2] = Math.max(245, Math.min(255, baseColor + 3)) // B (slightly more blue)
+    data[i + 3] = Math.random() > 0.98 ? 5 : 0 // Very sparse tiny specks
+  }
+  
+  ctx.globalAlpha = 0.05
+  ctx.putImageData(imageData, 0, 0)
+  ctx.restore()
+}
+
+// Colored pencil line effect
+function drawColoredPencilLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, color: string, width: number = 2) {
+  ctx.save()
+  
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  const steps = Math.floor(distance / 2) // Draw in small segments
+  
+  ctx.strokeStyle = color
+  ctx.lineWidth = width
+  ctx.lineCap = 'round'
+  ctx.globalAlpha = 0.8
+  
+  for (let i = 0; i < steps; i++) {
+    const t1 = i / steps
+    const t2 = (i + 1) / steps
+    
+    // Add slight randomness for hand-drawn effect
+    const jitter = 0.3
+    const x1_j = x1 + dx * t1 + (Math.random() - 0.5) * jitter
+    const y1_j = y1 + dy * t1 + (Math.random() - 0.5) * jitter
+    const x2_j = x1 + dx * t2 + (Math.random() - 0.5) * jitter
+    const y2_j = y1 + dy * t2 + (Math.random() - 0.5) * jitter
+    
+    // Vary opacity slightly for texture
+    ctx.globalAlpha = 0.7 + Math.random() * 0.2
+    
+    ctx.beginPath()
+    ctx.moveTo(x1_j, y1_j)
+    ctx.lineTo(x2_j, y2_j)
+    ctx.stroke()
+  }
+  
+  ctx.restore()
+}
+
+// Colored pencil circle/dot effect
+function drawColoredPencilDot(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string) {
+  ctx.save()
+  
+  ctx.fillStyle = color
+  ctx.globalAlpha = 0.8
+  
+  // Draw multiple overlapping circles with slight jitter for texture
+  for (let i = 0; i < 3; i++) {
+    const jitterX = (Math.random() - 0.5) * 0.5
+    const jitterY = (Math.random() - 0.5) * 0.5
+    const radiusVariation = radius + (Math.random() - 0.5) * 0.5
+    
+    ctx.globalAlpha = 0.3 + Math.random() * 0.3
+    ctx.beginPath()
+    ctx.arc(x + jitterX, y + jitterY, radiusVariation, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  ctx.restore()
+}
+
+// Draw coordinate labels for technical reference (no grid lines - CSS provides those)
+function drawCoordinateLabels(ctx: CanvasRenderingContext2D, W: number, H: number, g: number) {
   ctx.save()
   
   // Calculate grid boundaries based on game coordinate system
   const maxX = Math.floor(W / g)
   const maxY = Math.floor(H / g)
   
-  // Draw grid lines with improved visibility
-  ctx.strokeStyle = '#333' // Slightly brighter than original #222
-  ctx.lineWidth = 0.8
-  ctx.globalAlpha = 0.6 // Semi-transparent so it doesn't overwhelm track elements
-  
-  // Major grid lines every 5 units (like graph paper)
-  ctx.strokeStyle = '#444'
-  ctx.lineWidth = 1
-  for (let x = 0; x <= maxX; x += 5) {
-    const xPixel = x * g
-    if (xPixel <= W) {
-      line(ctx, xPixel, 0, xPixel, H)
-    }
-  }
-  for (let y = 0; y <= maxY; y += 5) {
-    const yPixel = y * g
-    if (yPixel <= H) {
-      line(ctx, 0, yPixel, W, yPixel)
-    }
-  }
-  
-  // Minor grid lines
-  ctx.strokeStyle = '#2a2a2a'
-  ctx.lineWidth = 0.5
-  for (let x = 1; x < maxX; x++) {
-    if (x % 5 !== 0) { // Skip major grid lines
-      const xPixel = x * g
-      if (xPixel <= W) {
-        line(ctx, xPixel, 0, xPixel, H)
-      }
-    }
-  }
-  for (let y = 1; y < maxY; y++) {
-    if (y % 5 !== 0) { // Skip major grid lines
-      const yPixel = y * g
-      if (yPixel <= H) {
-        line(ctx, 0, yPixel, W, yPixel)
-      }
-    }
-  }
-  
-  // Reset alpha for coordinate labels
-  ctx.globalAlpha = 0.8
-  
-  // Coordinate labels around the edges
-  ctx.fillStyle = '#666'
+  // Coordinate labels in graphite pencil style
+  ctx.fillStyle = '#4A4A4A' // Dark graphite pencil
   ctx.font = '11px monospace'
+  ctx.globalAlpha = 0.7
+  
+  // X-axis labels (top edge)
   ctx.textAlign = 'center'
+  ctx.textBaseline = 'top'
+  for (let x = 0; x <= maxX; x += 5) { // Every 5 units to match major grid lines
+    const xPixel = x * g
+    if (xPixel <= W && x > 0) { // Skip origin (0,0) for cleanliness
+      ctx.fillText(x.toString(), xPixel, 4)
+    }
+  }
+  
+  // Y-axis labels (left edge)
+  ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
-  
-  // X-axis labels (bottom edge)
-  for (let x = 0; x <= maxX; x += 2) { // Every 2 units to avoid crowding
-    const xPixel = x * g
-    if (xPixel <= W) {
-      ctx.fillText(x.toString(), xPixel, H - 8)
-    }
-  }
-  
-  // Y-axis labels (left edge) - note: Y increases downward in canvas, but we want graph paper style
-  ctx.textAlign = 'right'
-  for (let y = 0; y <= maxY; y += 2) { // Every 2 units to avoid crowding
+  for (let y = 0; y <= maxY; y += 5) { // Every 5 units to match major grid lines
     const yPixel = y * g
-    if (yPixel <= H) {
-      // Display coordinate as it appears in the game (Y increases downward)
-      ctx.fillText(y.toString(), 12, yPixel)
+    if (yPixel <= H && y > 0) { // Skip origin (0,0) for cleanliness
+      ctx.fillText(y.toString(), 4, yPixel)
     }
   }
   
-  // Origin marker (0,0)
-  ctx.fillStyle = '#888'
-  ctx.fillRect(-2, -2, 4, 4)
+  // Origin marker (0,0) - small graphite dot
+  ctx.fillStyle = '#4A4A4A'
+  ctx.globalAlpha = 1.0
+  ctx.beginPath()
+  ctx.arc(0, 0, 2, 0, Math.PI * 2)
+  ctx.fill()
   
-  // Add small coordinate indicators at regular intervals along edges
-  ctx.fillStyle = '#555'
-  
-  // Top edge tick marks
-  for (let x = 5; x <= maxX; x += 5) {
-    const xPixel = x * g
-    if (xPixel <= W) {
-      ctx.fillRect(xPixel - 0.5, 0, 1, 6)
-      if (x % 10 === 0) { // Larger ticks every 10 units
-        ctx.fillRect(xPixel - 1, 0, 2, 10)
-        // Add label on top edge for major coordinates
-        ctx.fillStyle = '#777'
-        ctx.textAlign = 'center'
-        ctx.fillText(x.toString(), xPixel, 15)
-        ctx.fillStyle = '#555'
-      }
-    }
-  }
-  
-  // Right edge tick marks
-  for (let y = 5; y <= maxY; y += 5) {
-    const yPixel = y * g
-    if (yPixel <= H) {
-      ctx.fillRect(W - 6, yPixel - 0.5, 6, 1)
-      if (y % 10 === 0) { // Larger ticks every 10 units
-        ctx.fillRect(W - 10, yPixel - 1, 10, 2)
-        // Add label on right edge for major coordinates
-        ctx.fillStyle = '#777'
-        ctx.textAlign = 'left'
-        ctx.fillText(y.toString(), W - 15, yPixel)
-        ctx.fillStyle = '#555'
-      }
-    }
-  }
+  // Origin label
+  ctx.fillStyle = '#4A4A4A'
+  ctx.font = '10px monospace'
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'top'
+  ctx.fillText('(0,0)', 4, 4)
   
   ctx.restore()
 }
