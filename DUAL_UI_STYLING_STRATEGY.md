@@ -12,6 +12,66 @@ The Dual UI Styling Strategy addresses the balance between immersive game aesthe
 
 **UI Interface Zone**: Uses clean, professional styling with high contrast and excellent readability for optimal user interaction.
 
+## 🎨 Terminology for Dual UI Strategy
+
+### **Primary Terms (Recommended)**
+
+**Canvas Zone** vs **UI Zone**
+- **Canvas Zone**: The game area with hand-drawn paper aesthetic
+- **UI Zone**: All interface elements with modern styling
+- ✅ **Best for**: Technical discussions, CSS debugging, precise feedback
+
+**Game Area** vs **Interface Elements**  
+- **Game Area**: The racing canvas and immediate game elements
+- **Interface Elements**: Headers, sidebar, controls, modals
+- ✅ **Best for**: User experience discussions, general feedback
+
+### **Alternative Terms (Also Valid)**
+
+**Paper Aesthetic** vs **Modern UI**
+- **Paper Aesthetic**: Hand-drawn colored pencil styling
+- **Modern UI**: Clean, high-contrast professional styling
+- ✅ **Best for**: Design-focused feedback
+
+**Canvas** vs **Controls**
+- **Canvas**: The game rendering area
+- **Controls**: All interactive UI components
+- ✅ **Best for**: Quick, informal feedback
+
+### **Feedback Framework**
+
+When providing feedback, use specific zone references:
+- "The Canvas Zone looks perfect, but the UI Zone header needs..."
+- "Interface Elements are too bright, but the Game Area is great"
+- "Modern UI buttons work well, but Paper Aesthetic could use..."
+
+### **Technical Terms**
+
+For debugging or technical discussions:
+- **`.canvas-zone`** - CSS class for canvas styling
+- **`.ui-zone`** - CSS class for modern UI styling  
+- **`.dual-style-enabled`** - Root class that activates dual styling
+- **Paper variables** - `--paper-bg`, `--pencil-dark`, etc.
+- **UI variables** - `--ui-bg-primary`, `--ui-text-primary`, etc.
+
+### **Element Categories Structure**
+
+```
+Canvas Zone:
+├── Game canvas
+├── Move indicators  
+├── Racing elements
+└── Debug overlays
+
+UI Zone:
+├── Header (branding, HUD, navigation)
+├── Sidebar (help, status, features)
+├── Modals (settings, new game)
+└── Controls (buttons, forms, inputs)
+```
+
+**Recommended Usage**: "Canvas Zone" + "UI Zone" for general feedback, "Game Area" + "Interface Elements" for UX discussions.
+
 ## 📐 Visual Zone Architecture
 
 ### 🖼️ Canvas Zone (Hand-Drawn Aesthetic)
