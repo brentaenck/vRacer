@@ -405,7 +405,9 @@
   font-weight: bold;
 }
 
-.dual-style-enabled .ui-zone aside li strong {
+.dual-style-enabled .ui-zone aside li strong,
+.dual-style-enabled .ui-zone strong,
+.dual-style-enabled .ui-zone b {
   color: var(--ui-text-primary);
   font-weight: 600;
 }
@@ -470,8 +472,78 @@
 /* Modern UI text styling */
 .dual-style-enabled .ui-zone p,
 .dual-style-enabled .ui-zone li,
-.dual-style-enabled .ui-zone span {
+.dual-style-enabled .ui-zone span,
+.dual-style-enabled .ui-zone div,
+.dual-style-enabled .ui-zone a {
   font-family: var(--ui-font-primary);
+  color: var(--ui-text-primary);
+}
+
+/* Ensure all UI Zone text elements use light text */
+.dual-style-enabled .ui-zone * {
+  color: var(--ui-text-primary);
+}
+
+/* Override any black text in UI zones */
+.dual-style-enabled .ui-zone,
+.dual-style-enabled .ui-zone .tagline,
+.dual-style-enabled .ui-zone .footer-content,
+.dual-style-enabled .ui-zone .footer-info,
+.dual-style-enabled .ui-zone .footer-links {
+  color: var(--ui-text-primary);
+}
+
+/* Comprehensive text color overrides for UI Zone */
+.dual-style-enabled .ui-zone .help-content,
+.dual-style-enabled .ui-zone .help-category,
+.dual-style-enabled .ui-zone .feature-badges,
+.dual-style-enabled .ui-zone .config-group,
+.dual-style-enabled .ui-zone .settings-group,
+.dual-style-enabled .ui-zone .racing-line-status,
+.dual-style-enabled .ui-zone .racing-line-controls,
+.dual-style-enabled .ui-zone .action-buttons,
+.dual-style-enabled .ui-zone .preset-buttons,
+.dual-style-enabled .ui-zone .property-group,
+.dual-style-enabled .ui-zone .editor-content,
+.dual-style-enabled .ui-zone .editor-tools,
+.dual-style-enabled .ui-zone .editor-modes,
+.dual-style-enabled .ui-zone .editor-properties,
+.dual-style-enabled .ui-zone .editor-actions {
+  color: var(--ui-text-primary);
+}
+
+/* Override default link colors in UI Zone */
+.dual-style-enabled .ui-zone a {
+  color: var(--ui-accent);
+}
+
+.dual-style-enabled .ui-zone a:hover {
+  color: var(--ui-accent-hover);
+}
+
+/* Make sure all text in UI Zone sections is readable */
+.dual-style-enabled .ui-zone .status-section *,
+.dual-style-enabled .ui-zone .help-section *,
+.dual-style-enabled .ui-zone .features-section *,
+.dual-style-enabled .ui-zone .config-section *,
+.dual-style-enabled .ui-zone .settings-section * {
+  color: inherit;
+}
+
+/* Specific overrides for elements that might have default styling */
+.dual-style-enabled .ui-zone .btn-icon,
+.dual-style-enabled .ui-zone .hamburger-line,
+.dual-style-enabled .ui-zone .hamburger-icon,
+.dual-style-enabled .ui-zone .setting-label,
+.dual-style-enabled .ui-zone .setting-item,
+.dual-style-enabled .ui-zone .race-settings-panel,
+.dual-style-enabled .ui-zone .quick-setup-section {
+  color: var(--ui-text-primary);
+}
+
+/* Footer text in UI zones */
+.dual-style-enabled footer.ui-zone,
+.dual-style-enabled .ui-zone footer {
   color: var(--ui-text-primary);
 }
 
