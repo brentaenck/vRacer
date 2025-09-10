@@ -1031,12 +1031,12 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.clearRect(0, 0, W, H)
 
-    // Paper background with subtle texture
-    ctx.fillStyle = '#fefef8'  // Cream paper
+    // Paper background with transparency to show grid
+    ctx.fillStyle = 'rgba(254, 254, 248, 0.85)'  // Semi-transparent cream paper
     ctx.fillRect(0, 0, W, H)
     
-    // Add subtle paper fiber texture
-    drawPaperTexture(ctx, W, H)
+    // Add very subtle paper texture (simplified)
+    drawSimplePaperTexture(ctx, W, H)
 
     // Coordinate labels (grid numbers only - CSS provides grid lines)
     if (legacyState.showGrid) {
@@ -1056,13 +1056,23 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     // Racing line overlay (if enabled)
     drawRacingLine(ctx, legacyState, g)
 
-    // Trail with colored pencil effect
+    // Trail with clean lines
     if (legacyState.trail.length > 1) {
-      for (let i = 0; i < legacyState.trail.length - 1; i++) {
-        const p1 = legacyState.trail[i]!
-        const p2 = legacyState.trail[i + 1]!
-        drawColoredPencilLine(ctx, p1.x * g, p1.y * g, p2.x * g, p2.y * g, '#4169E1', 2) // Royal blue pencil
+      ctx.save()
+      ctx.strokeStyle = '#4169E1' // Royal blue
+      ctx.lineWidth = 3
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      
+      ctx.beginPath()
+      const firstTrail = legacyState.trail[0]!
+      ctx.moveTo(firstTrail.x * g, firstTrail.y * g)
+      for (let i = 1; i < legacyState.trail.length; i++) {
+        const p = legacyState.trail[i]!
+        ctx.lineTo(p.x * g, p.y * g)
       }
+      ctx.stroke()
+      ctx.restore()
     }
 
     // Candidates with improved controls visual feedback
@@ -1101,9 +1111,9 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       }
     }
 
-    // Car with colored pencil effect
-    const carColor = legacyState.crashed ? '#DC143C' : '#FFD700' // Crimson or gold pencil
-    drawColoredPencilDot(ctx, legacyState.pos.x * g, legacyState.pos.y * g, 6, carColor)
+    // Car with clean circle
+    const carColor = legacyState.crashed ? '#DC143C' : '#FFD700' // Crimson or gold
+    drawNode(ctx, legacyState.pos, g, carColor, 6)
     
     // Particles (if animations are enabled)
     if (isFeatureEnabled('animations')) {
@@ -1143,12 +1153,12 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.clearRect(0, 0, W, H)
 
-    // Paper background with subtle texture
-    ctx.fillStyle = '#fefef8'  // Cream paper
+    // Paper background with transparency to show grid
+    ctx.fillStyle = 'rgba(254, 254, 248, 0.85)'  // Semi-transparent cream paper
     ctx.fillRect(0, 0, W, H)
     
-    // Add subtle paper fiber texture
-    drawPaperTexture(ctx, W, H)
+    // Add very subtle paper texture (simplified)
+    drawSimplePaperTexture(ctx, W, H)
 
     // Coordinate labels (grid numbers only - CSS provides grid lines)
     if (multiCarState.showGrid) {
@@ -1608,15 +1618,15 @@ function drawTrackWithHole(ctx: CanvasRenderingContext2D, outer: Vec[], inner: V
   // Use composite operation to create proper hole
   ctx.globalCompositeOperation = 'source-over'
   
-  // First, fill the outer track area with light graphite pencil
-  ctx.fillStyle = '#C0C0C0' // Light graphite pencil track surface
-  ctx.globalAlpha = 0.6
+  // First, fill the outer track area with semi-transparent dark gray surface
+  ctx.fillStyle = '#333333' // Clean dark gray track surface
+  ctx.globalAlpha = 0.3
   ctx.beginPath()
   for (let i = 0; i < outer.length; i++) {
     const p = outer[i]
     if (!p) continue
-    const x = p.x * g + (Math.random() - 0.5) * 0.3 // Slight jitter
-    const y = p.y * g + (Math.random() - 0.5) * 0.3
+    const x = p.x * g
+    const y = p.y * g
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
   }
   ctx.closePath()
@@ -1629,8 +1639,8 @@ function drawTrackWithHole(ctx: CanvasRenderingContext2D, outer: Vec[], inner: V
   for (let i = 0; i < inner.length; i++) {
     const p = inner[i]
     if (!p) continue
-    const x = p.x * g + (Math.random() - 0.5) * 0.3 // Slight jitter
-    const y = p.y * g + (Math.random() - 0.5) * 0.3
+    const x = p.x * g
+    const y = p.y * g
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
   }
   ctx.closePath()
@@ -1638,12 +1648,35 @@ function drawTrackWithHole(ctx: CanvasRenderingContext2D, outer: Vec[], inner: V
   
   ctx.restore()
   
-  // Now draw the borders with dark graphite pencil effect
-  drawColoredPencilPolyBorder(ctx, outer, g, '#4A4A4A') // Dark graphite border for outer
-  drawColoredPencilPolyBorder(ctx, inner, g, '#4A4A4A') // Dark graphite border for inner
+  // Now draw the borders with clean light gray lines
+  drawCleanPolyBorder(ctx, outer, g, '#E0E0E0') // Clean light gray border for outer
+  drawCleanPolyBorder(ctx, inner, g, '#E0E0E0') // Clean light gray border for inner
 }
 
-// Helper function to draw just the border
+// Helper function to draw clean polygon border
+function drawCleanPolyBorder(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string) {
+  ctx.save()
+  
+  ctx.strokeStyle = stroke
+  ctx.lineWidth = 3
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  
+  ctx.beginPath()
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i]
+    if (!p) continue
+    const x = p.x * g
+    const y = p.y * g
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  
+  ctx.restore()
+}
+
+// Helper function to draw just the border (legacy pencil version - keeping for reference)
 function drawColoredPencilPolyBorder(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string) {
   ctx.save()
   
@@ -1695,7 +1728,22 @@ function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number,
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
 }
 
-// Paper texture effect
+// Simplified paper texture effect (much cleaner)
+function drawSimplePaperTexture(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.save()
+  
+  // Very subtle gradient overlay for paper feel (minimal to preserve grid)
+  const gradient = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, Math.max(width, height)/2)
+  gradient.addColorStop(0, 'rgba(250, 248, 240, 0.01)')
+  gradient.addColorStop(1, 'rgba(245, 243, 235, 0.02)')
+  
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, width, height)
+  
+  ctx.restore()
+}
+
+// Paper texture effect (legacy version with complex noise)
 function drawPaperTexture(ctx: CanvasRenderingContext2D, width: number, height: number) {
   ctx.save()
   
@@ -1835,31 +1883,81 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
   const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   const checkpoints = trackAnalysis.lapValidationCheckpoints
   
-  // Draw each checkpoint line with different colors for identification
-  const checkpointColors = ['#ff0', '#0ff', '#f0f', '#0f0'] // Yellow, Cyan, Magenta, Green
+  // Use darker gray than track color (#333333 -> #1A1A1A)
+  const checkpointColor = '#1A1A1A'
   
   for (let i = 0; i < checkpoints.length; i++) {
     const checkpoint = checkpoints[i]
     if (!checkpoint) continue
-    const color = checkpointColors[i] || '#fff'
     
-    ctx.strokeStyle = color
-    ctx.lineWidth = 3
-    ctx.globalAlpha = 0.7
+    // Draw double lines with thin width
+    ctx.strokeStyle = checkpointColor
+    ctx.lineWidth = 1
+    ctx.globalAlpha = 0.8
+    ctx.lineCap = 'round'
     
-    // Draw checkpoint line
+    const x1 = checkpoint.a.x * g
+    const y1 = checkpoint.a.y * g
+    const x2 = checkpoint.b.x * g
+    const y2 = checkpoint.b.y * g
+    
+    // Calculate perpendicular offset for double lines (2 pixels apart)
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const length = Math.sqrt(dx * dx + dy * dy)
+    const perpX = (-dy / length) * 1 // 1 pixel offset
+    const perpY = (dx / length) * 1
+    
+    // Draw first line
     ctx.beginPath()
-    ctx.moveTo(checkpoint.a.x * g, checkpoint.a.y * g)
-    ctx.lineTo(checkpoint.b.x * g, checkpoint.b.y * g)
+    ctx.moveTo(x1 + perpX, y1 + perpY)
+    ctx.lineTo(x2 + perpX, y2 + perpY)
     ctx.stroke()
     
-    // Draw checkpoint number label
-    ctx.fillStyle = color
-    ctx.font = '16px Arial'
-    ctx.globalAlpha = 1.0
-    const midX = (checkpoint.a.x + checkpoint.b.x) / 2 * g
-    const midY = (checkpoint.a.y + checkpoint.b.y) / 2 * g
-    ctx.fillText(`CP${i}`, midX - 10, midY - 5)
+    // Draw second line
+    ctx.beginPath()
+    ctx.moveTo(x1 - perpX, y1 - perpY)
+    ctx.lineTo(x2 - perpX, y2 - perpY)
+    ctx.stroke()
+    
+    // Draw checkpoint number label positioned inside the inner track boundary
+    ctx.fillStyle = checkpointColor
+    ctx.font = '10px Arial'
+    ctx.globalAlpha = 0.7
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    
+    // Find which endpoint is on the inner boundary
+    // Inner track bounds: x=12-38, y=10-25
+    const innerBounds = { minX: 12 * g, maxX: 38 * g, minY: 10 * g, maxY: 25 * g }
+    const trackCenterX = 25 * g
+    const trackCenterY = 17.5 * g
+    
+    // Check which endpoint is closer to the inner boundary (closer to track center)
+    const dist1ToCenter = Math.sqrt((x1 - trackCenterX) ** 2 + (y1 - trackCenterY) ** 2)
+    const dist2ToCenter = Math.sqrt((x2 - trackCenterX) ** 2 + (y2 - trackCenterY) ** 2)
+    
+    // Use the endpoint that's closer to the track center (inner boundary side)
+    const innerX = dist1ToCenter < dist2ToCenter ? x1 : x2
+    const innerY = dist1ToCenter < dist2ToCenter ? y1 : y2
+    
+    // Calculate direction from inner boundary point toward track center
+    const dirX = trackCenterX - innerX
+    const dirY = trackCenterY - innerY
+    const dirLength = Math.sqrt(dirX * dirX + dirY * dirY)
+    
+    // Move label 15 pixels inward from the inner boundary endpoint
+    let labelX = innerX
+    let labelY = innerY
+    
+    if (dirLength > 0) {
+      const normalizedX = dirX / dirLength
+      const normalizedY = dirY / dirLength
+      labelX = innerX + normalizedX * 15
+      labelY = innerY + normalizedY * 15
+    }
+    
+    ctx.fillText(`${i}`, labelX, labelY)
   }
   
   ctx.restore()

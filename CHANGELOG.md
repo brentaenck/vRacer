@@ -6,6 +6,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [3.1.1] - 2025-01-10
+
+### 🎨 **Visual Refinements: Clean Canvas Rendering & Professional Debug Interface**
+
+#### 🎨 Changed
+- **Canvas Rendering Improvements**
+  - Removed pencil drawing effects from all track and car elements for better visibility
+  - Track surface: Clean polygons with solid fills instead of jittery pencil strokes
+  - Car trails: Smooth continuous lines instead of segmented pencil effects
+  - Car rendering: Simple filled circles instead of overlapping textured dots
+  - Paper texture: Minimized to subtle gradient overlay
+
+- **Track Color Scheme Enhancement**
+  - Swapped track surface and boundary colors for better contrast
+  - Track surface: Dark gray (#333333) with 30% transparency
+  - Track boundaries: Light gray (#E0E0E0) for clear definition
+  - Background transparency: Graph paper grid now visible through all elements
+
+- **Debug Interface Improvements**
+  - Checkpoint lines: Professional dark gray (#1A1A1A) thin double lines
+  - Checkpoint labels: Positioned at inner boundary endpoints instead of line midpoints
+  - Label styling: Subtle 10px Arial font with 70% opacity
+  - Smart positioning: Labels offset 15 pixels inward from inner track boundaries
+
+#### 🔧 Technical
+- Added `drawCleanPolyBorder()` function for clean polygon border rendering
+- Added `drawSimplePaperTexture()` function with minimal gradient overlay
+- Enhanced checkpoint label positioning with endpoint detection algorithm
+- Improved canvas transparency settings for better grid visibility
+- Maintained backward compatibility with existing drawing functions
+
+### 🎯 Improved
+- **Visual Clarity**: Enhanced visibility of track boundaries and car positions
+- **Professional Appearance**: Clean, technical drawing aesthetic
+- **Debug Experience**: Better organized and positioned debug elements
+- **Graph Paper Integration**: Authentic graph paper visibility throughout
+- **Performance**: Simplified rendering with better frame rates
+
 ## [3.1.0] - 2025-01-09
 
 ### 🎨 **Visual Enhancement: Vibrant Car Color Palette**
