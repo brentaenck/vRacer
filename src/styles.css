@@ -30,10 +30,32 @@
   --warning: #d97706;           /* Warning orange */
   --error: #dc2626;             /* Error red */
   
+  /* Modern UI Color Palette (for dual styling) */
+  --ui-bg-primary: #ffffff;     /* Clean white background */
+  --ui-bg-secondary: #f8fafc;   /* Light gray background */
+  --ui-bg-tertiary: #f1f5f9;    /* Subtle background tint */
+  --ui-text-primary: #1e293b;   /* Dark text for high contrast */
+  --ui-text-secondary: #64748b; /* Medium gray text */
+  --ui-text-tertiary: #94a3b8;  /* Light gray text */
+  --ui-border-light: #e2e8f0;   /* Light borders */
+  --ui-border-medium: #cbd5e1;  /* Medium borders */
+  --ui-border-dark: #94a3b8;    /* Dark borders */
+  --ui-accent: #3b82f6;         /* Primary accent (blue) */
+  --ui-accent-hover: #2563eb;   /* Accent hover state */
+  --ui-success: #10b981;        /* Success green */
+  --ui-warning: #f59e0b;        /* Warning amber */
+  --ui-error: #ef4444;          /* Error red */
+  --ui-info: #0ea5e9;           /* Info blue */
+  
   /* Hand-drawn Typography */
   --font-primary: 'Architects Daughter', 'Kalam', cursive, sans-serif;
   --font-heading: 'Caveat', 'Patrick Hand', cursive, sans-serif;
   --font-mono: 'Kalam', 'Architects Daughter', monospace, cursive;
+  
+  /* Modern UI Typography (for dual styling) */
+  --ui-font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ui-font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ui-font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Consolas', monospace;
   
   /* Spacing */
   --spacing-xs: 4px;
@@ -61,6 +83,96 @@
   --transition-slow: 0.4s ease-out;
   
   color-scheme: light; /* Changed from dark to light for paper theme */
+}
+
+/* ========================================
+   Dual Styling System
+   ======================================== */
+
+/* Default: Paper aesthetic for all elements (maintained for compatibility) */
+
+/* Dual styling mode: Modern UI for UI zones */
+.dual-style-enabled .ui-zone {
+  /* Reset paper-based styling for UI zones */
+  background: var(--ui-bg-primary);
+  color: var(--ui-text-primary);
+  font-family: var(--ui-font-primary);
+}
+
+/* Canvas zone always maintains paper aesthetic regardless of dual styling */
+.canvas-zone,
+.dual-style-enabled .canvas-zone {
+  /* Ensure canvas area always keeps paper styling */
+  background: var(--paper-bg);
+  color: var(--pencil-dark);
+  font-family: var(--font-primary);
+}
+
+/* Modern UI button styling */
+.dual-style-enabled .ui-zone button {
+  background: var(--ui-bg-primary);
+  color: var(--ui-text-primary);
+  font-family: var(--ui-font-primary);
+  border: 1px solid var(--ui-border-medium);
+  border-radius: var(--radius-sm);
+  /* Remove paper texture and hand-drawn effects */
+  background-image: none;
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dual-style-enabled .ui-zone button:hover {
+  background: var(--ui-bg-secondary);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
+}
+
+/* Modern UI header styling */
+.dual-style-enabled .ui-zone header,
+.dual-style-enabled header.ui-zone {
+  background: var(--ui-bg-primary);
+  border-bottom: 1px solid var(--ui-border-light);
+  /* Remove paper texture */
+  background-image: none;
+  /* Remove hand-drawn border effects */
+  border-image: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dual-style-enabled .ui-zone h1,
+.dual-style-enabled .ui-zone h2,
+.dual-style-enabled .ui-zone h3 {
+  font-family: var(--ui-font-heading);
+  color: var(--ui-text-primary);
+  /* Remove hand-drawn text effects */
+  text-shadow: none;
+  transform: none;
+}
+
+/* Modern UI sidebar styling */
+.dual-style-enabled .ui-zone aside,
+.dual-style-enabled aside.ui-zone {
+  background: var(--ui-bg-secondary);
+  color: var(--ui-text-primary);
+}
+
+/* Modern UI text styling */
+.dual-style-enabled .ui-zone p,
+.dual-style-enabled .ui-zone li,
+.dual-style-enabled .ui-zone span {
+  font-family: var(--ui-font-primary);
+  color: var(--ui-text-primary);
+}
+
+/* Modern UI form elements */
+.dual-style-enabled .ui-zone input,
+.dual-style-enabled .ui-zone select,
+.dual-style-enabled .ui-zone textarea {
+  background: var(--ui-bg-primary);
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-border-medium);
+  font-family: var(--ui-font-primary);
+  border-radius: var(--radius-sm);
 }
 
 /* Add paper aging effects */

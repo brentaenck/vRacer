@@ -8,6 +8,42 @@ import { setupEditorCanvas, drawEditorOverlay } from './track-editor-canvas'
 import { chooseAIMove } from './ai'
 import { initializeRacingLineUI, isRacingLineVisible, handleRacingLineKeyboardShortcut } from './racing-line-ui'
 
+/**
+ * Initialize dual styling system based on feature flag
+ */
+function initializeDualStyling() {
+  const appElement = document.getElementById('app')
+  if (!appElement) return
+
+  if (isFeatureEnabled('dualStyling')) {
+    appElement.classList.add('dual-style-enabled')
+    console.log('🎨 Dual styling enabled: Modern UI with paper canvas')
+  } else {
+    appElement.classList.remove('dual-style-enabled')
+    console.log('📜 Paper styling enabled: Full paper aesthetic')
+  }
+}
+
+/**
+ * Toggle dual styling mode (for runtime switching)
+ */
+function toggleDualStyling() {
+  const appElement = document.getElementById('app')
+  if (!appElement) return
+
+  const isCurrentlyEnabled = appElement.classList.contains('dual-style-enabled')
+  if (isCurrentlyEnabled) {
+    appElement.classList.remove('dual-style-enabled')
+    console.log('📜 Switched to full paper aesthetic')
+  } else {
+    appElement.classList.add('dual-style-enabled')
+    console.log('🎨 Switched to dual styling mode')
+  }
+}
+
+// Expose toggleDualStyling to global scope for console access
+;(window as any).toggleDualStyling = toggleDualStyling
+
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const ctx = canvas.getContext('2d')!
 const statusEl = document.getElementById('status')!
@@ -47,6 +83,9 @@ const AI_MOVE_DELAY = 800 // milliseconds before AI makes move
 
 // Initialize feature flags and log enabled features
 logEnabledFeatures()
+
+// Initialize dual styling system
+initializeDualStyling()
 
 // Initialize track editor UI system
 initializeTrackEditor()

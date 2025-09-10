@@ -30,6 +30,7 @@ export interface FeatureFlags {
   soundEffects: boolean;
   animations: boolean;
   graphPaperGrid: boolean;
+  dualStyling: boolean;          // Modern UI with paper canvas aesthetic
   
   // Development and debugging
   debugMode: boolean;
@@ -58,6 +59,7 @@ export const FEATURES: FeatureFlags = {
   soundEffects: false,        // Audio feedback - DISABLED
   animations: true,           // Smooth movement, particle effects
   graphPaperGrid: true,       // Enhanced grid with coordinate indicators
+  dualStyling: true,          // Modern UI with paper canvas - ENABLED for better UX
   
   // Development and debugging - ENABLED for AI testing
   debugMode: true,            // Show extra info for development
