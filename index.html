@@ -15,11 +15,11 @@
   </head>
   <body>
     <div id="app">
-      <header role="banner">
+      <header role="banner" class="ui-zone">
         <div class="header-brand">
           <h1>
             🏁 vRacer
-            <span class="version">v2.1.1</span>
+            <span class="version">v3.2.0</span>
           </h1>
           <p class="tagline">Professional Vector Racing</p>
         </div>
@@ -48,9 +48,10 @@
       </header>
       
       <main role="main">
-        <section class="game-area">
+        <section class="game-area canvas-zone">
           <canvas 
             id="canvas" 
+            class="canvas-zone"
             width="1000" 
             height="700" 
             role="application"
@@ -62,7 +63,7 @@
           </div>
         </section>
         
-        <aside id="sidebar" role="complementary" aria-label="Game information and help">
+        <aside id="sidebar" class="ui-zone" role="complementary" aria-label="Game information and help">
           <section class="status-section">
             <h2>
               <span class="section-icon">📊</span>
