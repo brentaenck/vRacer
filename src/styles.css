@@ -974,6 +974,160 @@
   color: var(--ui-text-secondary);
 }
 
+/* ========================================
+   New Game Modal Panel Styling
+   ======================================== */
+
+/* Update New Game modal panels to use dark theme */
+.dual-style-enabled .race-settings-panel,
+.dual-style-enabled .player-setup-panel {
+  background: var(--ui-bg-secondary);
+  color: var(--ui-text-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+/* Settings sections within the panels */
+.dual-style-enabled .settings-section,
+.dual-style-enabled .quick-setup-section,
+.dual-style-enabled .race-preview-section,
+.dual-style-enabled .players-section {
+  background: var(--ui-bg-primary) !important;
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-border-light);
+}
+
+/* Settings groups and preview stats */
+.dual-style-enabled .settings-group,
+.dual-style-enabled .preview-stats {
+  background: var(--ui-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.dual-style-enabled .preview-stat {
+  background: var(--ui-bg-tertiary);
+  color: var(--ui-text-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  text-align: center;
+}
+
+.dual-style-enabled .stat-value {
+  color: var(--ui-text-primary);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.dual-style-enabled .stat-label {
+  color: var(--ui-text-secondary);
+  font-size: 12px;
+}
+
+/* Player cards styling */
+.dual-style-enabled .player-card {
+  background: var(--ui-bg-primary) !important;
+  border: 1px solid var(--ui-border-medium) !important;
+  color: var(--ui-text-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dual-style-enabled .player-card-header {
+  background: var(--ui-bg-secondary);
+  color: var(--ui-text-primary);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.dual-style-enabled .player-card-body {
+  background: var(--ui-bg-primary);
+  padding: var(--spacing-md);
+}
+
+.dual-style-enabled .player-number {
+  color: var(--ui-text-primary);
+  font-weight: 600;
+}
+
+.dual-style-enabled .player-name {
+  background: var(--ui-bg-secondary) !important;
+  color: var(--ui-text-primary) !important;
+  border: 1px solid var(--ui-border-medium) !important;
+}
+
+.dual-style-enabled .player-ai-controls {
+  background: var(--ui-bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.dual-style-enabled .ai-toggle-label {
+  color: var(--ui-text-primary);
+}
+
+.dual-style-enabled .player-ai-diff {
+  background: var(--ui-bg-secondary) !important;
+  color: var(--ui-text-primary) !important;
+  border: 1px solid var(--ui-border-medium) !important;
+}
+
+/* Setting items and labels */
+.dual-style-enabled .setting-item {
+  color: var(--ui-text-primary);
+}
+
+.dual-style-enabled .setting-label {
+  color: var(--ui-text-primary) !important;
+  font-weight: 500;
+}
+
+.dual-style-enabled .setting-select {
+  background: var(--ui-bg-secondary) !important;
+  color: var(--ui-text-primary) !important;
+  border: 1px solid var(--ui-border-medium) !important;
+}
+
+/* Split panel body styling */
+.dual-style-enabled .split-panel-body {
+  background: var(--ui-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+/* AI toggle slider in player cards */
+.dual-style-enabled .ai-toggle-slider {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--ui-bg-tertiary);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid var(--ui-border-medium);
+}
+
+.dual-style-enabled .ai-toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: var(--ui-text-primary);
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.dual-style-enabled .ai-toggle input[type="checkbox"]:checked + .ai-toggle-slider {
+  background: var(--ui-accent);
+}
+
+.dual-style-enabled .ai-toggle input[type="checkbox"]:checked + .ai-toggle-slider::before {
+  transform: translateX(14px);
+}
+
 /* Add paper aging effects */
 body::before {
   content: '';
