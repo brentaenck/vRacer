@@ -168,3 +168,169 @@ export class PerformanceTracker {
 
 // Global performance tracker instance
 export const performanceTracker = new PerformanceTracker()
+
+/**
+ * Performance benchmark test for visual enhancements
+ * 
+ * Runs a performance test for a specified duration and returns metrics
+ */
+export class PerformanceBenchmark {
+  /**
+   * Run a performance benchmark test
+   * @param durationSeconds How long to run the test
+   * @param renderCallback Function to call for each render
+   * @returns Promise with benchmark results
+   */
+  static async runBenchmark(
+    durationSeconds: number,
+    renderCallback: () => void
+  ): Promise<{
+    duration: number
+    frameCount: number
+    avgFps: number
+    minFps: number
+    maxFps: number
+    avgRenderTime: number
+    maxRenderTime: number
+    avgFrameTime: number
+    maxFrameTime: number
+    memoryStart?: number
+    memoryEnd?: number
+    memoryDelta?: number
+    isLagging: boolean
+    performance60FpsTarget: boolean
+  }> {
+    // Reset tracker before starting
+    performanceTracker.reset()
+    
+    // Get initial memory if available
+    let memoryStart: number | undefined
+    if ('memory' in performance && (performance as any).memory) {
+      memoryStart = Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024)
+    }
+    
+    const startTime = performance.now()
+    const endTime = startTime + (durationSeconds * 1000)
+    let frameCount = 0
+    
+    const renderLoop = (): Promise<void> => {
+      return new Promise((resolve) => {
+        const frame = () => {
+          if (performance.now() >= endTime) {
+            resolve()
+            return
+          }
+          
+          performanceTracker.startFrame()
+          renderCallback()
+          performanceTracker.endFrame()
+          frameCount++
+          
+          requestAnimationFrame(frame)
+        }
+        requestAnimationFrame(frame)
+      })
+    }
+    
+    // Run the benchmark
+    await renderLoop()
+    
+    // Get final metrics
+    const metrics = performanceTracker.getMetrics()
+    const actualDuration = (performance.now() - startTime) / 1000
+    
+    // Get final memory if available
+    let memoryEnd: number | undefined
+    let memoryDelta: number | undefined
+    if ('memory' in performance && (performance as any).memory) {
+      memoryEnd = Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024)
+      if (memoryStart !== undefined) {
+        memoryDelta = memoryEnd - memoryStart
+      }
+    }
+    
+    return {
+      duration: actualDuration,
+      frameCount,
+      avgFps: metrics.avgFps,
+      minFps: metrics.minFps,
+      maxFps: metrics.maxFps,
+      avgRenderTime: metrics.avgRenderTime,
+      maxRenderTime: Math.max(...performanceTracker['renderTimes']),
+      avgFrameTime: metrics.avgFrameTime,
+      maxFrameTime: Math.max(...performanceTracker['frameTimes']),
+      memoryStart,
+      memoryEnd,
+      memoryDelta,
+      isLagging: metrics.isLagging,
+      performance60FpsTarget: metrics.avgFps >= 55 // Close to 60fps target
+    }
+  }
+  
+  /**
+   * Compare current performance with baseline
+   * @param baselineFps Previous average FPS
+   * @param currentFps Current average FPS
+   * @returns Performance comparison info
+   */
+  static comparePerformance(baselineFps: number, currentFps: number): {
+    deltaFps: number
+    deltaPercent: number
+    improved: boolean
+    maintained: boolean
+    regressed: boolean
+    acceptable: boolean
+  } {
+    const deltaFps = currentFps - baselineFps
+    const deltaPercent = Math.round(((currentFps / baselineFps) - 1) * 100 * 100) / 100
+    
+    const improved = deltaFps > 2
+    const regressed = deltaFps < -5 // More than 5fps drop is concerning
+    const maintained = Math.abs(deltaFps) <= 2
+    const acceptable = currentFps >= 45 && deltaFps > -10 // Still playable
+    
+    return {
+      deltaFps: Math.round(deltaFps * 100) / 100,
+      deltaPercent,
+      improved,
+      maintained,
+      regressed,
+      acceptable
+    }
+  }
+  
+  /**
+   * Generate a performance report
+   */
+  static generateReport(results: any): string[] {
+    const report = []
+    
+    report.push(`📊 Performance Benchmark Results:`)
+    report.push(`Duration: ${results.duration.toFixed(1)}s`)
+    report.push(`Frames: ${results.frameCount} (${results.avgFps} avg fps)`)
+    report.push(`FPS Range: ${results.minFps} - ${results.maxFps}`)
+    report.push(`Render Time: ${results.avgRenderTime.toFixed(2)}ms avg (max: ${results.maxRenderTime.toFixed(2)}ms)`)
+    report.push(`Frame Time: ${results.avgFrameTime.toFixed(2)}ms avg (max: ${results.maxFrameTime.toFixed(2)}ms)`)
+    
+    if (results.memoryStart !== undefined && results.memoryEnd !== undefined) {
+      report.push(`Memory: ${results.memoryStart}MB → ${results.memoryEnd}MB (${results.memoryDelta > 0 ? '+' : ''}${results.memoryDelta}MB)`)
+    }
+    
+    // Performance assessment
+    if (results.performance60FpsTarget) {
+      report.push(`✅ Performance: Excellent (near 60fps target)`)
+    } else if (results.avgFps >= 45) {
+      report.push(`👍 Performance: Good (playable)`)
+    } else if (results.avgFps >= 30) {
+      report.push(`⚠️ Performance: Fair (may feel choppy)`)
+    } else {
+      report.push(`❌ Performance: Poor (needs optimization)`)
+    }
+    
+    if (results.isLagging) {
+      report.push(`⚠️ Lag detected: Frame drops or slow rendering`)
+    }
+    
+    return report
+  }
+}

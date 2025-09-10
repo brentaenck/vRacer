@@ -6,6 +6,77 @@ import { hudManager, HUDData } from './hud'
 import { createTrackAnalysisWithCustomLine, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
 import { isRacingLineVisible } from './racing-line-ui'
 
+// Utility to access CSS custom properties from canvas context
+function getCSSColor(varName: string): string {
+  if (typeof window === 'undefined') return '#333333' // SSR fallback
+  const computedStyle = getComputedStyle(document.documentElement)
+  const color = computedStyle.getPropertyValue(varName).trim()
+  return color || '#333333' // Fallback if variable not found
+}
+
+// Comprehensive unified color system bridge
+const UNIFIED_COLORS = {
+  // Paper-based foundation colors
+  get paperBg() { return getCSSColor('--paper-bg') },
+  get paperAged() { return getCSSColor('--paper-aged') },
+  get paperShadow() { return getCSSColor('--paper-shadow') },
+  get paperBorder() { return getCSSColor('--paper-border') },
+  
+  // Pencil drawing colors
+  get pencilDark() { return getCSSColor('--pencil-dark') },
+  get pencilMedium() { return getCSSColor('--pencil-medium') },
+  get pencilLight() { return getCSSColor('--pencil-light') },
+  get pencilBlue() { return getCSSColor('--pencil-blue') },
+  get pencilRed() { return getCSSColor('--pencil-red') },
+  get pencilGreen() { return getCSSColor('--pencil-green') },
+  
+  // Graph paper grid colors
+  get graphBlue() { return getCSSColor('--graph-blue') },
+  get graphMajor() { return getCSSColor('--graph-major') },
+  
+  // Racing car colors (synchronized with CSS)
+  get racingTangerine() { return getCSSColor('--racing-tangerine') },
+  get racingYellow() { return getCSSColor('--racing-yellow') },
+  get racingBlue() { return getCSSColor('--racing-blue') },
+  get racingViolet() { return getCSSColor('--racing-violet') },
+  get racingRed() { return getCSSColor('--racing-red') },
+  
+  // UI state colors
+  get success() { return getCSSColor('--success') },
+  get warning() { return getCSSColor('--warning') },
+  get error() { return getCSSColor('--error') },
+  
+  // Car colors array (synchronized with CSS racing colors)
+  get carColors(): string[] {
+    return [
+      this.racingTangerine,
+      this.racingYellow,
+      this.racingBlue,
+      this.racingViolet,
+      this.racingRed,
+      '#44ffff', // Cyan (fallback)
+      '#ff8844', // Orange (fallback)
+      this.pencilMedium, // Gray (fallback)
+    ]
+  },
+  
+  // UI feedback colors for game states
+  get gameStates() {
+    return {
+      legal: this.success,
+      illegal: this.error,
+      warning: this.warning,
+      crashed: this.error,
+      finished: this.success,
+      current: this.pencilBlue,
+      hover: this.warning
+    }
+  }
+}
+
+// Legacy alias for backward compatibility
+const PAPER_COLORS = UNIFIED_COLORS
+
 // Individual car state
 export interface Car {
   id: string
@@ -111,17 +182,13 @@ export function isLegacyGame(state: GameState): state is LegacyGameState {
   return 'pos' in state && 'vel' in state && 'crashed' in state
 }
 
-// Car colors for multiplayer
-const CAR_COLORS = [
-  '#F28E2B', // 🧡 Tangerine
-  '#F4D03F', // 💛 Golden Yellow  
-  '#286DC0', // 💙 Royal Blue
-  '#8E44AD', // 💜 Violet
-  '#ff44ff', // Magenta (fallback)
-  '#44ffff', // Cyan (fallback)
-  '#ff8844', // Orange (fallback)
-  '#34495e', // Dark gray (fallback)
-]
+// Car colors for multiplayer (using unified color system)
+function getCarColors(): string[] {
+  return UNIFIED_COLORS.carColors
+}
+
+// Legacy constant (now dynamically generated)
+const CAR_COLORS = getCarColors()
 
 // Create a new car instance
 export function createCar(id: string, playerId: string, name: string, startPos: Vec, color: string): Car {
@@ -1031,35 +1098,31 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.clearRect(0, 0, W, H)
 
-    // Paper background with transparency to show grid
-    ctx.fillStyle = 'rgba(254, 254, 248, 0.85)'  // Semi-transparent cream paper
-    ctx.fillRect(0, 0, W, H)
+    // Refined layering system with optimized transparency hierarchy
     
-    // Add very subtle paper texture (simplified)
-    drawSimplePaperTexture(ctx, W, H)
-
+    // Foundation layers (paper and texture)
+    LayerManager.drawPaperFoundation(ctx, W, H)
+    LayerManager.drawPaperTexture(ctx, W, H)
+    
     // Coordinate labels (grid numbers only - CSS provides grid lines)
     if (legacyState.showGrid) {
+      ctx.save()
+      ctx.globalAlpha = LayerManager.LAYER_OPACITY.GRID_LABELS
       drawCoordinateLabels(ctx, W, H, g)
+      ctx.restore()
     }
 
-    // Track with proper hole cutout
-    drawTrackWithHole(ctx, legacyState.outer, legacyState.inner, g)
+    // Track layers (surface, shadows, texture, borders)
+    LayerManager.drawTrackLayers(ctx, legacyState.outer, legacyState.inner, g)
     
+    // Racing elements (start/finish, arrows, racing line)
+    LayerManager.drawRacingElements(ctx, legacyState, g)
 
-    // Start/Finish line - checkered flag pattern
-    drawCheckeredStartLine(ctx, legacyState.start, g)
-
-    // Directional arrows to show racing direction
-    drawDirectionalArrows(ctx, legacyState, g)
-    
-    // Racing line overlay (if enabled)
-    drawRacingLine(ctx, legacyState, g)
-
-    // Trail with clean lines
+    // Trail layer with refined transparency
     if (legacyState.trail.length > 1) {
       ctx.save()
-      ctx.strokeStyle = '#4169E1' // Royal blue
+      ctx.globalAlpha = LayerManager.LAYER_OPACITY.TRAILS
+      ctx.strokeStyle = UNIFIED_COLORS.racingBlue // Use racing blue from unified system
       ctx.lineWidth = 3
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
@@ -1075,8 +1138,11 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       ctx.restore()
     }
 
-    // Candidates with improved controls visual feedback
+    // Game feedback layer (candidates and hover effects)
     if (legacyState.showCandidates && !legacyState.crashed && !legacyState.finished) {
+      ctx.save()
+      ctx.globalAlpha = LayerManager.LAYER_OPACITY.GAME_FEEDBACK
+      
       const opts = stepOptions(legacyState)
       for (const { nextPos } of opts) {
         const legal = pathLegal(legacyState.pos, nextPos, legacyState)
@@ -1086,16 +1152,16 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
                          nextPos.y === legacyState.hoveredPosition.y
         
         if (isHovered) {
-          // Draw hover effects
+          // Draw hover effects with layered transparency
           ctx.save()
           ctx.globalAlpha = 0.3
-          drawNode(ctx, nextPos, g, legal ? '#0f0' : '#f33', 8) // Larger hover ring
+          drawNode(ctx, nextPos, g, legal ? UNIFIED_COLORS.gameStates.legal : UNIFIED_COLORS.gameStates.illegal, 8)
           ctx.restore()
           
           // Draw preview trail line
           if (legal && isFeatureEnabled('improvedControls')) {
             ctx.save()
-            ctx.strokeStyle = '#ff0'
+            ctx.strokeStyle = UNIFIED_COLORS.gameStates.hover
             ctx.lineWidth = 2
             ctx.globalAlpha = 0.6
             ctx.setLineDash([5, 5])
@@ -1104,20 +1170,33 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
           }
         }
         
-        // Draw normal candidate
+        // Draw normal candidate with proper layering
         const radius = isHovered ? 6 : 4
-        const color = legal ? (isHovered ? '#5f5' : '#0f0') : (isHovered ? '#f55' : '#f33')
+        const gameStates = UNIFIED_COLORS.gameStates
+        const color = legal ? 
+          (isHovered ? lightenColor(gameStates.legal, 0.2) : gameStates.legal) : 
+          (isHovered ? lightenColor(gameStates.illegal, 0.2) : gameStates.illegal)
         drawNode(ctx, nextPos, g, color, radius)
       }
+      
+      ctx.restore()
     }
 
-    // Car with clean circle
-    const carColor = legacyState.crashed ? '#DC143C' : '#FFD700' // Crimson or gold
-    drawNode(ctx, legacyState.pos, g, carColor, 6)
+    // Car layer with full opacity for maximum clarity
+    ctx.save()
+    ctx.globalAlpha = LayerManager.LAYER_OPACITY.CARS
+    const carColor = legacyState.crashed ? 
+      UNIFIED_COLORS.gameStates.crashed : 
+      UNIFIED_COLORS.racingYellow // Use racing yellow for default single car
+    drawCarWithShadow(ctx, legacyState.pos, g, carColor, 6, true)
+    ctx.restore()
     
-    // Particles (if animations are enabled)
+    // Particle layer with slight transparency
     if (isFeatureEnabled('animations')) {
+      ctx.save()
+      ctx.globalAlpha = LayerManager.LAYER_OPACITY.PARTICLES
       animationManager.renderParticles(ctx, g)
+      ctx.restore()
     }
 
     // End render tracking for performance metrics
@@ -1153,48 +1232,47 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.clearRect(0, 0, W, H)
 
-    // Paper background with transparency to show grid
-    ctx.fillStyle = 'rgba(254, 254, 248, 0.85)'  // Semi-transparent cream paper
-    ctx.fillRect(0, 0, W, H)
+    // Refined layering system with optimized transparency hierarchy
     
-    // Add very subtle paper texture (simplified)
-    drawSimplePaperTexture(ctx, W, H)
-
-    // Coordinate labels (grid numbers only - CSS provides grid lines)
+    // Foundation layers (paper and texture)
+    LayerManager.drawPaperFoundation(ctx, W, H)
+    LayerManager.drawPaperTexture(ctx, W, H)
+    
+    // Coordinate labels with proper opacity
     if (multiCarState.showGrid) {
+      ctx.save()
+      ctx.globalAlpha = LayerManager.LAYER_OPACITY.GRID_LABELS
       drawCoordinateLabels(ctx, W, H, g)
+      ctx.restore()
     }
 
-    // Track with proper hole cutout
-    drawTrackWithHole(ctx, multiCarState.outer, multiCarState.inner, g)
+    // Track layers (surface, shadows, texture, borders)
+    LayerManager.drawTrackLayers(ctx, multiCarState.outer, multiCarState.inner, g)
     
-
-    // Start/Finish line - checkered flag pattern
-    drawCheckeredStartLine(ctx, multiCarState.start, g)
-
-    // Directional arrows to show racing direction
-    drawDirectionalArrows(ctx, multiCarState, g)
+    // Racing elements (start/finish, arrows, racing line)
+    LayerManager.drawRacingElements(ctx, multiCarState, g)
     
-    // Racing line overlay (if enabled)
-    drawRacingLine(ctx, multiCarState, g)
-    
-    // Draw checkpoint lines when in debug mode
-    if (isFeatureEnabled('debugMode')) {
-      drawCheckpointLines(ctx, multiCarState, g)
-      
-      // AI Debug Visualization
-      drawAIDebugVisualization(ctx, multiCarState, g)
-    }
+    // Debug elements with proper layering
+    LayerManager.drawDebugElements(ctx, multiCarState, g)
 
-    // Draw all car trails
+    // Trail layer with refined transparency
+    ctx.save()
+    ctx.globalAlpha = LayerManager.LAYER_OPACITY.TRAILS
+    
     for (let i = 0; i < multiCarState.cars.length; i++) {
       const car = multiCarState.cars[i]!
       const isCurrentPlayer = i === multiCarState.currentPlayerIndex
       
-      // Trail style varies based on current player
+      // Trail style with layered transparency
       ctx.strokeStyle = isCurrentPlayer ? car.color : fadeColor(car.color, 0.5)
       ctx.lineWidth = isCurrentPlayer ? 3 : 2
-      ctx.globalAlpha = isCurrentPlayer ? 1.0 : 0.6
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      
+      // Adjust transparency within the trail layer
+      const trailOpacity = isCurrentPlayer ? 1.0 : 0.6
+      ctx.save()
+      ctx.globalAlpha = trailOpacity
       
       if (car.trail.length > 0) {
         ctx.beginPath()
@@ -1206,14 +1284,18 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
         }
         ctx.stroke()
       }
+      
+      ctx.restore()
     }
     
-    // Reset alpha for subsequent drawing
-    ctx.globalAlpha = 1.0
+    ctx.restore()
 
-    // Current player's move candidates
+    // Game feedback layer (candidates and hover effects)
     const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
     if (currentCar && multiCarState.showCandidates && !currentCar.crashed && !currentCar.finished && !multiCarState.gameFinished) {
+      ctx.save()
+      ctx.globalAlpha = LayerManager.LAYER_OPACITY.GAME_FEEDBACK
+      
       const opts = stepOptions(multiCarState)
       for (const { nextPos } of opts) {
         const legal = pathLegal(currentCar.pos, nextPos, multiCarState)
@@ -1223,10 +1305,10 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
                          nextPos.y === multiCarState.hoveredPosition.y
         
         if (isHovered) {
-          // Draw hover effects
+          // Draw hover effects with layered transparency
           ctx.save()
           ctx.globalAlpha = 0.3
-          drawNode(ctx, nextPos, g, legal ? '#0f0' : '#f33', 8) // Larger hover ring
+          drawNode(ctx, nextPos, g, legal ? UNIFIED_COLORS.gameStates.legal : UNIFIED_COLORS.gameStates.illegal, 8)
           ctx.restore()
           
           // Draw preview trail line
@@ -1241,14 +1323,22 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
           }
         }
         
-        // Draw normal candidate
+        // Draw normal candidate with proper layering
         const radius = isHovered ? 6 : 4
-        const color = legal ? (isHovered ? '#5f5' : '#0f0') : (isHovered ? '#f55' : '#f33')
+        const gameStates = UNIFIED_COLORS.gameStates
+        const color = legal ? 
+          (isHovered ? lightenColor(gameStates.legal, 0.2) : gameStates.legal) : 
+          (isHovered ? lightenColor(gameStates.illegal, 0.2) : gameStates.illegal)
         drawNode(ctx, nextPos, g, color, radius)
       }
+      
+      ctx.restore()
     }
 
-    // Draw all cars
+    // Car layer with full opacity for maximum clarity
+    ctx.save()
+    ctx.globalAlpha = LayerManager.LAYER_OPACITY.CARS
+    
     for (let i = 0; i < multiCarState.cars.length; i++) {
       const car = multiCarState.cars[i]!
       const isCurrentPlayer = i === multiCarState.currentPlayerIndex
@@ -1264,21 +1354,23 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
         carColor = lightenColor(car.color, 0.3)
         carSize = 8
       } else if (isCurrentPlayer) {
-        // Current player gets a subtle glow/highlight
-        ctx.save()
-        ctx.shadowColor = car.color
-        ctx.shadowBlur = 10
-        drawNode(ctx, car.pos, g, carColor, carSize)
-        ctx.restore()
+        // Current player gets enhanced shadow depth
+        drawCarWithShadow(ctx, car.pos, g, carColor, carSize, true)
         continue // Skip the normal draw below
       }
       
-      drawNode(ctx, car.pos, g, carColor, carSize)
+      // Draw regular car with subtle shadow
+      drawCarWithShadow(ctx, car.pos, g, carColor, carSize, false)
     }
     
-    // Particles (if animations are enabled)
+    ctx.restore()
+    
+    // Particle layer with slight transparency
     if (isFeatureEnabled('animations')) {
+      ctx.save()
+      ctx.globalAlpha = LayerManager.LAYER_OPACITY.PARTICLES
       animationManager.renderParticles(ctx, g)
+      ctx.restore()
     }
 
     // End render tracking for performance metrics
@@ -1618,8 +1710,8 @@ function drawTrackWithHole(ctx: CanvasRenderingContext2D, outer: Vec[], inner: V
   // Use composite operation to create proper hole
   ctx.globalCompositeOperation = 'source-over'
   
-  // First, fill the outer track area with semi-transparent dark gray surface
-  ctx.fillStyle = '#333333' // Clean dark gray track surface
+  // First, fill the outer track area with warm graphite surface from CSS variables
+  ctx.fillStyle = PAPER_COLORS.pencilMedium // Warm graphite track surface
   ctx.globalAlpha = 0.3
   ctx.beginPath()
   for (let i = 0; i < outer.length; i++) {
@@ -1648,9 +1740,9 @@ function drawTrackWithHole(ctx: CanvasRenderingContext2D, outer: Vec[], inner: V
   
   ctx.restore()
   
-  // Now draw the borders with clean light gray lines
-  drawCleanPolyBorder(ctx, outer, g, '#E0E0E0') // Clean light gray border for outer
-  drawCleanPolyBorder(ctx, inner, g, '#E0E0E0') // Clean light gray border for inner
+  // Now draw the borders with pencil dark from CSS variables
+  drawCleanPolyBorder(ctx, outer, g, PAPER_COLORS.pencilDark) // Dark pencil border for outer
+  drawCleanPolyBorder(ctx, inner, g, PAPER_COLORS.pencilDark) // Dark pencil border for inner
 }
 
 // Helper function to draw clean polygon border
@@ -1728,14 +1820,73 @@ function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number,
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
 }
 
-// Simplified paper texture effect (much cleaner)
+// Enhanced paper texture effect matching CSS aging
 function drawSimplePaperTexture(ctx: CanvasRenderingContext2D, width: number, height: number) {
   ctx.save()
   
-  // Very subtle gradient overlay for paper feel (minimal to preserve grid)
+  // Layer 1: Base paper aging spots (matching CSS body::before)
+  // Brown aging spot at top-left area
+  const aging1 = ctx.createRadialGradient(width * 0.2, height * 0.2, 0, width * 0.2, height * 0.2, Math.min(width, height) * 0.5)
+  aging1.addColorStop(0, 'rgba(139, 69, 19, 0.03)') // Matches CSS brown aging
+  aging1.addColorStop(1, 'transparent')
+  ctx.fillStyle = aging1
+  ctx.fillRect(0, 0, width, height)
+  
+  // Brown aging spot at bottom-right area
+  const aging2 = ctx.createRadialGradient(width * 0.8, height * 0.8, 0, width * 0.8, height * 0.8, Math.min(width, height) * 0.5)
+  aging2.addColorStop(0, 'rgba(160, 82, 45, 0.02)') // Matches CSS saddle brown aging
+  aging2.addColorStop(1, 'transparent')
+  ctx.fillStyle = aging2
+  ctx.fillRect(0, 0, width, height)
+  
+  // Brown aging spot at center-left area
+  const aging3 = ctx.createRadialGradient(width * 0.4, height * 0.7, 0, width * 0.4, height * 0.7, Math.min(width, height) * 0.5)
+  aging3.addColorStop(0, 'rgba(139, 69, 19, 0.01)') // Subtle center aging
+  aging3.addColorStop(1, 'transparent')
+  ctx.fillStyle = aging3
+  ctx.fillRect(0, 0, width, height)
+  
+  // Layer 2: Paper fiber texture using CSS paper colors
+  const paperBg = PAPER_COLORS.paperBg
+  const paperAged = PAPER_COLORS.paperAged
+  const paperShadow = PAPER_COLORS.paperShadow
+  
+  // Create paper fiber texture with dots (matching CSS radial gradient pattern)
+  const fiberSpacing = 25 // Matches CSS 25px paper texture size
+  for (let x = 0; x < width; x += fiberSpacing) {
+    for (let y = 0; y < height; y += fiberSpacing) {
+      if (Math.random() > 0.3) { // 70% chance for fiber texture
+        const fiberGrad = ctx.createRadialGradient(x, y, 0, x, y, 1)
+        fiberGrad.addColorStop(0, paperShadow + '40') // Add 40 alpha (25% opacity)
+        fiberGrad.addColorStop(1, 'transparent')
+        ctx.fillStyle = fiberGrad
+        ctx.fillRect(x-1, y-1, 2, 2)
+      }
+    }
+  }
+  
+  // Layer 3: Overall paper gradient (main paper feel)
   const gradient = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, Math.max(width, height)/2)
-  gradient.addColorStop(0, 'rgba(250, 248, 240, 0.01)')
-  gradient.addColorStop(1, 'rgba(245, 243, 235, 0.02)')
+  
+  // Convert hex colors to rgba with very low opacity for subtle effect
+  const centerColor = paperBg.replace('#', '').match(/.{2}/g)
+  const edgeColor = paperAged.replace('#', '').match(/.{2}/g)
+  
+  if (centerColor && centerColor.length >= 3 && edgeColor && edgeColor.length >= 3) {
+    const centerR = parseInt(centerColor[0]!, 16)
+    const centerG = parseInt(centerColor[1]!, 16)
+    const centerB = parseInt(centerColor[2]!, 16)
+    const edgeR = parseInt(edgeColor[0]!, 16)
+    const edgeG = parseInt(edgeColor[1]!, 16)
+    const edgeB = parseInt(edgeColor[2]!, 16)
+    
+    gradient.addColorStop(0, `rgba(${centerR}, ${centerG}, ${centerB}, 0.005)`) // Very subtle center
+    gradient.addColorStop(1, `rgba(${edgeR}, ${edgeG}, ${edgeB}, 0.015)`) // Slightly more aged edges
+  } else {
+    // Fallback if color parsing fails
+    gradient.addColorStop(0, 'rgba(250, 248, 240, 0.005)')
+    gradient.addColorStop(1, 'rgba(245, 243, 235, 0.015)')
+  }
   
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, width, height)
@@ -1825,6 +1976,356 @@ function drawColoredPencilDot(ctx: CanvasRenderingContext2D, x: number, y: numbe
   ctx.restore()
 }
 
+// Refined hand-drawn border function with subtle character and consistent opacity
+function drawRefinedPencilBorder(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string, lineWidth = 3) {
+  ctx.save()
+  
+  ctx.strokeStyle = stroke
+  ctx.lineWidth = lineWidth
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.globalAlpha = 0.9 // Consistent opacity (no random variations)
+  
+  for (let i = 0; i < poly.length; i++) {
+    const p1 = poly[i]
+    const p2 = poly[(i + 1) % poly.length]
+    if (!p1 || !p2) continue
+    
+    const x1 = p1.x * g
+    const y1 = p1.y * g
+    const x2 = p2.x * g
+    const y2 = p2.y * g
+    
+    // Refined hand-drawn effect with subtle jitter (0.1px vs previous 0.3px)
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    const segments = Math.max(1, Math.floor(distance / 5)) // Fewer segments for better performance
+    
+    ctx.beginPath()
+    let currentX = x1
+    let currentY = y1
+    ctx.moveTo(currentX, currentY)
+    
+    for (let j = 1; j <= segments; j++) {
+      const t = j / segments
+      let targetX = x1 + dx * t
+      let targetY = y1 + dy * t
+      
+      // Add very subtle jitter for hand-drawn character (0.1px max)
+      if (j < segments) { // Don't jitter the final point to ensure clean connections
+        targetX += (Math.random() - 0.5) * 0.1
+        targetY += (Math.random() - 0.5) * 0.1
+      }
+      
+      ctx.lineTo(targetX, targetY)
+      currentX = targetX
+      currentY = targetY
+    }
+    
+    ctx.stroke()
+  }
+  
+  ctx.restore()
+}
+
+// Refined hand-drawn polygon function that combines fill and border
+function drawRefinedPencilPoly(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke: string, fill: string, lineWidth = 3) {
+  ctx.save()
+  
+  // Fill first with clean edges
+  ctx.fillStyle = fill
+  ctx.globalAlpha = 0.3
+  ctx.beginPath()
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i]
+    if (!p) continue
+    const x = p.x * g
+    const y = p.y * g
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fill()
+  
+  ctx.restore()
+  
+  // Then draw refined border
+  drawRefinedPencilBorder(ctx, poly, g, stroke, lineWidth)
+}
+
+// Refined hand-drawn line function for debug elements
+function drawRefinedPencilLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, stroke: string, lineWidth = 2) {
+  ctx.save()
+  
+  ctx.strokeStyle = stroke
+  ctx.lineWidth = lineWidth
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  
+  // Refined hand-drawn effect with subtle jitter (0.1px vs previous 0.3px)
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  const segments = Math.max(1, Math.floor(distance / 5)) // Fewer segments for better performance
+  
+  ctx.beginPath()
+  ctx.moveTo(x1, y1)
+  
+  for (let j = 1; j <= segments; j++) {
+    const t = j / segments
+    let targetX = x1 + dx * t
+    let targetY = y1 + dy * t
+    
+    // Add very subtle jitter for hand-drawn character (0.1px max)
+    if (j < segments) { // Don't jitter the final point to ensure clean connections
+      targetX += (Math.random() - 0.5) * 0.1
+      targetY += (Math.random() - 0.5) * 0.1
+    }
+    
+    ctx.lineTo(targetX, targetY)
+  }
+  
+  ctx.stroke()
+  ctx.restore()
+}
+
+// Selective paper texture overlay for track surface
+function drawTrackPaperTexture(ctx: CanvasRenderingContext2D, outer: Vec[], inner: Vec[], g: number) {
+  ctx.save()
+  
+  // Create clipping path for track area only (outer minus inner)
+  ctx.globalCompositeOperation = 'source-over'
+  
+  // First, create the track area clip path
+  ctx.beginPath()
+  for (let i = 0; i < outer.length; i++) {
+    const p = outer[i]
+    if (!p) continue
+    const x = p.x * g
+    const y = p.y * g
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  
+  // Cut out inner hole
+  for (let i = 0; i < inner.length; i++) {
+    const p = inner[i]
+    if (!p) continue
+    const x = p.x * g
+    const y = p.y * g
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  
+  ctx.clip()
+  
+  // Apply very subtle paper texture only to track surface
+  const paperShadow = PAPER_COLORS.paperShadow
+  const paperAged = PAPER_COLORS.paperAged
+  
+  // Minimal fiber texture that matches UI layer aesthetic
+  const fiberSpacing = 30 // Slightly larger spacing to preserve grid visibility
+  const minX = Math.min(...outer.map(p => p.x)) * g
+  const maxX = Math.max(...outer.map(p => p.x)) * g
+  const minY = Math.min(...outer.map(p => p.y)) * g
+  const maxY = Math.max(...outer.map(p => p.y)) * g
+  
+  for (let x = minX; x < maxX; x += fiberSpacing) {
+    for (let y = minY; y < maxY; y += fiberSpacing) {
+      if (Math.random() > 0.7) { // Only 30% chance for very sparse texture
+        const fiberGrad = ctx.createRadialGradient(x, y, 0, x, y, 0.5)
+        fiberGrad.addColorStop(0, paperShadow + '20') // Very low opacity (12.5%)
+        fiberGrad.addColorStop(1, 'transparent')
+        ctx.fillStyle = fiberGrad
+        ctx.fillRect(x-0.5, y-0.5, 1, 1) // Tiny dots
+      }
+    }
+  }
+  
+  // Add very subtle aged paper tint to track surface
+  const trackBounds = {
+    left: minX,
+    top: minY,
+    width: maxX - minX,
+    height: maxY - minY
+  }
+  
+  const agingGrad = ctx.createRadialGradient(
+    trackBounds.left + trackBounds.width * 0.3,
+    trackBounds.top + trackBounds.height * 0.3,
+    0,
+    trackBounds.left + trackBounds.width * 0.3,
+    trackBounds.top + trackBounds.height * 0.3,
+    Math.max(trackBounds.width, trackBounds.height) * 0.6
+  )
+  agingGrad.addColorStop(0, 'rgba(139, 69, 19, 0.005)') // Extremely subtle brown aging
+  agingGrad.addColorStop(1, 'transparent')
+  
+  ctx.fillStyle = agingGrad
+  ctx.fillRect(trackBounds.left, trackBounds.top, trackBounds.width, trackBounds.height)
+  
+  ctx.restore()
+}
+
+// Gentle shadow effects for track boundaries using warm gray tones
+function drawTrackShadows(ctx: CanvasRenderingContext2D, outer: Vec[], inner: Vec[], g: number) {
+  ctx.save()
+  
+  // Very subtle drop shadow for outer track boundary
+  ctx.shadowColor = PAPER_COLORS.pencilLight // Warm gray shadow
+  ctx.shadowBlur = 2
+  ctx.shadowOffsetX = 1
+  ctx.shadowOffsetY = 1
+  ctx.globalAlpha = 0.3 // Very subtle
+  
+  // Draw invisible shape to cast shadow
+  ctx.strokeStyle = 'transparent'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  for (let i = 0; i < outer.length; i++) {
+    const p = outer[i]
+    if (!p) continue
+    const x = p.x * g
+    const y = p.y * g
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  
+  // Reset shadow for inner boundary
+  ctx.shadowOffsetX = -0.5
+  ctx.shadowOffsetY = -0.5
+  ctx.shadowBlur = 1
+  
+  // Inner boundary shadow (inward)
+  ctx.beginPath()
+  for (let i = 0; i < inner.length; i++) {
+    const p = inner[i]
+    if (!p) continue
+    const x = p.x * g
+    const y = p.y * g
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  
+  ctx.restore()
+}
+
+// Enhanced car drawing with subtle shadow depth
+function drawCarWithShadow(ctx: CanvasRenderingContext2D, pos: Vec, g: number, color: string, radius = 6, isCurrentPlayer = false) {
+  ctx.save()
+  
+  // Very subtle shadow using warm gray tones
+  if (!color.includes('transparent') && !color.includes('fade')) {
+    ctx.shadowColor = PAPER_COLORS.pencilMedium
+    ctx.shadowBlur = isCurrentPlayer ? 3 : 2
+    ctx.shadowOffsetX = 1
+    ctx.shadowOffsetY = 1
+    ctx.globalAlpha = 0.4
+  }
+  
+  // Draw the car
+  ctx.fillStyle = color
+  ctx.beginPath()
+  ctx.arc(pos.x * g, pos.y * g, radius, 0, Math.PI * 2)
+  ctx.fill()
+  
+  ctx.restore()
+}
+
+// Refined layering system with optimized transparency hierarchy
+class LayerManager {
+  static readonly LAYER_OPACITY = {
+    PAPER_BASE: 0.85,          // Foundation paper layer
+    PAPER_TEXTURE: 0.02,       // Subtle paper aging texture
+    TRACK_SURFACE: 0.3,        // Track fill surface
+    TRACK_SHADOWS: 0.3,        // Track boundary shadows
+    TRACK_TEXTURE: 0.015,      // Track surface paper texture
+    TRACK_BORDERS: 1.0,        // Track boundary lines
+    GRID_LABELS: 0.7,          // Coordinate grid labels
+    RACING_ELEMENTS: 0.7,      // Start/finish, arrows, racing line
+    TRAILS: 1.0,               // Car movement trails
+    DEBUG_ELEMENTS: 0.8,       // Debug overlays and checkpoints
+    GAME_FEEDBACK: 1.0,        // Move candidates and hover effects
+    CARS: 1.0,                 // Player cars
+    PARTICLES: 0.9             // Animation particles
+  }
+  
+  static drawPaperFoundation(ctx: CanvasRenderingContext2D, W: number, H: number) {
+    // Layer 1: Paper base with optimal transparency for grid visibility
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.PAPER_BASE
+    const paperColor = UNIFIED_COLORS.paperBg
+    ctx.fillStyle = paperColor
+    ctx.fillRect(0, 0, W, H)
+    ctx.restore()
+  }
+  
+  static drawPaperTexture(ctx: CanvasRenderingContext2D, W: number, H: number) {
+    // Layer 2: Paper aging texture with fine-tuned opacity
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.PAPER_TEXTURE
+    drawSimplePaperTexture(ctx, W, H)
+    ctx.restore()
+  }
+  
+  static drawTrackLayers(ctx: CanvasRenderingContext2D, outer: Vec[], inner: Vec[], g: number) {
+    // Layer 3a: Track surface with optimized opacity
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.TRACK_SURFACE
+    drawTrackWithHole(ctx, outer, inner, g)
+    ctx.restore()
+    
+    // Layer 3b: Track shadows (subtle depth)
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.TRACK_SHADOWS
+    drawTrackShadows(ctx, outer, inner, g)
+    ctx.restore()
+    
+    // Layer 3c: Track surface texture (very minimal)
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.TRACK_TEXTURE
+    drawTrackPaperTexture(ctx, outer, inner, g)
+    ctx.restore()
+    
+    // Layer 3d: Track borders (full opacity for clarity)
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.TRACK_BORDERS
+    // Track borders are drawn as part of drawTrackWithHole, so this is just for future reference
+    ctx.restore()
+  }
+  
+  static drawRacingElements(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.RACING_ELEMENTS
+    
+    if (isMultiCarGame(state)) {
+      const multiCarState = state as MultiCarGameState
+      drawCheckeredStartLine(ctx, multiCarState.start, g)
+      drawDirectionalArrows(ctx, multiCarState, g)
+      drawRacingLine(ctx, multiCarState, g)
+    } else {
+      const legacyState = state as LegacyGameState
+      drawCheckeredStartLine(ctx, legacyState.start, g)
+      drawDirectionalArrows(ctx, legacyState, g)
+      drawRacingLine(ctx, legacyState, g)
+    }
+    
+    ctx.restore()
+  }
+  
+  static drawDebugElements(ctx: CanvasRenderingContext2D, state: MultiCarGameState, g: number) {
+    if (!isFeatureEnabled('debugMode')) return
+    
+    ctx.save()
+    ctx.globalAlpha = this.LAYER_OPACITY.DEBUG_ELEMENTS
+    drawCheckpointLines(ctx, state, g)
+    drawAIDebugVisualization(ctx, state, g)
+    ctx.restore()
+  }
+}
+
 // Draw coordinate labels for technical reference (no grid lines - CSS provides those)
 function drawCoordinateLabels(ctx: CanvasRenderingContext2D, W: number, H: number, g: number) {
   ctx.save()
@@ -1833,8 +2334,8 @@ function drawCoordinateLabels(ctx: CanvasRenderingContext2D, W: number, H: numbe
   const maxX = Math.floor(W / g)
   const maxY = Math.floor(H / g)
   
-  // Coordinate labels in graphite pencil style
-  ctx.fillStyle = '#4A4A4A' // Dark graphite pencil
+  // Coordinate labels in graphite pencil style using CSS variables
+  ctx.fillStyle = PAPER_COLORS.pencilMedium // Medium pencil from CSS
   ctx.font = '11px monospace'
   ctx.globalAlpha = 0.7
   
@@ -1858,15 +2359,15 @@ function drawCoordinateLabels(ctx: CanvasRenderingContext2D, W: number, H: numbe
     }
   }
   
-  // Origin marker (0,0) - small graphite dot
-  ctx.fillStyle = '#4A4A4A'
+  // Origin marker (0,0) - small graphite dot using CSS color
+  ctx.fillStyle = PAPER_COLORS.pencilMedium
   ctx.globalAlpha = 1.0
   ctx.beginPath()
   ctx.arc(0, 0, 2, 0, Math.PI * 2)
   ctx.fill()
   
-  // Origin label
-  ctx.fillStyle = '#4A4A4A'
+  // Origin label using CSS color
+  ctx.fillStyle = PAPER_COLORS.pencilMedium
   ctx.font = '10px monospace'
   ctx.textAlign = 'left'
   ctx.textBaseline = 'top'
@@ -1875,7 +2376,7 @@ function drawCoordinateLabels(ctx: CanvasRenderingContext2D, W: number, H: numbe
   ctx.restore()
 }
 
-// Debug function to draw checkpoint lines when debug mode is enabled
+// Debug function to draw checkpoint lines with hand-drawn character
 function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameState, g: number) {
   ctx.save()
   
@@ -1883,18 +2384,12 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
   const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   const checkpoints = trackAnalysis.lapValidationCheckpoints
   
-  // Use darker gray than track color (#333333 -> #1A1A1A)
-  const checkpointColor = '#1A1A1A'
+  // Use warm dark brown from CSS variables for paper aesthetic
+  const checkpointColor = UNIFIED_COLORS.pencilDark
   
   for (let i = 0; i < checkpoints.length; i++) {
     const checkpoint = checkpoints[i]
     if (!checkpoint) continue
-    
-    // Draw double lines with thin width
-    ctx.strokeStyle = checkpointColor
-    ctx.lineWidth = 1
-    ctx.globalAlpha = 0.8
-    ctx.lineCap = 'round'
     
     const x1 = checkpoint.a.x * g
     const y1 = checkpoint.a.y * g
@@ -1908,24 +2403,38 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     const perpX = (-dy / length) * 1 // 1 pixel offset
     const perpY = (dx / length) * 1
     
-    // Draw first line
-    ctx.beginPath()
-    ctx.moveTo(x1 + perpX, y1 + perpY)
-    ctx.lineTo(x2 + perpX, y2 + perpY)
-    ctx.stroke()
+    // Draw hand-drawn style double lines with subtle character
+    ctx.strokeStyle = checkpointColor
+    ctx.lineWidth = 1.2
+    ctx.globalAlpha = 0.8
+    ctx.lineCap = 'round'
     
-    // Draw second line
-    ctx.beginPath()
-    ctx.moveTo(x1 - perpX, y1 - perpY)
-    ctx.lineTo(x2 - perpX, y2 - perpY)
-    ctx.stroke()
+    // First line with subtle hand-drawn character
+    drawRefinedPencilLine(ctx, 
+      x1 + perpX, y1 + perpY, 
+      x2 + perpX, y2 + perpY, 
+      checkpointColor, 1.2
+    )
     
-    // Draw checkpoint number label positioned inside the inner track boundary
+    // Second line with subtle hand-drawn character  
+    drawRefinedPencilLine(ctx, 
+      x1 - perpX, y1 - perpY, 
+      x2 - perpX, y2 - perpY, 
+      checkpointColor, 1.2
+    )
+    
+    // Draw checkpoint number label with hand-drawn typography
     ctx.fillStyle = checkpointColor
-    ctx.font = '10px Arial'
-    ctx.globalAlpha = 0.7
+    ctx.font = '11px cursive' // Use cursive font for hand-drawn feel
+    ctx.globalAlpha = 0.75
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
+    
+    // Add subtle shadow for better visibility on paper background
+    ctx.shadowColor = UNIFIED_COLORS.paperBg
+    ctx.shadowBlur = 1
+    ctx.shadowOffsetX = 0.5
+    ctx.shadowOffsetY = 0.5
     
     // Find which endpoint is on the inner boundary
     // Inner track bounds: x=12-38, y=10-25
@@ -2001,32 +2510,40 @@ function drawAIDebugVisualization(ctx: CanvasRenderingContext2D, state: MultiCar
 function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: any[], g: number) {
   ctx.save()
   
-  // Draw racing line as connected waypoints
-  ctx.strokeStyle = '#888'
+  // Draw racing line with hand-drawn character using warm colors
+  ctx.strokeStyle = UNIFIED_COLORS.pencilMedium
   ctx.lineWidth = 2
   ctx.globalAlpha = 0.6
-  ctx.setLineDash([5, 5])
+  ctx.setLineDash([6, 3]) // Slightly adjusted dash pattern
+  ctx.lineCap = 'round'
   
-  ctx.beginPath()
-  for (let i = 0; i < racingLine.length; i++) {
+  // Draw racing line segments with subtle hand-drawn character
+  for (let i = 0; i < racingLine.length - 1; i++) {
     const point = racingLine[i]
-    const x = point.pos.x * g
-    const y = point.pos.y * g
+    const nextPoint = racingLine[i + 1]
+    if (!point || !nextPoint) continue
     
-    if (i === 0) {
-      ctx.moveTo(x, y)
-    } else {
-      ctx.lineTo(x, y)
-    }
+    const x1 = point.pos.x * g
+    const y1 = point.pos.y * g
+    const x2 = nextPoint.pos.x * g
+    const y2 = nextPoint.pos.y * g
+    
+    // Use refined pencil line for subtle hand-drawn character
+    drawRefinedPencilLine(ctx, x1, y1, x2, y2, UNIFIED_COLORS.pencilMedium, 2)
   }
-  // Close the loop
+  
+  // Close the loop with hand-drawn character
   if (racingLine.length > 0) {
     const firstPoint = racingLine[0]
-    if (firstPoint) {
-      ctx.lineTo(firstPoint.pos.x * g, firstPoint.pos.y * g)
+    const lastPoint = racingLine[racingLine.length - 1]
+    if (firstPoint && lastPoint) {
+      drawRefinedPencilLine(ctx, 
+        lastPoint.pos.x * g, lastPoint.pos.y * g,
+        firstPoint.pos.x * g, firstPoint.pos.y * g,
+        UNIFIED_COLORS.pencilMedium, 2
+      )
     }
   }
-  ctx.stroke()
   
   // Draw waypoints with different colors based on corner type
   ctx.globalAlpha = 0.8
@@ -2038,13 +2555,13 @@ function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: 
     const x = point.pos.x * g
     const y = point.pos.y * g
     
-    // Color based on corner type
-    let color = '#888' // default
+    // Color based on corner type using warm paper-integrated tones
+    let color = UNIFIED_COLORS.pencilMedium // default warm gray
     switch (point.cornerType) {
-      case 'straight': color = '#4a4'; break  // Green for straights
-      case 'entry': color = '#fa4'; break     // Orange for corner entry
-      case 'apex': color = '#f44'; break      // Red for apex
-      case 'exit': color = '#44f'; break      // Blue for corner exit
+      case 'straight': color = UNIFIED_COLORS.pencilGreen; break  // Green pencil for straights
+      case 'entry': color = UNIFIED_COLORS.warning; break     // Warm orange for corner entry
+      case 'apex': color = UNIFIED_COLORS.pencilRed; break      // Red pencil for apex
+      case 'exit': color = UNIFIED_COLORS.pencilBlue; break      // Blue pencil for corner exit
     }
     
     // Draw waypoint circle
@@ -2056,15 +2573,21 @@ function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: 
     ctx.fill()
     ctx.stroke()
     
-    // Draw speed indicator as a small text label
-    ctx.fillStyle = '#fff'
-    ctx.font = '10px Arial'
+    // Draw speed indicator with hand-drawn style
+    ctx.fillStyle = UNIFIED_COLORS.paperBg
+    ctx.font = '9px cursive' // Hand-drawn style font
+    ctx.shadowColor = UNIFIED_COLORS.pencilDark
+    ctx.shadowBlur = 1
+    ctx.shadowOffsetX = 0.5
+    ctx.shadowOffsetY = 0.5
     ctx.fillText(point.targetSpeed.toString(), x + 6, y - 6)
     
-    // Draw brake zone indicator
+    // Draw brake zone indicator with warm tones
     if (point.brakeZone) {
-      ctx.strokeStyle = '#f80'
+      ctx.strokeStyle = UNIFIED_COLORS.warning
       ctx.lineWidth = 2
+      ctx.shadowColor = 'transparent' // Reset shadow for shapes
+      ctx.shadowBlur = 0
       ctx.beginPath()
       ctx.arc(x, y, 8, 0, Math.PI * 2)
       ctx.stroke()
@@ -2082,8 +2605,8 @@ function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state:
   
   ctx.save()
   
-  // Draw racing line as connected waypoints
-  ctx.strokeStyle = '#666'
+  // Draw racing line as connected waypoints using warm colors
+  ctx.strokeStyle = PAPER_COLORS.pencilLight
   ctx.lineWidth = 2
   ctx.globalAlpha = 0.4
   ctx.setLineDash([5, 5])
@@ -2118,8 +2641,8 @@ function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state:
     const x = point.pos.x * g
     const y = point.pos.y * g
     
-    // Color based on corner type from track analysis
-    let color = '#888' // default
+    // Color based on corner type from track analysis (using warm tones)
+    let color = PAPER_COLORS.pencilMedium // default warm gray
     switch (point.cornerType) {
       case 'straight': color = '#4a4'; break  // Green for straights
       case 'entry': color = '#fa4'; break     // Orange for corner entry
