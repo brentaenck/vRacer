@@ -1449,34 +1449,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
   }
 }
 
-function drawDirectionalArrows(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
-  ctx.save()
-  ctx.fillStyle = '#888'
-  ctx.strokeStyle = '#bbb'
-  ctx.lineWidth = 2
-  
-  // Arrow positions around the track showing COUNTER-CLOCKWISE direction (matching AI racing line)
-  // Counter-clockwise path: start → down → right → up → left → back to start
-  const arrows = [
-    // Left side near start/finish (going down from start)
-    { pos: { x: 7, y: 15 }, angle: Math.PI / 2 }, // ↓
-    
-    // Bottom side (going left to right)
-    { pos: { x: 25, y: 30 }, angle: 0 }, // →
-    
-    // Right side (going bottom to top)
-    { pos: { x: 45, y: 17.5 }, angle: -Math.PI / 2 }, // ↑
-    
-    // Top side (going right to left)
-    { pos: { x: 25, y: 5 }, angle: Math.PI }, // ←
-  ]
-  
-  for (const arrow of arrows) {
-    drawArrow(ctx, arrow.pos.x * g, arrow.pos.y * g, arrow.angle, 10, g)
-  }
-  
-  ctx.restore()
-}
+// Removed drawDirectionalArrows function - arrows were covered by checkpoint lines and not aesthetically pleasing
 
 function drawRacingLine(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
   if (!isRacingLineVisible()) return
@@ -1559,27 +1532,7 @@ function drawRacingLine(ctx: CanvasRenderingContext2D, state: GameState, g: numb
   }
 }
 
-function drawArrow(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, size: number, g: number) {
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.rotate(angle)
-  
-  // Draw arrow shaft
-  ctx.beginPath()
-  ctx.moveTo(-size, 0)
-  ctx.lineTo(size * 0.5, 0)
-  ctx.stroke()
-  
-  // Draw arrow head
-  ctx.beginPath()
-  ctx.moveTo(size * 0.5, 0)
-  ctx.lineTo(size * 0.2, -size * 0.4)
-  ctx.lineTo(size * 0.2, size * 0.4)
-  ctx.closePath()
-  ctx.fill()
-  
-  ctx.restore()
-}
+// Removed drawArrow helper function - no longer needed after removing directional arrows
 
 function drawCheckeredStartLine(ctx: CanvasRenderingContext2D, startLine: Segment, g: number) {
   const x1 = startLine.a.x * g
@@ -2303,12 +2256,12 @@ class LayerManager {
     if (isMultiCarGame(state)) {
       const multiCarState = state as MultiCarGameState
       drawCheckeredStartLine(ctx, multiCarState.start, g)
-      drawDirectionalArrows(ctx, multiCarState, g)
+      // Removed directional arrows - they were covered by checkpoint lines and not aesthetically pleasing
       drawRacingLine(ctx, multiCarState, g)
     } else {
       const legacyState = state as LegacyGameState
       drawCheckeredStartLine(ctx, legacyState.start, g)
-      drawDirectionalArrows(ctx, legacyState, g)
+      // Removed directional arrows - they were covered by checkpoint lines and not aesthetically pleasing
       drawRacingLine(ctx, legacyState, g)
     }
     
