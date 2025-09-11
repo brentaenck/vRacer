@@ -50,13 +50,13 @@ const UNIFIED_COLORS = {
   get carColors(): string[] {
     return [
       this.racingTangerine,
-      this.racingYellow,
+      '#2F2F2F', // Charcoal (moved from position 8)
       this.racingBlue,
       this.racingViolet,
       this.racingRed,
       '#228B22', // Forest Green (fallback)
       '#8B4513', // Burnt Sienna (fallback)
-      '#2F2F2F', // Charcoal (fallback)
+      this.racingYellow, // Golden Rod (moved from position 2)
     ]
   },
   
