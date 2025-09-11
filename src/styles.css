@@ -102,6 +102,18 @@
   font-family: var(--ui-font-primary);
 }
 
+/* Unified UI Zone Frame - Remove individual borders when dual styling enabled */
+.dual-style-enabled header {
+  border-bottom: none; /* Remove border to create seamless UI Zone */
+  border-radius: 0; /* Remove rounded corners for seamless connection */
+}
+
+.dual-style-enabled #sidebar {
+  border: none; /* Remove border to create seamless UI Zone */
+  border-radius: 0; /* Remove rounded corners for seamless connection */
+  box-shadow: none; /* Remove individual shadows */
+}
+
 /* Canvas zone always maintains paper aesthetic regardless of dual styling */
 .canvas-zone,
 .dual-style-enabled .canvas-zone {
@@ -1672,10 +1684,21 @@ input[type="checkbox"] {
 main {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
   flex: 1;
   min-height: 0;
+  /* Remove gap and padding to allow UI Zone to form solid frame */
+}
+
+/* Game area styling - creates padded space for canvas within UI Zone */
+.game-area {
+  padding: var(--spacing-lg);
+  position: relative;
+}
+
+/* Canvas container positioning */
+.game-area canvas {
+  display: block;
+  margin: 0;
 }
 
 /* Responsive layout */
@@ -1688,6 +1711,10 @@ main {
   #sidebar {
     max-height: 300px;
   }
+  
+  .game-area {
+    padding: var(--spacing-md);
+  }
 }
 
 @media (max-width: 768px) {
@@ -1695,6 +1722,11 @@ main {
     flex-direction: column;
     gap: var(--spacing-md);
     padding: var(--spacing-md);
+  }
+  
+  main {
+    padding: 0;
+    gap: 0;
   }
   
   header h1 {
