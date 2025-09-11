@@ -303,26 +303,28 @@
   transform: none;
 }
 
-/* Modern UI sidebar styling */
+/* Modern UI sidebar styling - Base Level */
 .dual-style-enabled .ui-zone aside,
 .dual-style-enabled aside.ui-zone {
-  background: var(--ui-bg-secondary);
-  color: var(--ui-text-primary);
+  background: var(--ui-bg-surface) !important;
+  color: var(--ui-text-primary) !important;
   padding: var(--spacing-xl);
-  border-left: 1px solid var(--ui-border-light);
+  border-left: 1px solid var(--ui-border-medium);
   max-height: calc(100vh - 80px);
   overflow-y: auto;
 }
 
-/* Modern sidebar sections */
+/* Modern sidebar sections - Level 1 */
 .dual-style-enabled .ui-zone .status-section,
 .dual-style-enabled .ui-zone .help-section,
 .dual-style-enabled .ui-zone .features-section {
-  background: var(--ui-bg-primary);
+  background: var(--ui-bg-primary) !important;
+  color: var(--ui-text-primary) !important;
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-xl);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--ui-border-light);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .dual-style-enabled .ui-zone .status-section:last-child,
@@ -333,10 +335,10 @@
 
 /* Modern sidebar section headers */
 .dual-style-enabled .ui-zone aside h2 {
-  font-family: var(--ui-font-heading);
+  font-family: var(--ui-font-heading) !important;
   font-size: 18px;
   font-weight: 600;
-  color: var(--ui-text-primary);
+  color: var(--ui-text-primary) !important;
   margin: 0 0 var(--spacing-md) 0;
   display: flex;
   align-items: center;
@@ -347,10 +349,10 @@
 }
 
 .dual-style-enabled .ui-zone aside h3 {
-  font-family: var(--ui-font-heading);
+  font-family: var(--ui-font-heading) !important;
   font-size: 16px;
   font-weight: 600;
-  color: var(--ui-text-primary);
+  color: var(--ui-text-primary) !important;
   margin: var(--spacing-lg) 0 var(--spacing-sm) 0;
   /* Remove hand-drawn effects */
   text-shadow: none;
@@ -371,16 +373,19 @@
 }
 
 .dual-style-enabled .ui-zone .help-category {
-  background: var(--ui-bg-tertiary);
+  background: var(--ui-bg-secondary) !important;
+  color: var(--ui-text-primary) !important;
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
+  border: 1px solid var(--ui-border-light);
 }
 
 .dual-style-enabled .ui-zone .help-category h3 {
   margin: 0 0 var(--spacing-sm) 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--ui-text-primary);
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-heading) !important;
 }
 
 /* Modern list styling */
@@ -391,10 +396,10 @@
 }
 
 .dual-style-enabled .ui-zone aside li {
-  font-family: var(--ui-font-primary);
+  font-family: var(--ui-font-primary) !important;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--ui-text-secondary);
+  color: var(--ui-text-secondary) !important;
   margin-bottom: var(--spacing-xs);
   position: relative;
   padding-left: var(--spacing-md);
@@ -402,7 +407,7 @@
 
 .dual-style-enabled .ui-zone aside li::before {
   content: '•';
-  color: var(--ui-accent);
+  color: var(--ui-accent) !important;
   position: absolute;
   left: 0;
   font-weight: bold;
@@ -411,18 +416,18 @@
 .dual-style-enabled .ui-zone aside li strong,
 .dual-style-enabled .ui-zone strong,
 .dual-style-enabled .ui-zone b {
-  color: var(--ui-text-primary);
+  color: var(--ui-text-primary) !important;
   font-weight: 600;
 }
 
 /* Modern status display */
 .dual-style-enabled .ui-zone #status {
-  font-family: var(--ui-font-mono);
+  font-family: var(--ui-font-mono) !important;
   font-size: 12px;
-  background: var(--ui-bg-tertiary);
+  background: var(--ui-bg-secondary) !important;
   border-radius: var(--radius-sm);
   padding: var(--spacing-md);
-  color: var(--ui-text-secondary);
+  color: var(--ui-text-secondary) !important;
   border: 1px solid var(--ui-border-light);
   white-space: pre-wrap;
   overflow-x: auto;
@@ -1303,6 +1308,39 @@
 .dual-style-enabled .ui-zone button .btn-icon,
 .dual-style-enabled .ui-zone .btn-reset-header span {
   color: inherit !important;
+}
+
+/* ========================================
+   Comprehensive Sidebar Content Fixes
+   ======================================== */
+
+/* Ensure all sidebar content uses proper colors and fonts */
+.dual-style-enabled .ui-zone aside *,
+.dual-style-enabled aside.ui-zone * {
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Sidebar headings use heading font */
+.dual-style-enabled .ui-zone aside h1,
+.dual-style-enabled .ui-zone aside h2,
+.dual-style-enabled .ui-zone aside h3,
+.dual-style-enabled .ui-zone aside h4 {
+  font-family: var(--ui-font-heading) !important;
+}
+
+/* Secondary text elements */
+.dual-style-enabled .ui-zone aside p,
+.dual-style-enabled .ui-zone aside li,
+.dual-style-enabled .ui-zone aside .help-content {
+  color: var(--ui-text-secondary) !important;
+}
+
+/* Monospace elements */
+.dual-style-enabled .ui-zone aside code,
+.dual-style-enabled .ui-zone aside kbd,
+.dual-style-enabled .ui-zone aside #status {
+  font-family: var(--ui-font-mono) !important;
 }
 
 /* Add paper aging effects */
