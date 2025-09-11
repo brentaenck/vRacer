@@ -1532,7 +1532,46 @@ function drawRacingLine(ctx: CanvasRenderingContext2D, state: GameState, g: numb
   }
 }
 
-// Removed drawArrow helper function - no longer needed after removing directional arrows
+// Helper function to draw directional arrow with number label for checkpoints
+function drawDirectionalArrowLabel(ctx: CanvasRenderingContext2D, x: number, y: number, direction: number, checkpointNum: number, color: string) {
+  ctx.save()
+  
+  // Calculate arrow direction (counter-clockwise racing direction)
+  // direction: 0=right, 1=down, 2=left, 3=up based on checkpoint position
+  const angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2] // →, ↓, ←, ↑
+  const angle = angles[direction % 4] || 0
+  
+  ctx.translate(x, y)
+  ctx.rotate(angle)
+  
+  const arrowSize = 12
+  const arrowWidth = 8
+  
+  // Draw arrow background (rounded rectangle)
+  ctx.fillStyle = color
+  ctx.globalAlpha = 0.8
+  ctx.beginPath()
+  ctx.roundRect(-arrowSize, -arrowWidth/2, arrowSize * 1.6, arrowWidth, 3)
+  ctx.fill()
+  
+  // Draw arrow head
+  ctx.beginPath()
+  ctx.moveTo(arrowSize * 0.6, 0)
+  ctx.lineTo(arrowSize * 0.2, -arrowWidth/3)
+  ctx.lineTo(arrowSize * 0.2, arrowWidth/3)
+  ctx.closePath()
+  ctx.fill()
+  
+  // Draw checkpoint number on arrow
+  ctx.fillStyle = '#fff'
+  ctx.globalAlpha = 1.0
+  ctx.font = 'bold 10px monospace'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(checkpointNum.toString(), -arrowSize * 0.3, 0)
+  
+  ctx.restore()
+}
 
 function drawCheckeredStartLine(ctx: CanvasRenderingContext2D, startLine: Segment, g: number) {
   const x1 = startLine.a.x * g
@@ -2376,22 +2415,8 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
       checkpointColor, 1.2
     )
     
-    // Draw checkpoint number label with hand-drawn typography
-    ctx.fillStyle = checkpointColor
-    ctx.font = '11px cursive' // Use cursive font for hand-drawn feel
-    ctx.globalAlpha = 0.75
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    
-    // Add subtle shadow for better visibility on paper background
-    ctx.shadowColor = UNIFIED_COLORS.paperBg
-    ctx.shadowBlur = 1
-    ctx.shadowOffsetX = 0.5
-    ctx.shadowOffsetY = 0.5
-    
-    // Find which endpoint is on the inner boundary
-    // Inner track bounds: x=12-38, y=10-25
-    const innerBounds = { minX: 12 * g, maxX: 38 * g, minY: 10 * g, maxY: 25 * g }
+    // Draw directional arrow label showing racing direction and checkpoint number
+    // Find which endpoint is on the inner boundary for arrow placement
     const trackCenterX = 25 * g
     const trackCenterY = 17.5 * g
     
@@ -2408,18 +2433,26 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     const dirY = trackCenterY - innerY
     const dirLength = Math.sqrt(dirX * dirX + dirY * dirY)
     
-    // Move label 15 pixels inward from the inner boundary endpoint
-    let labelX = innerX
-    let labelY = innerY
+    // Move arrow 18 pixels inward from the inner boundary endpoint
+    let arrowX = innerX
+    let arrowY = innerY
     
     if (dirLength > 0) {
       const normalizedX = dirX / dirLength
       const normalizedY = dirY / dirLength
-      labelX = innerX + normalizedX * 15
-      labelY = innerY + normalizedY * 15
+      arrowX = innerX + normalizedX * 18
+      arrowY = innerY + normalizedY * 18
     }
     
-    ctx.fillText(`${i}`, labelX, labelY)
+    // Determine racing direction for arrow (counter-clockwise):
+    // CP0: right (→), CP1: up (↑), CP2: left (←), CP3: down (↓)
+    let racingDirection = i // Default matches counter-clockwise progression
+    
+    // Use different colors for each checkpoint
+    const checkpointColors = ['#f59e0b', '#06b6d4', '#ec4899', '#10b981'] // Amber, Cyan, Pink, Green
+    const arrowColor = checkpointColors[i % checkpointColors.length] || checkpointColor
+    
+    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, arrowColor)
   }
   
   ctx.restore()
