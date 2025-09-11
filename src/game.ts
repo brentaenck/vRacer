@@ -54,9 +54,9 @@ const UNIFIED_COLORS = {
       this.racingBlue,
       this.racingViolet,
       this.racingRed,
-      '#44ffff', // Cyan (fallback)
-      '#ff8844', // Orange (fallback)
-      this.pencilMedium, // Gray (fallback)
+      '#228B22', // Forest Green (fallback)
+      '#8B4513', // Burnt Sienna (fallback)
+      '#2F2F2F', // Charcoal (fallback)
     ]
   },
   

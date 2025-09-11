@@ -19,12 +19,12 @@
   --graph-blue: #a8c8e8;        /* Graph paper blue lines */
   --graph-major: #7db4d8;       /* Major grid lines */
   
-  /* Hand-drawn colored pencil racing colors */
-  --racing-tangerine: #F28E2B;  /* 🧡 Tangerine colored pencil */
-  --racing-yellow: #F4D03F;     /* 💛 Golden Yellow colored pencil */
-  --racing-blue: #286DC0;       /* 💙 Royal Blue colored pencil */
-  --racing-violet: #8E44AD;     /* 💜 Violet colored pencil */
-  --racing-red: #dc2626;        /* Red colored pencil (fallback) */
+  /* Hand-drawn colored pencil racing colors - Darker, more saturated tones */
+  --racing-tangerine: #CC5500;  /* 🧡 Deep Orange colored pencil */
+  --racing-yellow: #B8860B;     /* 💛 Golden Rod colored pencil */
+  --racing-blue: #003D82;       /* 💙 Deep Blue colored pencil */
+  --racing-violet: #5D1A8B;     /* 💜 Deep Purple colored pencil */
+  --racing-red: #8B0000;        /* ❤️ Crimson Red colored pencil */
   
   --success: #059669;           /* Success green */
   --warning: #d97706;           /* Warning orange */
