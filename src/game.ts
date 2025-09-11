@@ -2374,15 +2374,12 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
   const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   const checkpoints = trackAnalysis.lapValidationCheckpoints
   
-  // Use distinct colors for each checkpoint line: Yellow, Cyan, Magenta, Green
-  const checkpointColors = ['#ffff00', '#00ffff', '#ff00ff', '#00ff00'] // Yellow, Cyan, Magenta, Green
+  // Use warm dark brown from CSS variables for paper aesthetic
+  const checkpointColor = UNIFIED_COLORS.pencilDark
   
   for (let i = 0; i < checkpoints.length; i++) {
     const checkpoint = checkpoints[i]
     if (!checkpoint) continue
-    
-    // Get color for this specific checkpoint
-    const checkpointColor = checkpointColors[i % checkpointColors.length] || UNIFIED_COLORS.pencilDark
     
     const x1 = checkpoint.a.x * g
     const y1 = checkpoint.a.y * g
@@ -2396,10 +2393,10 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     const perpX = (-dy / length) * 1 // 1 pixel offset
     const perpY = (dx / length) * 1
     
-    // Draw hand-drawn style double lines with subtle character in checkpoint color
+    // Draw hand-drawn style double lines with subtle character
     ctx.strokeStyle = checkpointColor
     ctx.lineWidth = 1.2
-    ctx.globalAlpha = 0.7
+    ctx.globalAlpha = 0.8
     ctx.lineCap = 'round'
     
     // First line with subtle hand-drawn character
@@ -2449,8 +2446,11 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     // CP0: right (→), CP1: up (↑), CP2: left (←), CP3: down (↓)
     let racingDirection = i // Default matches counter-clockwise progression
     
-    // Use the same color as the checkpoint line for consistency
-    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, checkpointColor)
+    // Use distinct colors for directional arrows: Yellow, Cyan, Magenta, Green
+    const arrowColors = ['#ffff00', '#00ffff', '#ff00ff', '#00ff00'] // Yellow, Cyan, Magenta, Green
+    const arrowColor = arrowColors[i % arrowColors.length] || checkpointColor
+    
+    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, arrowColor)
   }
   
   ctx.restore()
