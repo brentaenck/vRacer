@@ -1537,8 +1537,8 @@ function drawDirectionalArrowLabel(ctx: CanvasRenderingContext2D, x: number, y: 
   ctx.save()
   
   // Calculate arrow direction (counter-clockwise racing direction)
-  // direction: 0=right, 1=down, 2=left, 3=up based on checkpoint position
-  const angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2] // →, ↓, ←, ↑
+  // direction: 0=right, 1=up, 2=left, 3=down based on checkpoint position
+  const angles = [0, -Math.PI / 2, Math.PI, Math.PI / 2] // →, ↑, ←, ↓
   const angle = angles[direction % 4] || 0
   
   ctx.translate(x, y)
@@ -1547,12 +1547,10 @@ function drawDirectionalArrowLabel(ctx: CanvasRenderingContext2D, x: number, y: 
   const arrowSize = 12
   const arrowWidth = 8
   
-  // Draw arrow background (rounded rectangle)
+  // Draw arrow background (rectangle - roundRect may not be available)
   ctx.fillStyle = color
-  ctx.globalAlpha = 0.8
-  ctx.beginPath()
-  ctx.roundRect(-arrowSize, -arrowWidth/2, arrowSize * 1.6, arrowWidth, 3)
-  ctx.fill()
+  ctx.globalAlpha = 0.9
+  ctx.fillRect(-arrowSize, -arrowWidth/2, arrowSize * 1.6, arrowWidth)
   
   // Draw arrow head
   ctx.beginPath()
@@ -2376,12 +2374,15 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
   const trackAnalysis = createTrackAnalysisWithCustomLine(state.outer, state.inner, state.start)
   const checkpoints = trackAnalysis.lapValidationCheckpoints
   
-  // Use warm dark brown from CSS variables for paper aesthetic
-  const checkpointColor = UNIFIED_COLORS.pencilDark
+  // Use distinct colors for each checkpoint line: Yellow, Cyan, Magenta, Green
+  const checkpointColors = ['#ffff00', '#00ffff', '#ff00ff', '#00ff00'] // Yellow, Cyan, Magenta, Green
   
   for (let i = 0; i < checkpoints.length; i++) {
     const checkpoint = checkpoints[i]
     if (!checkpoint) continue
+    
+    // Get color for this specific checkpoint
+    const checkpointColor = checkpointColors[i % checkpointColors.length] || UNIFIED_COLORS.pencilDark
     
     const x1 = checkpoint.a.x * g
     const y1 = checkpoint.a.y * g
@@ -2395,10 +2396,10 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     const perpX = (-dy / length) * 1 // 1 pixel offset
     const perpY = (dx / length) * 1
     
-    // Draw hand-drawn style double lines with subtle character
+    // Draw hand-drawn style double lines with subtle character in checkpoint color
     ctx.strokeStyle = checkpointColor
     ctx.lineWidth = 1.2
-    ctx.globalAlpha = 0.8
+    ctx.globalAlpha = 0.7
     ctx.lineCap = 'round'
     
     // First line with subtle hand-drawn character
@@ -2448,11 +2449,8 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     // CP0: right (→), CP1: up (↑), CP2: left (←), CP3: down (↓)
     let racingDirection = i // Default matches counter-clockwise progression
     
-    // Use different colors for each checkpoint
-    const checkpointColors = ['#f59e0b', '#06b6d4', '#ec4899', '#10b981'] // Amber, Cyan, Pink, Green
-    const arrowColor = checkpointColors[i % checkpointColors.length] || checkpointColor
-    
-    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, arrowColor)
+    // Use the same color as the checkpoint line for consistency
+    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, checkpointColor)
   }
   
   ctx.restore()
