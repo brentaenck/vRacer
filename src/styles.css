@@ -1159,6 +1159,112 @@
   transform: translateX(14px);
 }
 
+/* ========================================
+   Font Consistency for New Game Modal
+   ======================================== */
+
+/* Ensure ALL New Game modal elements use UI Zone fonts */
+.dual-style-enabled .new-game-modal *,
+.dual-style-enabled .new-game-modal h1,
+.dual-style-enabled .new-game-modal h2,
+.dual-style-enabled .new-game-modal h3,
+.dual-style-enabled .new-game-modal h4,
+.dual-style-enabled .new-game-modal p,
+.dual-style-enabled .new-game-modal span,
+.dual-style-enabled .new-game-modal div,
+.dual-style-enabled .new-game-modal label,
+.dual-style-enabled .new-game-modal button {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Specific font overrides for New Game modal sections */
+.dual-style-enabled .race-settings-panel *,
+.dual-style-enabled .player-setup-panel *,
+.dual-style-enabled .settings-section *,
+.dual-style-enabled .quick-setup-section *,
+.dual-style-enabled .race-preview-section *,
+.dual-style-enabled .players-section * {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Section titles should use heading font */
+.dual-style-enabled .new-game-modal .section-title,
+.dual-style-enabled .new-game-modal h2,
+.dual-style-enabled .new-game-modal h3 {
+  font-family: var(--ui-font-heading) !important;
+  font-weight: 600 !important;
+}
+
+/* Player card elements */
+.dual-style-enabled .player-card *,
+.dual-style-enabled .player-card-header *,
+.dual-style-enabled .player-card-body *,
+.dual-style-enabled .player-number,
+.dual-style-enabled .player-name,
+.dual-style-enabled .ai-toggle-label {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Setting elements */
+.dual-style-enabled .setting-item *,
+.dual-style-enabled .setting-label,
+.dual-style-enabled .setting-select,
+.dual-style-enabled .setting-select option {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Preset buttons */
+.dual-style-enabled .preset-btn *,
+.dual-style-enabled .preset-name,
+.dual-style-enabled .preset-desc {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Preview stats */
+.dual-style-enabled .preview-stat *,
+.dual-style-enabled .stat-value,
+.dual-style-enabled .stat-label {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Form inputs and selects */
+.dual-style-enabled .new-game-modal input,
+.dual-style-enabled .new-game-modal select,
+.dual-style-enabled .new-game-modal textarea,
+.dual-style-enabled .player-name,
+.dual-style-enabled .player-ai-diff {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* General font overrides for all UI Zone modals */
+.dual-style-enabled .modal-content *,
+.dual-style-enabled .modal-header *,
+.dual-style-enabled .modal-body *,
+.dual-style-enabled .modal-footer * {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Modal headers should use heading font */
+.dual-style-enabled .modal-header h1,
+.dual-style-enabled .modal-header h2,
+.dual-style-enabled .modal-header h3 {
+  font-family: var(--ui-font-heading) !important;
+}
+
+/* Config modal font consistency */
+.dual-style-enabled .config-section *,
+.dual-style-enabled .config-toggle *,
+.dual-style-enabled .toggle-label,
+.dual-style-enabled .toggle-desc {
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Keyboard shortcuts should use monospace */
+.dual-style-enabled .shortcut,
+.dual-style-enabled kbd {
+  font-family: var(--ui-font-mono) !important;
+}
+
 /* Add paper aging effects */
 body::before {
   content: '';
