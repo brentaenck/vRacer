@@ -1265,6 +1265,46 @@
   font-family: var(--ui-font-mono) !important;
 }
 
+/* ========================================
+   Hamburger Menu Button Fix
+   ======================================== */
+
+/* Fix hamburger menu lines to be visible on dark background */
+.dual-style-enabled .ui-zone .hamburger-line {
+  background-color: var(--ui-text-primary) !important;
+  border-color: var(--ui-text-primary) !important;
+}
+
+.dual-style-enabled .ui-zone .hamburger-icon {
+  color: var(--ui-text-primary) !important;
+}
+
+/* Hamburger button hover state */
+.dual-style-enabled .ui-zone .btn-config:hover .hamburger-line {
+  background-color: var(--ui-accent) !important;
+  border-color: var(--ui-accent) !important;
+}
+
+.dual-style-enabled .ui-zone .btn-config:hover .hamburger-icon {
+  color: var(--ui-accent) !important;
+}
+
+/* Fix other button icons in UI Zone */
+.dual-style-enabled .ui-zone .btn-icon {
+  color: var(--ui-text-primary) !important;
+}
+
+.dual-style-enabled .ui-zone button:hover .btn-icon {
+  color: var(--ui-accent) !important;
+}
+
+/* Ensure button text and icons are visible */
+.dual-style-enabled .ui-zone button span,
+.dual-style-enabled .ui-zone button .btn-icon,
+.dual-style-enabled .ui-zone .btn-reset-header span {
+  color: inherit !important;
+}
+
 /* Add paper aging effects */
 body::before {
   content: '';
