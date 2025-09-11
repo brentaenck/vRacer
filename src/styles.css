@@ -1343,6 +1343,116 @@
   font-family: var(--ui-font-mono) !important;
 }
 
+/* ========================================
+   Game Settings (Config) Modal Fixes
+   ======================================== */
+
+/* Ensure all config modal elements use proper dark theme */
+.dual-style-enabled #configModal *,
+.dual-style-enabled .config-section *,
+.dual-style-enabled .config-group *,
+.dual-style-enabled .config-toggle * {
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Config section headers */
+.dual-style-enabled .config-section h3 {
+  font-family: var(--ui-font-heading) !important;
+  color: var(--ui-text-primary) !important;
+}
+
+/* Toggle labels and descriptions */
+.dual-style-enabled .toggle-label {
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-primary) !important;
+  font-weight: 600 !important;
+}
+
+.dual-style-enabled .toggle-desc {
+  color: var(--ui-text-secondary) !important;
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Racing line controls and status */
+.dual-style-enabled .racing-line-controls *,
+.dual-style-enabled .racing-line-status *,
+.dual-style-enabled #racingLineInfo {
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Button text in config modal */
+.dual-style-enabled #configModal button,
+.dual-style-enabled .btn-import,
+.dual-style-enabled .btn-clear,
+.dual-style-enabled .btn-editor {
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Config modal specific sections */
+.dual-style-enabled #trackEditorSection *,
+.dual-style-enabled .racing-line-controls,
+.dual-style-enabled .racing-line-status {
+  color: var(--ui-text-primary) !important;
+}
+
+/* Shortcut keys in config modal */
+.dual-style-enabled .config-toggle .shortcut {
+  background: var(--ui-bg-tertiary) !important;
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-mono) !important;
+}
+
+/* Additional config modal element fixes */
+.dual-style-enabled .config-toggle-info,
+.dual-style-enabled .toggle-info *,
+.dual-style-enabled .config-group div,
+.dual-style-enabled .config-group span,
+.dual-style-enabled .config-group label {
+  color: var(--ui-text-primary) !important;
+  font-family: var(--ui-font-primary) !important;
+}
+
+/* Developer options section */
+.dual-style-enabled .config-section:has(h3:contains('Developer')) *,
+.dual-style-enabled .config-section h3[contains='Developer'] ~ * {
+  color: var(--ui-text-primary) !important;
+}
+
+/* Display options section */
+.dual-style-enabled .config-section:has(h3:contains('Display')) *,
+.dual-style-enabled .config-section h3[contains='Display'] ~ * {
+  color: var(--ui-text-primary) !important;
+}
+
+/* Racing line section */
+.dual-style-enabled .config-section:has(h3:contains('Racing Line')) *,
+.dual-style-enabled .config-section h3[contains='Racing Line'] ~ * {
+  color: var(--ui-text-primary) !important;
+}
+
+/* Track editor section */
+.dual-style-enabled .config-section:has(h3:contains('Track Editor')) *,
+.dual-style-enabled #trackEditorSection h3,
+.dual-style-enabled #trackEditorSection div,
+.dual-style-enabled #trackEditorSection span {
+  color: var(--ui-text-primary) !important;
+}
+
+/* Force override for all config modal text elements */
+.dual-style-enabled #configModal .modal-body *:not(button):not(input):not(select) {
+  color: var(--ui-text-primary) !important;
+}
+
+/* Config modal buttons specifically */
+.dual-style-enabled #configModal .btn-import *,
+.dual-style-enabled #configModal .btn-clear *,
+.dual-style-enabled #configModal .btn-editor * {
+  color: inherit !important;
+}
+
 /* Add paper aging effects */
 body::before {
   content: '';
