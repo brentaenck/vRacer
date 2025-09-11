@@ -1544,29 +1544,35 @@ function drawDirectionalArrowLabel(ctx: CanvasRenderingContext2D, x: number, y: 
   ctx.translate(x, y)
   ctx.rotate(angle)
   
-  const arrowSize = 12
+  const arrowSize = 14
   const arrowWidth = 8
+  const arrowHeadSize = 6
   
-  // Draw arrow background (rectangle - roundRect may not be available)
+  // Draw arrow shaft (rectangle)
   ctx.fillStyle = color
   ctx.globalAlpha = 0.9
-  ctx.fillRect(-arrowSize, -arrowWidth/2, arrowSize * 1.6, arrowWidth)
+  ctx.fillRect(-arrowSize * 0.8, -arrowWidth/2, arrowSize * 1.2, arrowWidth)
   
-  // Draw arrow head
+  // Draw arrow head (triangle pointing right)
+  ctx.globalAlpha = 1.0  // Make arrow head fully opaque
   ctx.beginPath()
-  ctx.moveTo(arrowSize * 0.6, 0)
-  ctx.lineTo(arrowSize * 0.2, -arrowWidth/3)
-  ctx.lineTo(arrowSize * 0.2, arrowWidth/3)
+  ctx.moveTo(arrowSize * 0.4, 0)  // Point of arrow
+  ctx.lineTo(arrowSize * 0.4 - arrowHeadSize, -arrowHeadSize/2)  // Top of triangle
+  ctx.lineTo(arrowSize * 0.4 - arrowHeadSize, arrowHeadSize/2)   // Bottom of triangle
   ctx.closePath()
   ctx.fill()
   
-  // Draw checkpoint number on arrow
+  // Draw checkpoint number on arrow shaft
   ctx.fillStyle = '#fff'
-  ctx.globalAlpha = 1.0
-  ctx.font = 'bold 10px monospace'
+  ctx.strokeStyle = color
+  ctx.lineWidth = 1
+  ctx.font = 'bold 9px monospace'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(checkpointNum.toString(), -arrowSize * 0.3, 0)
+  
+  // Add text stroke for better visibility
+  ctx.strokeText(checkpointNum.toString(), -arrowSize * 0.2, 0)
+  ctx.fillText(checkpointNum.toString(), -arrowSize * 0.2, 0)
   
   ctx.restore()
 }
