@@ -1550,14 +1550,14 @@ function drawDirectionalArrowLabel(ctx: CanvasRenderingContext2D, x: number, y: 
   // Draw complete arrow shape as one path
   ctx.beginPath()
   
-  // Arrow shaft (narrower rectangle part)
-  ctx.moveTo(-12, -2.5)  // Top-left of shaft (narrower)
-  ctx.lineTo(8, -2.5)    // Top-right of shaft
+  // Arrow shaft (even narrower rectangle part)
+  ctx.moveTo(-12, -2)    // Top-left of shaft (even narrower)
+  ctx.lineTo(8, -2)      // Top-right of shaft
   ctx.lineTo(8, -6)      // Top of arrow head
   ctx.lineTo(12, 0)      // Point of arrow head
   ctx.lineTo(8, 6)       // Bottom of arrow head
-  ctx.lineTo(8, 2.5)     // Bottom-right of shaft (narrower)
-  ctx.lineTo(-12, 2.5)   // Bottom-left of shaft (narrower)
+  ctx.lineTo(8, 2)       // Bottom-right of shaft (even narrower)
+  ctx.lineTo(-12, 2)     // Bottom-left of shaft (even narrower)
   ctx.closePath()
   
   ctx.fill()
@@ -2453,8 +2453,9 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     // CP0: right (→), CP1: up (↑), CP2: left (←), CP3: down (↓)
     let racingDirection = i // Default matches counter-clockwise progression
     
-    // Use the same gray color as the checkpoint lines for consistency
-    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, checkpointColor)
+    // Use lighter gray color for better visibility
+    const arrowColor = UNIFIED_COLORS.pencilLight // Lighter gray than checkpoint lines
+    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, arrowColor)
   }
   
   ctx.restore()
