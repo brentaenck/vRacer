@@ -30,10 +30,13 @@
   --warning: #d97706;           /* Warning orange */
   --error: #dc2626;             /* Error red */
   
-  /* Modern UI Color Palette (for dual styling) - Dark Theme */
-  --ui-bg-primary: #1e293b;     /* Dark slate background */
-  --ui-bg-secondary: #334155;   /* Medium slate background */
-  --ui-bg-tertiary: #475569;    /* Light slate background */
+  /* Modern UI Color Palette (for dual styling) - Dark Theme with Hierarchical Depth */
+  --ui-bg-primary: #1e293b;     /* Dark slate background (deepest level) */
+  --ui-bg-secondary: #334155;   /* Medium slate background (second level) */
+  --ui-bg-tertiary: #475569;    /* Light slate background (third level) */
+  --ui-bg-quaternary: #64748b;  /* Lighter slate background (fourth level) */
+  --ui-bg-surface: #0f172a;     /* Darkest surface for modals/containers */
+  --ui-bg-elevated: #2d3748;    /* Elevated elements */
   --ui-text-primary: #f1f5f9;   /* Light text for high contrast */
   --ui-text-secondary: #cbd5e1; /* Medium light gray text */
   --ui-text-tertiary: #94a3b8;  /* Muted gray text */
@@ -711,18 +714,23 @@
   padding: var(--spacing-xl);
 }
 
-/* Modern modal content */
+/* Modern modal content - Base Level */
 .dual-style-enabled .modal-content {
-  background: var(--ui-bg-primary);
+  background: var(--ui-bg-surface);
   border-radius: var(--radius-xl);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), 0 10px 20px rgba(0, 0, 0, 0.2);
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ui-border-light);
+  border: 1px solid var(--ui-border-medium);
+}
+
+/* Large modal for New Game */
+.dual-style-enabled .new-game-modal {
+  max-width: 900px;
 }
 
 /* Modern modal header */
@@ -911,8 +919,13 @@
 .dual-style-enabled .modal-hint {
   font-family: var(--ui-font-primary);
   font-size: 13px;
-  color: var(--ui-text-tertiary);
+  color: var(--ui-text-tertiary) !important;
   margin: 0;
+}
+
+/* Ensure all modal footer content is readable */
+.dual-style-enabled .modal-footer * {
+  color: var(--ui-text-secondary) !important;
 }
 
 .dual-style-enabled .modal-hint kbd {
@@ -958,6 +971,15 @@
   text-align: center;
   min-width: 120px;
   padding: var(--spacing-lg) !important;
+  background: var(--ui-bg-primary) !important;
+  color: var(--ui-text-primary) !important;
+  border: 1px solid var(--ui-border-medium) !important;
+}
+
+.dual-style-enabled .preset-btn:hover {
+  background: var(--ui-bg-secondary) !important;
+  color: var(--ui-text-primary) !important;
+  border-color: var(--ui-accent) !important;
 }
 
 .dual-style-enabled .preset-icon {
@@ -978,16 +1000,17 @@
    New Game Modal Panel Styling
    ======================================== */
 
-/* Update New Game modal panels to use dark theme */
+/* Update New Game modal panels to use dark theme with proper hierarchy */
 .dual-style-enabled .race-settings-panel,
 .dual-style-enabled .player-setup-panel {
-  background: var(--ui-bg-secondary);
+  background: var(--ui-bg-surface);
   color: var(--ui-text-primary);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
+  border: 1px solid var(--ui-border-light);
 }
 
-/* Settings sections within the panels */
+/* Settings sections within the panels - Level 2 */
 .dual-style-enabled .settings-section,
 .dual-style-enabled .quick-setup-section,
 .dual-style-enabled .race-preview-section,
@@ -997,21 +1020,24 @@
   border: 1px solid var(--ui-border-light);
 }
 
-/* Settings groups and preview stats */
+/* Settings groups and preview stats - Level 3 */
 .dual-style-enabled .settings-group,
 .dual-style-enabled .preview-stats {
   background: var(--ui-bg-secondary);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   margin-top: var(--spacing-md);
+  border: 1px solid var(--ui-border-light);
 }
 
+/* Preview stat items - Level 4 */
 .dual-style-enabled .preview-stat {
   background: var(--ui-bg-tertiary);
   color: var(--ui-text-primary);
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
   text-align: center;
+  border: 1px solid var(--ui-border-light);
 }
 
 .dual-style-enabled .stat-value {
@@ -1025,7 +1051,7 @@
   font-size: 12px;
 }
 
-/* Player cards styling */
+/* Player cards styling - Level 2 */
 .dual-style-enabled .player-card {
   background: var(--ui-bg-primary) !important;
   border: 1px solid var(--ui-border-medium) !important;
@@ -1034,12 +1060,15 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Player card header - Level 3 */
 .dual-style-enabled .player-card-header {
   background: var(--ui-bg-secondary);
   color: var(--ui-text-primary);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: 1px solid var(--ui-border-light);
 }
 
+/* Player card body - Level 3 */
 .dual-style-enabled .player-card-body {
   background: var(--ui-bg-primary);
   padding: var(--spacing-md);
@@ -1056,11 +1085,13 @@
   border: 1px solid var(--ui-border-medium) !important;
 }
 
+/* Player AI controls - Level 4 */
 .dual-style-enabled .player-ai-controls {
   background: var(--ui-bg-secondary);
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
   margin-top: var(--spacing-sm);
+  border: 1px solid var(--ui-border-light);
 }
 
 .dual-style-enabled .ai-toggle-label {
