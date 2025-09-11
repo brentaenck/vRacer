@@ -1550,14 +1550,14 @@ function drawDirectionalArrowLabel(ctx: CanvasRenderingContext2D, x: number, y: 
   // Draw complete arrow shape as one path
   ctx.beginPath()
   
-  // Arrow shaft (rectangle part)
-  ctx.moveTo(-12, -4)    // Top-left of shaft
-  ctx.lineTo(8, -4)      // Top-right of shaft
+  // Arrow shaft (narrower rectangle part)
+  ctx.moveTo(-12, -2.5)  // Top-left of shaft (narrower)
+  ctx.lineTo(8, -2.5)    // Top-right of shaft
   ctx.lineTo(8, -6)      // Top of arrow head
   ctx.lineTo(12, 0)      // Point of arrow head
   ctx.lineTo(8, 6)       // Bottom of arrow head
-  ctx.lineTo(8, 4)       // Bottom-right of shaft
-  ctx.lineTo(-12, 4)     // Bottom-left of shaft
+  ctx.lineTo(8, 2.5)     // Bottom-right of shaft (narrower)
+  ctx.lineTo(-12, 2.5)   // Bottom-left of shaft (narrower)
   ctx.closePath()
   
   ctx.fill()
