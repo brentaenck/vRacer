@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [3.3.1] - 2025-01-11
+
+### 🎨 **Visual Improvements: Enhanced Car Colors & Unified UI Zone**
+
+#### 🎨 Changed
+- **Car Color Palette Enhancement**
+  - Updated primary car colors to darker, more saturated tones for better visibility
+  - Deep Orange (#CC5500), Golden Rod (#B8860B), Deep Blue (#003D82), Deep Purple (#5D1A8B), Crimson Red (#8B0000)
+  - Improved contrast against track surface after hand-drawn rendering effects
+  - Swapped Golden Rod with Charcoal for better primary player visibility
+
+- **Unified UI Zone Frame**
+  - Removed gaps between header and sidebar to create seamless dark UI frame
+  - UI Zone now forms solid L-shaped frame around Canvas Zone
+  - Eliminated individual borders and shadows from header/sidebar in dual styling mode
+  - Added padding to game area for proper canvas inset within UI Zone
+
+#### 🔧 Technical
+- Updated CSS layout system to remove main layout gaps and padding
+- Enhanced car color fallback array with Forest Green, Burnt Sienna, and Charcoal
+- Improved visual cohesion between UI Zone components
+- Maintained responsive design for mobile layouts
+
+### 🎯 Improved
+- **Car Visibility**: Darker car colors maintain visibility with artistic rendering effects
+- **UI Cohesion**: Seamless dark frame creates professional appearance
+- **User Experience**: Eliminated visual distractions between UI elements
+
 ## [3.3.0] - 2025-01-11
 
 ### 🎨 **MAJOR: Dual UI Styling System - Professional UI with Artistic Canvas**
