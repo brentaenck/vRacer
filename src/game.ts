@@ -2446,11 +2446,8 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     // CP0: right (→), CP1: up (↑), CP2: left (←), CP3: down (↓)
     let racingDirection = i // Default matches counter-clockwise progression
     
-    // Use distinct colors for directional arrows: Yellow, Cyan, Magenta, Green
-    const arrowColors = ['#ffff00', '#00ffff', '#ff00ff', '#00ff00'] // Yellow, Cyan, Magenta, Green
-    const arrowColor = arrowColors[i % arrowColors.length] || checkpointColor
-    
-    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, arrowColor)
+    // Use the same gray color as the checkpoint lines for consistency
+    drawDirectionalArrowLabel(ctx, arrowX, arrowY, racingDirection, i, checkpointColor)
   }
   
   ctx.restore()
