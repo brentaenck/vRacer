@@ -140,46 +140,51 @@ export function analyzeTrack(
     }
   ]
   
-  // Use custom racing line if provided, otherwise use default racing line
+  // Use custom racing line if provided, otherwise use improved default racing line
+  // This improved racing line has been tested and proven to enable AI lap completion
   const optimalRacingLine: RacingLinePoint[] = customRacingLine || [
-    // Start/finish area - optimized for maximum track width utilization
-    { pos: { x: 5, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    // Left side straight - improved positioning for better racing flow
+    { pos: { x: 10, y: 18 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    { pos: { x: 10, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    { pos: { x: 10, y: 22 }, targetSpeed: 2, brakeZone: false, cornerType: 'entry', safeZone: 'left' },
     
-    // Left side - maximize track width for better Turn 1 entry geometry
-    { pos: { x: 5, y: 23 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
-    { pos: { x: 5, y: 26 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    // Turn 1: Left to bottom - optimized geometry for AI navigation
+    { pos: { x: 11, y: 26 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'bottom' },
+    { pos: { x: 13, y: 27 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'bottom' },
     
-    // Turn 1: Left to bottom (optimized for maximum corner radius)
-    { pos: { x: 8, y: 28 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'left' },
-    { pos: { x: 11, y: 31 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'bottom' },
-    { pos: { x: 18, y: 29 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'bottom' },
+    // Bottom straight - consistent speed progression
+    { pos: { x: 16, y: 27 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
+    { pos: { x: 23, y: 27 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
+    { pos: { x: 29, y: 27 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
     
-    // Bottom straight - maximum speed on longest straight section
-    { pos: { x: 25, y: 29 }, targetSpeed: 5, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
-    { pos: { x: 32, y: 29 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'bottom' },
+    // Turn 2: Bottom to right - improved corner entry
+    { pos: { x: 34, y: 27 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'bottom' },
+    { pos: { x: 39, y: 26 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'right' },
+    { pos: { x: 40, y: 24 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'right' },
     
-    // Turn 2: Bottom to right (optimized entry for better track width utilization)
-    { pos: { x: 39, y: 29 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'bottom' },
-    { pos: { x: 42, y: 25 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'right' },
-    { pos: { x: 43, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'right' },
+    // Right straight - stable racing line positioning
+    { pos: { x: 40, y: 22 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    { pos: { x: 40, y: 20 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    { pos: { x: 40, y: 17 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
     
-    // Right straight - maximize track width for consistent optimization
-    { pos: { x: 43, y: 17 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
-    { pos: { x: 43, y: 14 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'right' },
+    // Turn 3: Right to top - consistent corner geometry
+    { pos: { x: 40, y: 13 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'right' },
+    { pos: { x: 39, y: 9 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'top' },
+    { pos: { x: 37, y: 8 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'top' },
     
-    // Turn 3: Right to top (wide entry, late apex, early exit)
-    { pos: { x: 38, y: 8 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'right' },
-    { pos: { x: 32, y: 5 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'top' },
-    { pos: { x: 25, y: 6 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'top' },
+    // Top straight - optimized for AI navigation
+    { pos: { x: 34, y: 8 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
+    { pos: { x: 29, y: 8 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
+    { pos: { x: 21, y: 8 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
     
-    // Top straight - fast section across the top
-    { pos: { x: 20, y: 6 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
-    { pos: { x: 15, y: 6 }, targetSpeed: 4, brakeZone: false, cornerType: 'straight', safeZone: 'top' },
+    // Turn 4: Top to left - completing the circuit
+    { pos: { x: 16, y: 8 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'top' },
+    { pos: { x: 11, y: 9 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'left' },
+    { pos: { x: 10, y: 11 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'left' },
     
-    // Turn 4: Top to left (wide entry, late apex, early exit)
-    { pos: { x: 10, y: 8 }, targetSpeed: 2, brakeZone: true, cornerType: 'entry', safeZone: 'top' },
-    { pos: { x: 6, y: 12 }, targetSpeed: 2, brakeZone: false, cornerType: 'apex', safeZone: 'left' },
-    { pos: { x: 7, y: 16 }, targetSpeed: 3, brakeZone: false, cornerType: 'exit', safeZone: 'left' }
+    // Return to start - final straight section
+    { pos: { x: 10, y: 13 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' },
+    { pos: { x: 10, y: 15 }, targetSpeed: 3, brakeZone: false, cornerType: 'straight', safeZone: 'left' }
   ]
   
   // Generate lap validation checkpoints for COUNTER-CLOCKWISE racing

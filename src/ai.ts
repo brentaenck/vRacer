@@ -541,29 +541,29 @@ function scoreSimplifiedMove(
     }
   }
   
-  // 2. SPEED FACTOR: Encourage competitive but safe racing speeds
+  // 2. SPEED FACTOR: Much more conservative speed management
   let targetSpeedRange: [number, number]
   switch (difficulty) {
     case 'easy':
-      targetSpeedRange = [2, 4] // Conservative but competitive speeds
+      targetSpeedRange = [1, 2.5] // Very conservative to ensure safety
       break
     case 'medium':
-      targetSpeedRange = [3, 5] // Good racing speeds with safety margin
+      targetSpeedRange = [1, 3] // Conservative but functional
       break
     case 'hard':
-      targetSpeedRange = [4, 6] // Aggressive but not reckless speeds
+      targetSpeedRange = [2, 3.5] // Still conservative until we prove safety
       break
   }
   
-  // CRITICAL SAFETY: Add heavy penalty for speeds that might cause crashes
-  const CRASH_PREVENTION_SPEED = 4.5
+  // CRITICAL SAFETY: Much more aggressive speed control
+  const CRASH_PREVENTION_SPEED = 3.0 // Reduced from 4.5 to 3.0
   if (futureSpeed > CRASH_PREVENTION_SPEED) {
-    // Progressive penalty for dangerous speeds
+    // MASSIVE penalty for dangerous speeds
     const overspeed = futureSpeed - CRASH_PREVENTION_SPEED
-    score -= overspeed * overspeed * 80 // Quadratic penalty for excessive speed
+    score -= overspeed * overspeed * 200 // Increased from 80 to 200
     
     if (isFeatureEnabled('debugMode')) {
-      console.warn(`⚠️ AI crash prevention: speed ${futureSpeed.toFixed(1)} > ${CRASH_PREVENTION_SPEED}, penalty: ${(overspeed * overspeed * 80).toFixed(0)}`)
+      console.warn(`⚠️ AI crash prevention: speed ${futureSpeed.toFixed(1)} > ${CRASH_PREVENTION_SPEED}, penalty: ${(overspeed * overspeed * 200).toFixed(0)}`)
     }
   }
   
@@ -614,21 +614,55 @@ function scoreSimplifiedMove(
     }
   }
   
-  // ADDITIONAL SAFETY: Check for dangerous speeds near boundaries
-  const DANGER_ZONE_MARGIN = 4.0
-  const nearBoundary = (
-    nextPos.x - 2 < DANGER_ZONE_MARGIN ||    // Near left wall
-    48 - nextPos.x < DANGER_ZONE_MARGIN ||   // Near right wall
-    nextPos.y - 2 < DANGER_ZONE_MARGIN ||    // Near top wall  
-    33 - nextPos.y < DANGER_ZONE_MARGIN      // Near bottom wall
-  )
+  // ENHANCED BOUNDARY AWARENESS: Progressive warnings based on proximity
+  const OUTER_MARGIN_1 = 6.0  // First warning zone
+  const OUTER_MARGIN_2 = 4.0  // Second warning zone  
+  const OUTER_MARGIN_3 = 2.5  // Critical danger zone
   
-  if (nearBoundary && futureSpeed > 3.0) {
-    const speedPenalty = (futureSpeed - 3.0) * 150 // Heavy penalty for fast speeds near boundaries
-    score -= speedPenalty
+  // Calculate distance to each boundary
+  const leftDist = nextPos.x - 2
+  const rightDist = 48 - nextPos.x
+  const topDist = nextPos.y - 2
+  const bottomDist = 33 - nextPos.y
+  const minBoundaryDist = Math.min(leftDist, rightDist, topDist, bottomDist)
+  
+  // PROGRESSIVE BOUNDARY PENALTIES based on distance and speed
+  if (minBoundaryDist < OUTER_MARGIN_3) {
+    // CRITICAL: Very close to boundary - severe penalties
+    const proximityPenalty = (OUTER_MARGIN_3 - minBoundaryDist) * 300
+    const speedPenalty = futureSpeed * 200 // Heavy penalty for any speed near critical boundary
+    score -= proximityPenalty + speedPenalty
     
     if (isFeatureEnabled('debugMode')) {
-      console.warn(`⚠️ AI near boundary speed warning: speed ${futureSpeed.toFixed(1)} near boundary, penalty: ${speedPenalty.toFixed(0)}`)
+      console.warn(`🚨 AI CRITICAL boundary proximity: dist=${minBoundaryDist.toFixed(1)}, speed=${futureSpeed.toFixed(1)}, penalty: ${(proximityPenalty + speedPenalty).toFixed(0)}`)
+    }
+  } else if (minBoundaryDist < OUTER_MARGIN_2) {
+    // WARNING: Close to boundary - moderate penalties  
+    const proximityPenalty = (OUTER_MARGIN_2 - minBoundaryDist) * 100
+    const speedPenalty = futureSpeed > 2.0 ? (futureSpeed - 2.0) * 150 : 0
+    score -= proximityPenalty + speedPenalty
+    
+    if (isFeatureEnabled('debugMode') && speedPenalty > 0) {
+      console.warn(`⚠️ AI boundary warning: dist=${minBoundaryDist.toFixed(1)}, speed=${futureSpeed.toFixed(1)}, penalty: ${(proximityPenalty + speedPenalty).toFixed(0)}`)
+    }
+  } else if (minBoundaryDist < OUTER_MARGIN_1) {
+    // CAUTION: Approaching boundary - light penalties for high speed
+    const speedPenalty = futureSpeed > 3.5 ? (futureSpeed - 3.5) * 50 : 0
+    score -= speedPenalty
+  }
+  
+  // PREDICTIVE SAFETY: Check if we're heading toward boundaries
+  const predictivePos = { x: nextPos.x + velAfter.x, y: nextPos.y + velAfter.y }
+  const futureBoundaryDist = Math.min(
+    predictivePos.x - 2, 48 - predictivePos.x, predictivePos.y - 2, 33 - predictivePos.y
+  )
+  
+  if (futureBoundaryDist < 1.0) {
+    // Next move after this one would be very close to boundary
+    score -= (1.0 - futureBoundaryDist) * 400
+    
+    if (isFeatureEnabled('debugMode')) {
+      console.warn(`🚨 AI predictive boundary danger: future dist=${futureBoundaryDist.toFixed(1)}, penalty: ${((1.0 - futureBoundaryDist) * 400).toFixed(0)}`)
     }
   }
   
@@ -1138,81 +1172,78 @@ function selectTargetCheckpoint(currentPos: Vec, checkpoints: Vec[], currentLap:
   return checkpoints[bestIdx]!
 }
 
-// Emergency move handling when no legal moves are available
+// Enhanced emergency move handling - CRITICAL for preventing "no legal moves" failures
 function handleEmergencyMove(state: GameState, car: any, difficulty: 'easy' | 'medium' | 'hard'): Vec | null {
-  // When in emergency mode, we need to make the least bad choice
-  // This usually means the car is moving too fast or is heading toward a wall
+  if (isFeatureEnabled('debugMode')) {
+    console.error(`🚨 AI Emergency Mode Activated! Car at: (${car.pos.x.toFixed(1)}, ${car.pos.y.toFixed(1)}), velocity: (${car.vel.x}, ${car.vel.y})`)
+  }
   
-  const allMoves = stepOptions(state)
-  if (allMoves.length === 0) {
+  // Emergency strategy: Try EVERY possible acceleration combination and find ANY legal move
+  const emergencyMoves = []
+  
+  for (let ax = -1; ax <= 1; ax++) {
+    for (let ay = -1; ay <= 1; ay++) {
+      const acc = { x: ax, y: ay }
+      const velAfter = { x: car.vel.x + ax, y: car.vel.y + ay }
+      const nextPos = { x: car.pos.x + velAfter.x, y: car.pos.y + velAfter.y }
+      
+      // Check if this move would be legal using actual game logic
+      const isLegal = pathLegal(car.pos, nextPos, state)
+      
+      if (isLegal) {
+        const futureSpeed = Math.hypot(velAfter.x, velAfter.y)
+        
+        let emergencyScore = 1000 // Base bonus for being a legal move
+        
+        // PRIMARY: Massive bonus for stopping or slowing down
+        const speedReduction = Math.hypot(car.vel.x, car.vel.y) - futureSpeed
+        emergencyScore += speedReduction * 100
+        
+        // SECONDARY: Prefer moves that head toward track center
+        const trackCenterX = 25
+        const trackCenterY = 17.5  
+        const distanceToCenter = distance(nextPos, { x: trackCenterX, y: trackCenterY })
+        emergencyScore -= distanceToCenter * 5
+        
+        // TERTIARY: Slight preference for staying on racing line if possible
+        try {
+          const racingLine = computeRacingLine(state)
+          const nearestTarget = findNearestRacingLineTarget(nextPos, racingLine)
+          const distanceToLine = distance(nextPos, nearestTarget.pos)
+          emergencyScore -= distanceToLine * 2
+        } catch (error) {
+          // If racing line computation fails, ignore this factor
+        }
+        
+        emergencyMoves.push({
+          acc,
+          nextPos,
+          velAfter,
+          score: emergencyScore,
+          speed: futureSpeed
+        })
+      }
+    }
+  }
+  
+  if (emergencyMoves.length === 0) {
     if (isFeatureEnabled('debugMode')) {
-      console.error(`🚨 AI Emergency: No moves possible at all! Car at: ${JSON.stringify(car.pos)}, velocity: ${JSON.stringify(car.vel)}`)
+      console.error(`💀 AI CRITICAL FAILURE: No legal emergency moves available! Car will crash.`)
     }
-    return null // Absolutely no moves possible
+    return null // Truly no moves possible - this should be very rare now
   }
+  
+  // Sort by emergency score and pick the best legal move
+  emergencyMoves.sort((a, b) => b.score - a.score)
+  const bestMove = emergencyMoves[0]!
   
   if (isFeatureEnabled('debugMode')) {
-    console.log(`🚨 AI Emergency Mode: Evaluating ${allMoves.length} crash moves for least damage`)
+    console.log(`🛟 AI Emergency: Found ${emergencyMoves.length} legal moves, selected acc=(${bestMove.acc.x}, ${bestMove.acc.y}), ` +
+      `speed: ${Math.hypot(car.vel.x, car.vel.y).toFixed(1)} → ${bestMove.speed.toFixed(1)}, ` +
+      `score: ${bestMove.score.toFixed(0)}`)
   }
   
-  // Strategy: Find the move that gets us closest to stopping or slowing down
-  // and causes the least catastrophic crash
-  let bestEmergencyMove = allMoves[0]!
-  let bestScore = -Infinity
-  
-  const currentSpeed = Math.hypot(car.vel.x, car.vel.y)
-  
-  for (const { acc, nextPos } of allMoves) {
-    const velAfter = { x: car.vel.x + acc.x, y: car.vel.y + acc.y }
-    const futureSpeed = Math.hypot(velAfter.x, velAfter.y)
-    
-    let emergencyScore = 0
-    
-    // Primary goal: reduce speed as much as possible
-    const speedReduction = currentSpeed - futureSpeed
-    emergencyScore += speedReduction * 20 // Heavy bonus for slowing down
-    
-    // Secondary goal: avoid acceleration if possible
-    if (futureSpeed < currentSpeed) {
-      emergencyScore += 15 // Bonus for decelerating
-    } else {
-      emergencyScore -= (futureSpeed - currentSpeed) * 10 // Penalty for accelerating further
-    }
-    
-    // Prefer moves that get us to zero velocity fastest
-    if (futureSpeed === 0) {
-      emergencyScore += 50 // Big bonus for complete stop
-    } else if (futureSpeed < 2) {
-      emergencyScore += 25 // Good bonus for very slow speed
-    }
-    
-    // Try to steer away from walls if we can figure out a safe direction
-    const racingLine = computeRacingLine(state)
-    const nearestTarget = findNearestRacingLineTarget(nextPos, racingLine)
-    const distanceToSafety = distance(nextPos, nearestTarget.pos)
-    emergencyScore -= distanceToSafety * 2 // Prefer moves closer to safe racing line
-    
-    // Avoid extreme accelerations in emergency
-    const accMagnitude = Math.hypot(acc.x, acc.y)
-    if (accMagnitude > 1) {
-      emergencyScore -= accMagnitude * 3 // Penalty for extreme acceleration changes
-    }
-    
-    if (emergencyScore > bestScore) {
-      bestScore = emergencyScore
-      bestEmergencyMove = { acc, nextPos }
-    }
-  }
-  
-  if (isFeatureEnabled('debugMode')) {
-    const velAfter = { x: car.vel.x + bestEmergencyMove.acc.x, y: car.vel.y + bestEmergencyMove.acc.y }
-    const futureSpeed = Math.hypot(velAfter.x, velAfter.y)
-    console.log(`🚨 AI Emergency: Selected move ${JSON.stringify(bestEmergencyMove.acc)}, ` +
-      `current speed: ${currentSpeed.toFixed(1)}, future speed: ${futureSpeed.toFixed(1)}, ` +
-      `score: ${bestScore.toFixed(1)}`)
-  }
-  
-  return bestEmergencyMove.acc
+  return bestMove.acc
 }
 
 // Export functions for visualization
@@ -1294,17 +1325,33 @@ export function chooseAIMove(state: GameState): Vec | null {
       console.log(`📝 Using simplified single-move evaluation for ${difficulty} AI`);
     }
     
-    // Phase 1: Use simplified single-move evaluation for all difficulties
-    let best = legal[0]!
-    let bestScore = -Infinity
+    // CRITICAL: Pre-filter moves to ensure they're actually legal using pathLegal
+    const actuallyLegalMoves = []
+    for (const move of legal) {
+      const velAfter = { x: car.vel.x + move.acc.x, y: car.vel.y + move.acc.y }
+      const nextPos = { x: car.pos.x + velAfter.x, y: car.pos.y + velAfter.y }
+      
+      if (pathLegal(car.pos, nextPos, state)) {
+        actuallyLegalMoves.push({ ...move, nextPos, velAfter })
+      }
+    }
     
-    console.log(`🔢 EVALUATING ${legal.length} POSSIBLE MOVES (SIMPLIFIED):`)
+    if (actuallyLegalMoves.length === 0) {
+      console.warn(`⚠️ AI ${player.name}: All moves filtered out by pathLegal - entering emergency mode`)
+      return handleEmergencyMove(state, car, player.aiDifficulty || 'medium')
+    }
+    
+    console.log(`🔢 EVALUATING ${actuallyLegalMoves.length} ACTUALLY LEGAL MOVES (from ${legal.length} candidates):`)    
+    
+    // Phase 1: Use simplified single-move evaluation for all difficulties
+    let best = actuallyLegalMoves[0]!
+    let bestScore = -Infinity
     
     // Add detailed analysis for each move
     const moveAnalysis: Array<{acc: Vec, nextPos: Vec, velAfter: Vec, score: number, analysis: string}> = []
     
-    for (const { acc, nextPos } of legal) {
-      const velAfter = { x: car.vel.x + acc.x, y: car.vel.y + acc.y }
+    for (const move of actuallyLegalMoves) {
+      const { acc, nextPos, velAfter } = move
       const targetPoint = findNearestRacingLineTarget(nextPos, racingLine)
       
       // Use the new simplified scoring system
@@ -1325,7 +1372,7 @@ export function chooseAIMove(state: GameState): Vec | null {
       
       if (score > bestScore) {
         bestScore = score
-        best = { acc, nextPos }
+        best = move // Use the full move object instead of reconstructing
       }
     }
     
