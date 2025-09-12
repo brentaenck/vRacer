@@ -1,0 +1,1802 @@
+(index):1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-action btn-primary#startNewGameBtn>
+Ancestor with aria-hidden: <div.modal-overlay#newGameModal> 
+ 🎯 Waypoint selection: closest=9 (dist=1.0), target=12 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(40,20), type=straight, distance=7.1
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=9 (dist=2.0), target=12 (lookahead=3)
+   Move {"x":-1,"y":-1}: score=147.7, align=2.30, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=9 (dist=2.2), target=12 (lookahead=3)
+   Move {"x":-1,"y":0}: score=111.0, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=9 (dist=2.8), target=12 (lookahead=3)
+   Move {"x":-1,"y":1}: score=75.1, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=10 (dist=2.8), target=13 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (10.0), alignment=0.41, bonus=+41
+   Move {"x":0,"y":-1}: score=178.7, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=9 (dist=3.2), target=11 (lookahead=2)
+   Move {"x":0,"y":0}: score=178.8, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=9 (dist=3.6), target=11 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+   Move {"x":0,"y":1}: score=116.5, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=10 (dist=3.6), target=12 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+   Move {"x":1,"y":-1}: score=-51.2, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=9 (dist=4.1), target=11 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+   Move {"x":1,"y":0}: score=-17.3, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=9 (dist=4.5), target=11 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+   Move {"x":1,"y":1}: score=-95.4, align=3.70, FORWARD, speed=4.1
+ 🏆 SELECTED: {"x":0,"y":0} with score 178.8 (align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL])
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":0} with score 178.8
+ 🎯 Waypoint selection: closest=9 (dist=3.2), target=11 (lookahead=2)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 39,
+    "y": 27
+  },
+  "velocity": {
+    "x": 3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 0
+  },
+  "score": "178.75",
+  "racingLineDistance": "5.4",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 42,
+    "y": 27
+  },
+  "velocity": {
+    "x": 3,
+    "y": 0
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=9 (dist=3.2), target=11 (lookahead=2)
+ 🎯 AI AI Opponent targeting waypoint: pos=(40,22), type=straight, distance=5.4
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=10 (dist=4.5), target=12 (lookahead=2)
+   Move {"x":-1,"y":-1}: score=131.1, align=2.30, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=10 (dist=5.0), target=12 (lookahead=2)
+   Move {"x":-1,"y":0}: score=91.2, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=9 (dist=5.4), target=11 (lookahead=2)
+   Move {"x":-1,"y":1}: score=87.2, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=10 (dist=5.4), target=12 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":3,"y":-1} -> future pos (48.0, 25.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ ⚠️ AI boundary warning: dist=3.0, speed=3.2, penalty: 132 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":0,"y":-1}: score=-2195.3, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=10 (dist=5.8), target=12 (lookahead=2)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":3,"y":0} -> future pos (48.0, 27.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ ⚠️ AI boundary warning: dist=3.0, speed=3.0, penalty: 120 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":0,"y":0}: score=-2179.1, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=9 (dist=6.3), target=10 (lookahead=1)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":3,"y":1} -> future pos (48.0, 29.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ ⚠️ AI boundary warning: dist=3.0, speed=3.2, penalty: 132 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":0,"y":1}: score=-2220.8, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=10 (dist=6.3), target=11 (lookahead=1)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":4,"y":-1} -> future pos (50.0, 25.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=4.1, penalty: 446 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-2.0, penalty: 630 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":-1}: score=-3126.8, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=10 (dist=6.7), target=11 (lookahead=1)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":4,"y":0} -> future pos (50.0, 27.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=4.0, penalty: 435 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-2.0, penalty: 630 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":0}: score=-3083.2, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=10 (dist=7.2), target=11 (lookahead=1)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":4,"y":1} -> future pos (50.0, 29.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=4.1, penalty: 446 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-2.0, penalty: 630 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":1}: score=-3169.1, align=3.70, FORWARD, speed=4.1
+ 🏆 SELECTED: {"x":-1,"y":-1} with score 131.1 (align=2.30, FORWARD, speed=2.2)
+ 🏆 BEST MOVE SELECTED: {"x":-1,"y":-1} with score 131.1
+ 🎯 Waypoint selection: closest=10 (dist=4.5), target=12 (lookahead=2)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 42,
+    "y": 27
+  },
+  "velocity": {
+    "x": 3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": -1,
+    "y": -1
+  },
+  "score": "131.14",
+  "racingLineDistance": "7.2",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 44,
+    "y": 26
+  },
+  "velocity": {
+    "x": 2,
+    "y": -1
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=10 (dist=4.5), target=12 (lookahead=2)
+ 🎯 AI AI Opponent targeting waypoint: pos=(40,20), type=straight, distance=7.2
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=10 (dist=5.0), target=12 (lookahead=2)
+ ⚠️ AI boundary warning: dist=3.0, speed=2.2, penalty: 65 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+   Move {"x":-1,"y":-1}: score=36.1, align=1.60, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=10 (dist=5.1), target=12 (lookahead=2)
+   Move {"x":-1,"y":0}: score=23.3, align=1.30, FORWARD, speed=1.4
+ 🎯 Waypoint selection: closest=10 (dist=5.4), target=12 (lookahead=2)
+   Move {"x":-1,"y":1}: score=-70.6, align=1.00, FORWARD, speed=1.0
+ 🎯 Waypoint selection: closest=10 (dist=6.0), target=11 (lookahead=1)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":2,"y":-2} -> future pos (48.0, 22.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=2.8, penalty: 330 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":0,"y":-1}: score=-2390.9, align=2.60, FORWARD, speed=2.8
+ 🎯 Waypoint selection: closest=10 (dist=6.1), target=11 (lookahead=1)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":2,"y":-1} -> future pos (48.0, 24.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=2.2, penalty: 276 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":0,"y":0}: score=-2358.1, align=2.30, FORWARD, speed=2.2 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=10 (dist=6.3), target=11 (lookahead=1)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":2,"y":0} -> future pos (48.0, 26.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=2.0, penalty: 255 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":0,"y":1}: score=-2357.3, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=10 (dist=7.0), target=11 (lookahead=1)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":3,"y":-2} -> future pos (50.0, 22.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=1.0, speed=3.6, penalty: 549 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-2.0, penalty: 630 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":-1}: score=-3187.9, align=3.60, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=10 (dist=7.1), target=11 (lookahead=1)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":3,"y":-1} -> future pos (50.0, 24.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=1.0, speed=3.2, penalty: 510 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-2.0, penalty: 630 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":0}: score=-3092.3, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=10 (dist=7.3), target=11 (lookahead=1)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":3,"y":0} -> future pos (50.0, 26.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=1.0, speed=3.0, penalty: 495 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-2.0, penalty: 630 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":1}: score=-3063.1, align=3.00, FORWARD, speed=3.0
+ 🏆 SELECTED: {"x":-1,"y":-1} with score 36.1 (align=1.60, FORWARD, speed=2.2)
+ 🏆 BEST MOVE SELECTED: {"x":-1,"y":-1} with score 36.1
+ 🎯 Waypoint selection: closest=10 (dist=5.0), target=12 (lookahead=2)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 44,
+    "y": 26
+  },
+  "velocity": {
+    "x": 2,
+    "y": -1
+  },
+  "chosenMove": {
+    "x": -1,
+    "y": -1
+  },
+  "score": "36.13",
+  "racingLineDistance": "6.4",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 45,
+    "y": 24
+  },
+  "velocity": {
+    "x": 1,
+    "y": -2
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=10 (dist=5.0), target=12 (lookahead=2)
+ 🎯 AI AI Opponent targeting waypoint: pos=(40,20), type=straight, distance=6.4
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=11 (dist=5.1), target=13 (lookahead=2)
+ ⚠️ AI boundary warning: dist=3.0, speed=3.0, penalty: 120 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🧲 AI racing line attraction: far from line (8.6), alignment=0.81, bonus=+53
+   Move {"x":-1,"y":-1}: score=106.5, align=3.00, FORWARD, speed=3.0
+ 🎯 Waypoint selection: closest=11 (dist=5.0), target=13 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (8.6), alignment=0.81, bonus=+53
+   Move {"x":-1,"y":0}: score=112.5, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=10 (dist=5.1), target=12 (lookahead=2)
+   Move {"x":-1,"y":1}: score=-35.6, align=1.00, FORWARD, speed=1.0
+ 🎯 Waypoint selection: closest=11 (dist=6.1), target=12 (lookahead=1)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=3.2, penalty: 360 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+   Move {"x":0,"y":-1}: score=-236.5, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=11 (dist=6.0), target=12 (lookahead=1)
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=2.2, penalty: 276 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+   Move {"x":0,"y":0}: score=-178.3, align=1.70, FORWARD, speed=2.2 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=10 (dist=6.1), target=11 (lookahead=1)
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=1.4, penalty: 202 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+   Move {"x":0,"y":1}: score=-255.4, align=0.70, FORWARD, speed=1.4
+ 🎯 Waypoint selection: closest=11 (dist=7.1), target=12 (lookahead=1)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":2,"y":-3} -> future pos (49.0, 18.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=1.0, speed=3.6, penalty: 549 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-1.0, penalty: 420 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":-1}: score=-3047.0, align=2.40, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=11 (dist=7.0), target=12 (lookahead=1)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":2,"y":-2} -> future pos (49.0, 20.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=1.0, speed=2.8, penalty: 480 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-1.0, penalty: 420 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":0}: score=-2931.6, align=1.40, FORWARD, speed=2.8
+ 🎯 Waypoint selection: closest=10 (dist=7.1), target=11 (lookahead=1)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":2,"y":-1} -> future pos (49.0, 22.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI CRITICAL boundary proximity: dist=1.0, speed=2.2, penalty: 426 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+ 🚨 AI predictive boundary danger: future dist=-1.0, penalty: 420 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":1,"y":1}: score=-2936.1, align=0.40, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":-1,"y":0} with score 112.5 (align=2.00, FORWARD, speed=2.0)
+ 🏆 BEST MOVE SELECTED: {"x":-1,"y":0} with score 112.5
+ 🎯 Waypoint selection: closest=11 (dist=5.0), target=13 (lookahead=2)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 45,
+    "y": 24
+  },
+  "velocity": {
+    "x": 1,
+    "y": -2
+  },
+  "chosenMove": {
+    "x": -1,
+    "y": 0
+  },
+  "score": "112.46",
+  "racingLineDistance": "7.1",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 45,
+    "y": 22
+  },
+  "velocity": {
+    "x": 0,
+    "y": -2
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=11 (dist=5.0), target=13 (lookahead=2)
+ 🎯 AI AI Opponent targeting waypoint: pos=(40,17), type=straight, distance=7.1
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=12 (dist=4.1), target=14 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.98, bonus=+106
+   Move {"x":-1,"y":-1}: score=251.7, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=12 (dist=4.0), target=14 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (10.3), alignment=1.00, bonus=+107
+   Move {"x":-1,"y":0}: score=227.4, align=2.30, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=11 (dist=4.1), target=13 (lookahead=2)
+   Move {"x":-1,"y":1}: score=69.5, align=1.30, FORWARD, speed=1.4
+ 🎯 Waypoint selection: closest=12 (dist=5.1), target=14 (lookahead=2)
+ ⚠️ AI boundary warning: dist=3.0, speed=3.0, penalty: 120 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.87, bonus=+94
+   Move {"x":0,"y":-1}: score=137.9, align=3.00, FORWARD, speed=3.0
+ 🎯 Waypoint selection: closest=12 (dist=5.0), target=14 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.87, bonus=+94
+   Move {"x":0,"y":0}: score=143.3, align=2.00, FORWARD, speed=2.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=11 (dist=5.1), target=13 (lookahead=2)
+   Move {"x":0,"y":1}: score=-125.7, align=1.00, FORWARD, speed=1.0
+ 🎯 Waypoint selection: closest=12 (dist=6.1), target=13 (lookahead=1)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=3.2, penalty: 360 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+   Move {"x":1,"y":-1}: score=-231.3, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=12 (dist=6.0), target=13 (lookahead=1)
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=2.2, penalty: 276 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+   Move {"x":1,"y":0}: score=-176.8, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=11 (dist=6.1), target=12 (lookahead=1)
+ 🚨 AI CRITICAL boundary proximity: dist=2.0, speed=1.4, penalty: 202 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:410
+   Move {"x":1,"y":1}: score=-254.6, align=0.70, FORWARD, speed=1.4
+ 🏆 SELECTED: {"x":-1,"y":-1} with score 251.7 (align=3.30, FORWARD, speed=3.2)
+ 🏆 BEST MOVE SELECTED: {"x":-1,"y":-1} with score 251.7
+ 🎯 Waypoint selection: closest=12 (dist=4.1), target=14 (lookahead=2)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 45,
+    "y": 22
+  },
+  "velocity": {
+    "x": 0,
+    "y": -2
+  },
+  "chosenMove": {
+    "x": -1,
+    "y": -1
+  },
+  "score": "251.67",
+  "racingLineDistance": "7.2",
+  "cornerType": "entry",
+  "targetSpeed": 2
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 44,
+    "y": 19
+  },
+  "velocity": {
+    "x": -1,
+    "y": -3
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=12 (dist=4.1), target=14 (lookahead=2)
+ 🎯 AI AI Opponent targeting waypoint: pos=(40,13), type=entry, distance=7.2
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=13 (dist=2.8), target=16 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.5 > 3, penalty: 433
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.0), alignment=0.99, bonus=+175
+   Move {"x":-1,"y":-1}: score=-48.1, align=4.60, FORWARD, speed=4.5
+ 🎯 Waypoint selection: closest=13 (dist=2.2), target=16 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.0), alignment=1.00, bonus=+176
+   Move {"x":-1,"y":0}: score=256.1, align=3.60, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=13 (dist=2.0), target=16 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (13.0), alignment=0.98, bonus=+172
+   Move {"x":-1,"y":1}: score=297.0, align=2.60, FORWARD, speed=2.8
+ 🎯 Waypoint selection: closest=13 (dist=3.6), target=15 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (11.2), alignment=0.98, bonus=+126
+   Move {"x":0,"y":-1}: score=61.8, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=13 (dist=3.2), target=15 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (11.2), alignment=0.99, bonus=+128
+   Move {"x":0,"y":0}: score=269.1, align=3.30, FORWARD, speed=3.2 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=13 (dist=3.0), target=15 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (11.2), alignment=1.00, bonus=+130
+   Move {"x":0,"y":1}: score=244.9, align=2.30, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=13 (dist=4.5), target=15 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (11.2), alignment=0.89, bonus=+116
+   Move {"x":1,"y":-1}: score=86.6, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=13 (dist=4.1), target=15 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (11.2), alignment=0.89, bonus=+116
+   Move {"x":1,"y":0}: score=275.3, align=3.00, FORWARD, speed=3.0
+ 🎯 Waypoint selection: closest=13 (dist=4.0), target=15 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (11.2), alignment=0.89, bonus=+116
+   Move {"x":1,"y":1}: score=208.0, align=2.00, FORWARD, speed=2.0
+ 🏆 SELECTED: {"x":-1,"y":1} with score 297.0 (align=2.60, FORWARD, speed=2.8)
+ 🏆 BEST MOVE SELECTED: {"x":-1,"y":1} with score 297.0
+ 🎯 Waypoint selection: closest=13 (dist=2.0), target=16 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 44,
+    "y": 19
+  },
+  "velocity": {
+    "x": -1,
+    "y": -3
+  },
+  "chosenMove": {
+    "x": -1,
+    "y": 1
+  },
+  "score": "297.04",
+  "racingLineDistance": "10.3",
+  "cornerType": "exit",
+  "targetSpeed": 3
+}
+ ✓ AI Opponent's Car passed checkpoint 1 (valid progression) Object
+ ⏱️ Path planning timed out after 100ms
+ ✓ Player 1's Car passed checkpoint 2 (valid progression) Object
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 42,
+    "y": 17
+  },
+  "velocity": {
+    "x": -2,
+    "y": -2
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=13 (dist=2.0), target=16 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(37,8), type=exit, distance=10.3
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=14 (dist=1.4), target=17 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.2 > 3, penalty: 309
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":-3} -> future pos (36.0, 11.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (12.0), alignment=1.00, bonus=+151
+   Move {"x":-1,"y":-1}: score=-1984.0, align=3.90, FORWARD, speed=4.2
+ 🎯 Waypoint selection: closest=13 (dist=2.2), target=16 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":-2} -> future pos (36.0, 13.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.89, bonus=+95
+   Move {"x":-1,"y":0}: score=-1841.6, align=2.90, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=13 (dist=1.4), target=16 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":-1} -> future pos (36.0, 15.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.74, bonus=+79
+   Move {"x":-1,"y":1}: score=-1861.4, align=1.90, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=14 (dist=1.0), target=17 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":-3} -> future pos (38.0, 11.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (12.0), alignment=0.99, bonus=+150
+   Move {"x":0,"y":-1}: score=-1764.5, align=3.60, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=13 (dist=2.0), target=16 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":-2} -> future pos (38.0, 13.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.96, bonus=+103
+   Move {"x":0,"y":0}: score=-1755.4, align=2.60, FORWARD, speed=2.8 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=13 (dist=1.0), target=16 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":-1} -> future pos (38.0, 15.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.83, bonus=+89
+   Move {"x":0,"y":1}: score=-1838.1, align=1.60, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=14 (dist=1.4), target=17 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (12.0), alignment=0.92, bonus=+139
+   Move {"x":1,"y":-1}: score=274.0, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=13 (dist=2.2), target=16 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (10.3), alignment=1.00, bonus=+107
+   Move {"x":1,"y":0}: score=225.5, align=2.30, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=13 (dist=1.4), target=16 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.96, bonus=+103
+   Move {"x":1,"y":1}: score=68.7, align=1.30, FORWARD, speed=1.4
+ 🏆 SELECTED: {"x":1,"y":-1} with score 274.0 (align=3.30, FORWARD, speed=3.2)
+ 🏆 BEST MOVE SELECTED: {"x":1,"y":-1} with score 274.0
+ 🎯 Waypoint selection: closest=14 (dist=1.4), target=17 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 42,
+    "y": 17
+  },
+  "velocity": {
+    "x": -2,
+    "y": -2
+  },
+  "chosenMove": {
+    "x": 1,
+    "y": -1
+  },
+  "score": "273.98",
+  "racingLineDistance": "9.2",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 41,
+    "y": 14
+  },
+  "velocity": {
+    "x": -1,
+    "y": -3
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=14 (dist=1.4), target=17 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(34,8), type=straight, distance=9.2
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=15 (dist=1.0), target=18 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.5 > 3, penalty: 433
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.4), alignment=0.80, bonus=+148
+   Move {"x":-1,"y":-1}: score=-87.2, align=4.60, FORWARD, speed=4.5
+ 🎯 Waypoint selection: closest=15 (dist=2.0), target=18 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.4), alignment=0.87, bonus=+161
+   Move {"x":-1,"y":0}: score=235.5, align=3.60, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=14 (dist=1.4), target=17 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":-2} -> future pos (37.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (9.2), alignment=1.00, bonus=+80
+   Move {"x":-1,"y":1}: score=-1773.5, align=2.60, FORWARD, speed=2.8
+ 🎯 Waypoint selection: closest=15 (dist=1.4), target=18 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.4), alignment=0.65, bonus=+121
+   Move {"x":0,"y":-1}: score=43.5, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=14 (dist=2.0), target=17 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.86, bonus=+69
+   Move {"x":0,"y":0}: score=218.1, align=3.30, FORWARD, speed=3.2 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=14 (dist=1.0), target=17 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.92, bonus=+74
+   Move {"x":0,"y":1}: score=198.3, align=2.30, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=15 (dist=2.2), target=18 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.4), alignment=0.45, bonus=+83
+   Move {"x":1,"y":-1}: score=28.7, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=14 (dist=2.2), target=17 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.65, bonus=+52
+   Move {"x":1,"y":0}: score=218.7, align=3.00, FORWARD, speed=3.0
+ 🎯 Waypoint selection: closest=14 (dist=1.4), target=17 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.65, bonus=+52
+   Move {"x":1,"y":1}: score=153.7, align=2.00, FORWARD, speed=2.0
+ 🏆 SELECTED: {"x":-1,"y":0} with score 235.5 (align=3.60, FORWARD, speed=3.6)
+ 🏆 BEST MOVE SELECTED: {"x":-1,"y":0} with score 235.5
+ 🎯 Waypoint selection: closest=15 (dist=2.0), target=18 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 41,
+    "y": 14
+  },
+  "velocity": {
+    "x": -1,
+    "y": -3
+  },
+  "chosenMove": {
+    "x": -1,
+    "y": 0
+  },
+  "score": "235.47",
+  "racingLineDistance": "10.4",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 39,
+    "y": 11
+  },
+  "velocity": {
+    "x": -2,
+    "y": -3
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 8
+ 🎯 Waypoint selection: closest=15 (dist=2.0), target=18 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(29,8), type=straight, distance=10.4
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 8 ACTUALLY LEGAL MOVES (from 8 candidates):
+ 🎯 Waypoint selection: closest=16 (dist=1.4), target=19 (lookahead=3)
+ ⚠️ AI crash prevention: speed 5.0 > 3, penalty: 800
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (18.2), alignment=0.72, bonus=+221
+   Move {"x":-1,"y":-1}: score=-486.7, align=4.90, FORWARD, speed=5.0
+ 🎯 Waypoint selection: closest=16 (dist=1.0), target=19 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.2 > 3, penalty: 309
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (18.2), alignment=0.81, bonus=+249
+   Move {"x":-1,"y":0}: score=37.8, align=3.90, FORWARD, speed=4.2
+ 🎯 Waypoint selection: closest=16 (dist=1.0), target=19 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.5 > 3, penalty: 433
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (18.2), alignment=0.59, bonus=+180
+   Move {"x":0,"y":-1}: score=-167.2, align=4.60, FORWARD, speed=4.5
+ 🎯 Waypoint selection: closest=16 (dist=0.0), target=19 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (18.2), alignment=0.68, bonus=+209
+   Move {"x":0,"y":0}: score=210.2, align=3.60, FORWARD, speed=3.6 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=16 (dist=1.0), target=19 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (18.2), alignment=0.81, bonus=+249
+   Move {"x":0,"y":1}: score=297.5, align=2.60, FORWARD, speed=2.8
+ 🎯 Waypoint selection: closest=16 (dist=1.4), target=19 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (18.2), alignment=0.40, bonus=+122
+   Move {"x":1,"y":-1}: score=-62.7, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=16 (dist=1.0), target=19 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (18.2), alignment=0.47, bonus=+143
+   Move {"x":1,"y":0}: score=184.1, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=15 (dist=1.0), target=18 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (10.4), alignment=0.69, bonus=+76
+   Move {"x":1,"y":1}: score=188.9, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":1} with score 297.5 (align=2.60, FORWARD, speed=2.8)
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":1} with score 297.5
+ 🎯 Waypoint selection: closest=16 (dist=1.0), target=19 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 39,
+    "y": 11
+  },
+  "velocity": {
+    "x": -2,
+    "y": -3
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 1
+  },
+  "score": "297.54",
+  "racingLineDistance": "16.0",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 37,
+    "y": 9
+  },
+  "velocity": {
+    "x": -2,
+    "y": -2
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=16 (dist=1.0), target=19 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(21,8), type=straight, distance=16.0
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=17 (dist=2.0), target=20 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.2 > 3, penalty: 309
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI corner safety: speed 4.2 > 3.5 at entry, penalty: 33
+scoreSimplifiedMove @ ai.ts:369
+ 🧲 AI racing line attraction: far from line (21.0), alignment=0.74, bonus=+278
+   Move {"x":-1,"y":-1}: score=-150.7, align=2.10, FORWARD, speed=4.2
+ 🎯 Waypoint selection: closest=17 (dist=1.0), target=20 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI corner safety: speed 3.6 > 3.5 at entry, penalty: 1
+scoreSimplifiedMove @ ai.ts:369
+ 🧲 AI racing line attraction: far from line (21.0), alignment=0.86, bonus=+322
+   Move {"x":-1,"y":0}: score=212.2, align=2.40, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=17 (dist=0.0), target=20 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (21.0), alignment=0.96, bonus=+362
+   Move {"x":-1,"y":1}: score=348.8, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=17 (dist=2.2), target=20 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI corner safety: speed 3.6 > 3.5 at entry, penalty: 1
+scoreSimplifiedMove @ ai.ts:369
+ 🧲 AI racing line attraction: far from line (21.0), alignment=0.59, bonus=+223
+   Move {"x":0,"y":-1}: score=17.4, align=1.10, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=17 (dist=1.4), target=20 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (21.0), alignment=0.74, bonus=+278
+   Move {"x":0,"y":0}: score=208.7, align=1.40, FORWARD, speed=2.8 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=17 (dist=1.0), target=20 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (21.0), alignment=0.91, bonus=+344
+   Move {"x":0,"y":1}: score=290.2, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=16 (dist=2.2), target=19 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (16.0), alignment=0.37, bonus=+94
+   Move {"x":1,"y":-1}: score=-32.5, align=0.10, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=16 (dist=1.4), target=19 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (16.0), alignment=0.50, bonus=+126
+   Move {"x":1,"y":0}: score=56.0, align=0.40, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=16 (dist=1.0), target=19 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (16.0), alignment=0.75, bonus=+188
+   Move {"x":1,"y":1}: score=50.3, align=0.70, FORWARD, speed=1.4
+ 🏆 SELECTED: {"x":-1,"y":1} with score 348.8 (align=2.70, FORWARD, speed=3.2)
+ 🏆 BEST MOVE SELECTED: {"x":-1,"y":1} with score 348.8
+ 🎯 Waypoint selection: closest=17 (dist=0.0), target=20 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 37,
+    "y": 9
+  },
+  "velocity": {
+    "x": -2,
+    "y": -2
+  },
+  "chosenMove": {
+    "x": -1,
+    "y": 1
+  },
+  "score": "348.77",
+  "racingLineDistance": "18.0",
+  "cornerType": "entry",
+  "targetSpeed": 2
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 34,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": -1
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=17 (dist=0.0), target=20 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(16,8), type=entry, distance=18.0
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=18 (dist=2.2), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.5 > 3, penalty: 433
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (23.0), alignment=0.87, bonus=+372
+   Move {"x":-1,"y":-1}: score=-97.6, align=3.40, FORWARD, speed=4.5
+ 🎯 Waypoint selection: closest=18 (dist=1.4), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (23.0), alignment=0.96, bonus=+408
+   Move {"x":-1,"y":0}: score=156.9, align=3.70, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=18 (dist=1.0), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (23.0), alignment=1.00, bonus=+425
+   Move {"x":-1,"y":1}: score=269.3, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=18 (dist=2.8), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (23.0), alignment=0.81, bonus=+343
+   Move {"x":0,"y":-1}: score=199.4, align=2.40, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=18 (dist=2.2), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (23.0), alignment=0.93, bonus=+397
+   Move {"x":0,"y":0}: score=352.4, align=2.70, FORWARD, speed=3.2 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=18 (dist=2.0), target=21 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (23.0), alignment=1.00, bonus=+425
+   Move {"x":0,"y":1}: score=434.0, align=3.00, FORWARD, speed=3.0
+ 🎯 Waypoint selection: closest=17 (dist=2.8), target=20 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (18.0), alignment=0.71, bonus=+212
+   Move {"x":1,"y":-1}: score=185.8, align=1.40, FORWARD, speed=2.8
+ 🎯 Waypoint selection: closest=17 (dist=2.2), target=20 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (18.0), alignment=0.89, bonus=+268
+   Move {"x":1,"y":0}: score=263.0, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=17 (dist=2.0), target=20 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (18.0), alignment=1.00, bonus=+300
+   Move {"x":1,"y":1}: score=311.5, align=2.00, FORWARD, speed=2.0
+ 🏆 SELECTED: {"x":0,"y":1} with score 434.0 (align=3.00, FORWARD, speed=3.0)
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":1} with score 434.0
+ 🎯 Waypoint selection: closest=18 (dist=2.0), target=21 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 34,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": -1
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 1
+  },
+  "score": "433.99",
+  "racingLineDistance": "20.0",
+  "cornerType": "apex",
+  "targetSpeed": 2
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 31,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=18 (dist=2.0), target=21 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(11,9), type=apex, distance=20.0
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=18 (dist=2.2), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (20.0), alignment=0.96, bonus=+335
+   Move {"x":-1,"y":-1}: score=128.4, align=3.70, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=18 (dist=2.0), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (20.0), alignment=1.00, bonus=+350
+   Move {"x":-1,"y":0}: score=244.4, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=18 (dist=2.2), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-4,"y":1} -> future pos (23.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (20.0), alignment=0.98, bonus=+344
+   Move {"x":-1,"y":1}: score=-1800.0, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=18 (dist=1.4), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (20.0), alignment=0.93, bonus=+327
+   Move {"x":0,"y":-1}: score=329.5, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=18 (dist=1.0), target=21 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (20.0), alignment=1.00, bonus=+350
+   Move {"x":0,"y":0}: score=409.3, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=18 (dist=1.4), target=21 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":1} -> future pos (25.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (20.0), alignment=0.96, bonus=+338
+   Move {"x":0,"y":1}: score=-1624.8, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=18 (dist=1.0), target=21 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (20.0), alignment=0.87, bonus=+305
+   Move {"x":1,"y":-1}: score=269.9, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=18 (dist=0.0), target=21 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (20.0), alignment=1.00, bonus=+350
+   Move {"x":1,"y":0}: score=330.4, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=18 (dist=1.0), target=21 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":1} -> future pos (27.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (20.0), alignment=0.92, bonus=+321
+   Move {"x":1,"y":1}: score=-1678.7, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":0} with score 409.3 (align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL])
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":0} with score 409.3
+ 🎯 Waypoint selection: closest=18 (dist=1.0), target=21 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 31,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 0
+  },
+  "score": "409.31",
+  "racingLineDistance": "17.0",
+  "cornerType": "apex",
+  "targetSpeed": 2
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 28,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=18 (dist=1.0), target=21 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(11,9), type=apex, distance=17.0
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=19 (dist=3.2), target=21 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (17.0), alignment=0.95, bonus=+263
+   Move {"x":-1,"y":-1}: score=99.3, align=3.70, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=19 (dist=3.0), target=21 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (17.0), alignment=1.00, bonus=+275
+   Move {"x":-1,"y":0}: score=211.2, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=19 (dist=3.2), target=21 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-4,"y":1} -> future pos (20.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (17.0), alignment=0.98, bonus=+271
+   Move {"x":-1,"y":1}: score=-1827.6, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=18 (dist=4.1), target=20 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (12.0), alignment=0.95, bonus=+142
+   Move {"x":0,"y":-1}: score=243.6, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=18 (dist=4.0), target=20 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (12.0), alignment=1.00, bonus=+150
+   Move {"x":0,"y":0}: score=306.9, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=18 (dist=4.1), target=20 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":1} -> future pos (22.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (12.0), alignment=0.95, bonus=+142
+   Move {"x":0,"y":1}: score=-1720.6, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=18 (dist=3.2), target=20 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (12.0), alignment=0.89, bonus=+134
+   Move {"x":1,"y":-1}: score=206.7, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=18 (dist=3.0), target=20 (lookahead=2)
+ 🧲 AI racing line attraction: far from line (12.0), alignment=1.00, bonus=+150
+   Move {"x":1,"y":0}: score=239.7, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=18 (dist=3.2), target=20 (lookahead=2)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":1} -> future pos (24.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (12.0), alignment=0.89, bonus=+134
+   Move {"x":1,"y":1}: score=-1759.1, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":0} with score 306.9 (align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL])
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":0} with score 306.9
+ 🎯 Waypoint selection: closest=18 (dist=4.0), target=20 (lookahead=2)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 28,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 0
+  },
+  "score": "306.93",
+  "racingLineDistance": "9.0",
+  "cornerType": "entry",
+  "targetSpeed": 2
+}
+ ✓ AI Opponent's Car passed checkpoint 2 (valid progression) Object
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 25,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=18 (dist=4.0), target=20 (lookahead=2)
+ 🎯 AI AI Opponent targeting waypoint: pos=(16,8), type=entry, distance=9.0
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=19 (dist=1.0), target=22 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.90, bonus=+210
+   Move {"x":-1,"y":-1}: score=64.1, align=3.70, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=19 (dist=0.0), target=22 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.98, bonus=+228
+   Move {"x":-1,"y":0}: score=182.7, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=19 (dist=1.0), target=22 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-4,"y":1} -> future pos (17.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (15.3), alignment=1.00, bonus=+232
+   Move {"x":-1,"y":1}: score=-1844.0, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=19 (dist=1.4), target=22 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.87, bonus=+202
+   Move {"x":0,"y":-1}: score=268.6, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=19 (dist=1.0), target=22 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.98, bonus=+228
+   Move {"x":0,"y":0}: score=350.9, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=19 (dist=1.4), target=22 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":1} -> future pos (19.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.99, bonus=+231
+   Move {"x":0,"y":1}: score=-1663.5, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=19 (dist=2.2), target=22 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.79, bonus=+183
+   Move {"x":1,"y":-1}: score=213.1, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=19 (dist=2.0), target=22 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.98, bonus=+228
+   Move {"x":1,"y":0}: score=277.1, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=19 (dist=2.2), target=22 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":1} -> future pos (21.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (15.3), alignment=0.96, bonus=+224
+   Move {"x":1,"y":1}: score=-1704.4, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":0} with score 350.9 (align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL])
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":0} with score 350.9
+ 🎯 Waypoint selection: closest=19 (dist=1.0), target=22 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 25,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 0
+  },
+  "score": "350.91",
+  "racingLineDistance": "12.4",
+  "cornerType": "exit",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 22,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=19 (dist=1.0), target=22 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(10,11), type=exit, distance=12.4
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=20 (dist=2.2), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.0), alignment=0.80, bonus=+140
+   Move {"x":-1,"y":-1}: score=14.5, align=3.70, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=20 (dist=2.0), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (13.0), alignment=0.92, bonus=+162
+   Move {"x":-1,"y":0}: score=134.0, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=20 (dist=2.2), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-4,"y":1} -> future pos (14.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (13.0), alignment=0.99, bonus=+173
+   Move {"x":-1,"y":1}: score=-1885.2, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=19 (dist=2.2), target=22 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (12.4), alignment=0.84, bonus=+134
+   Move {"x":0,"y":-1}: score=228.9, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=19 (dist=2.0), target=22 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (12.4), alignment=0.97, bonus=+154
+   Move {"x":0,"y":0}: score=307.2, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=19 (dist=2.2), target=22 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":1} -> future pos (16.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (12.4), alignment=1.00, bonus=+159
+   Move {"x":0,"y":1}: score=-1706.3, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=19 (dist=1.4), target=22 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (12.4), alignment=0.76, bonus=+121
+   Move {"x":1,"y":-1}: score=184.0, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=19 (dist=1.0), target=22 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (12.4), alignment=0.97, bonus=+154
+   Move {"x":1,"y":0}: score=241.5, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=19 (dist=1.4), target=22 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":1} -> future pos (18.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (12.4), alignment=0.98, bonus=+155
+   Move {"x":1,"y":1}: score=-1738.5, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":0} with score 307.2 (align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL])
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":0} with score 307.2
+ 🎯 Waypoint selection: closest=19 (dist=2.0), target=22 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 22,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 0
+  },
+  "score": "307.23",
+  "racingLineDistance": "9.5",
+  "cornerType": "exit",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 19,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=19 (dist=2.0), target=22 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(10,11), type=exit, distance=9.5
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=20 (dist=1.4), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.73, bonus=+78
+   Move {"x":-1,"y":-1}: score=-24.5, align=3.70, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=20 (dist=1.0), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.87, bonus=+94
+   Move {"x":-1,"y":0}: score=82.6, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=20 (dist=1.4), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.97, bonus=+104
+   Move {"x":-1,"y":1}: score=58.3, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=20 (dist=1.0), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.68, bonus=+73
+   Move {"x":0,"y":-1}: score=176.5, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=20 (dist=0.0), target=23 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.87, bonus=+94
+   Move {"x":0,"y":0}: score=257.2, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=20 (dist=1.0), target=23 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":1} -> future pos (13.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.98, bonus=+106
+   Move {"x":0,"y":1}: score=-1745.4, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=20 (dist=1.4), target=23 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.56, bonus=+61
+   Move {"x":1,"y":-1}: score=139.0, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=20 (dist=1.0), target=23 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (10.3), alignment=0.87, bonus=+94
+   Move {"x":1,"y":0}: score=192.2, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=20 (dist=1.4), target=23 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":1} -> future pos (15.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (10.3), alignment=1.00, bonus=+107
+   Move {"x":1,"y":1}: score=-1771.5, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":0} with score 257.2 (align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL])
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":0} with score 257.2
+ 🎯 Waypoint selection: closest=20 (dist=0.0), target=23 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 19,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 0
+  },
+  "score": "257.15",
+  "racingLineDistance": "7.8",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 16,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=20 (dist=0.0), target=23 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(10,13), type=straight, distance=7.8
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=21 (dist=2.2), target=24 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.45, bonus=+36
+   Move {"x":-1,"y":-1}: score=-71.3, align=3.70, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=21 (dist=1.4), target=24 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.65, bonus=+52
+   Move {"x":-1,"y":0}: score=38.1, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=21 (dist=1.0), target=24 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.82, bonus=+66
+   Move {"x":-1,"y":1}: score=20.3, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=21 (dist=2.8), target=24 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.38, bonus=+30
+   Move {"x":0,"y":-1}: score=133.8, align=2.70, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=21 (dist=2.2), target=24 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.65, bonus=+52
+   Move {"x":0,"y":0}: score=216.6, align=3.00, FORWARD, speed=3.0 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=21 (dist=2.0), target=24 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.2), alignment=0.86, bonus=+69
+   Move {"x":0,"y":1}: score=219.8, align=3.30, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=20 (dist=2.2), target=23 (lookahead=3)
+   Move {"x":1,"y":-1}: score=104.9, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=20 (dist=2.0), target=23 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (7.8), alignment=0.77, bonus=+35
+   Move {"x":1,"y":0}: score=146.1, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=20 (dist=2.2), target=23 (lookahead=3)
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-2,"y":1} -> future pos (12.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🧲 AI racing line attraction: far from line (7.8), alignment=0.97, bonus=+44
+   Move {"x":1,"y":1}: score=-1823.8, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":1} with score 219.8 (align=3.30, FORWARD, speed=3.2)
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":1} with score 219.8
+ 🎯 Waypoint selection: closest=21 (dist=2.0), target=24 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 16,
+    "y": 8
+  },
+  "velocity": {
+    "x": -3,
+    "y": 0
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 1
+  },
+  "score": "219.82",
+  "racingLineDistance": "6.7",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 13,
+    "y": 9
+  },
+  "velocity": {
+    "x": -3,
+    "y": 1
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 8
+ 🎯 Waypoint selection: closest=21 (dist=2.0), target=24 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(10,15), type=straight, distance=6.7
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 8 ACTUALLY LEGAL MOVES (from 8 candidates):
+ 🎯 Waypoint selection: closest=21 (dist=2.0), target=24 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+   Move {"x":-1,"y":-1}: score=2.6, align=4.00, FORWARD, speed=4.0
+ 🎯 Waypoint selection: closest=22 (dist=1.4), target=0 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.5), alignment=0.54, bonus=+47
+   Move {"x":-1,"y":0}: score=-7.0, align=4.30, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=22 (dist=1.0), target=0 (lookahead=3)
+ ⚠️ AI crash prevention: speed 4.5 > 3, penalty: 433
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.5), alignment=0.71, bonus=+62
+   Move {"x":-1,"y":1}: score=-153.6, align=4.60, FORWARD, speed=4.5
+ 🎯 Waypoint selection: closest=21 (dist=1.0), target=24 (lookahead=3)
+   Move {"x":0,"y":-1}: score=181.5, align=3.00, FORWARD, speed=3.0
+ 🎯 Waypoint selection: closest=22 (dist=1.0), target=0 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.5), alignment=0.60, bonus=+52
+   Move {"x":0,"y":0}: score=194.3, align=3.30, FORWARD, speed=3.2 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=22 (dist=0.0), target=0 (lookahead=3)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (9.5), alignment=0.79, bonus=+69
+   Move {"x":0,"y":1}: score=164.4, align=3.60, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=21 (dist=0.0), target=24 (lookahead=3)
+   Move {"x":1,"y":-1}: score=123.0, align=2.00, FORWARD, speed=2.0
+ 🎯 Waypoint selection: closest=21 (dist=1.0), target=24 (lookahead=3)
+   Move {"x":1,"y":0}: score=150.6, align=2.30, FORWARD, speed=2.2
+ 🏆 SELECTED: {"x":0,"y":0} with score 194.3 (align=3.30, FORWARD, speed=3.2 [ZERO-ACCEL])
+ 🏆 BEST MOVE SELECTED: {"x":0,"y":0} with score 194.3
+ 🎯 Waypoint selection: closest=22 (dist=1.0), target=0 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 13,
+    "y": 9
+  },
+  "velocity": {
+    "x": -3,
+    "y": 1
+  },
+  "chosenMove": {
+    "x": 0,
+    "y": 0
+  },
+  "score": "194.34",
+  "racingLineDistance": "8.0",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 10,
+    "y": 10
+  },
+  "velocity": {
+    "x": -3,
+    "y": 1
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=22 (dist=1.0), target=0 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(10,18), type=straight, distance=8.0
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=22 (dist=4.1), target=24 (lookahead=2)
+ 🚫 AI backward movement detected: velocity=(-4.0, 0.0), alignment=-1.200, speed=4.0
+scoreSimplifiedMove @ ai.ts:340
+ ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-4,"y":0} -> future pos (2.0, 10.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":-1,"y":-1}: score=-3368.7, align=-1.20, BACKWARD, speed=4.0
+ 🎯 Waypoint selection: closest=22 (dist=4.0), target=24 (lookahead=2)
+ 🚫 AI backward movement detected: velocity=(-4.0, 1.0), alignment=-0.200, speed=4.1
+scoreSimplifiedMove @ ai.ts:340
+ ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-4,"y":1} -> future pos (2.0, 12.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":-1,"y":0}: score=-3435.6, align=-0.20, FORWARD, speed=4.1
+ 🎯 Waypoint selection: closest=22 (dist=4.1), target=24 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.5 > 3, penalty: 433
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-4,"y":2} -> future pos (2.0, 14.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":-1,"y":1}: score=-2663.1, align=0.80, FORWARD, speed=4.5
+ 🎯 Waypoint selection: closest=22 (dist=3.2), target=24 (lookahead=2)
+ 🚫 AI backward movement detected: velocity=(-3.0, 0.0), alignment=-0.900, speed=3.0
+scoreSimplifiedMove @ ai.ts:340
+   Move {"x":0,"y":-1}: score=-803.6, align=-0.90, BACKWARD, speed=3.0
+ 🎯 Waypoint selection: closest=22 (dist=3.0), target=24 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+   Move {"x":0,"y":0}: score=-31.3, align=0.10, FORWARD, speed=3.2 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=22 (dist=3.2), target=24 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+   Move {"x":0,"y":1}: score=-23.7, align=1.10, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=22 (dist=2.2), target=0 (lookahead=3)
+ 🚫 AI backward movement detected: velocity=(-2.0, 0.0), alignment=-0.600, speed=2.0
+scoreSimplifiedMove @ ai.ts:340
+   Move {"x":1,"y":-1}: score=-720.3, align=-0.60, BACKWARD, speed=2.0
+ 🎯 Waypoint selection: closest=22 (dist=2.0), target=0 (lookahead=3)
+   Move {"x":1,"y":0}: score=32.6, align=0.40, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=22 (dist=2.2), target=0 (lookahead=3)
+ 🧲 AI racing line attraction: far from line (8.0), alignment=0.71, bonus=+35
+   Move {"x":1,"y":1}: score=113.0, align=1.40, FORWARD, speed=2.8
+ 🏆 SELECTED: {"x":1,"y":1} with score 113.0 (align=1.40, FORWARD, speed=2.8)
+ 🏆 BEST MOVE SELECTED: {"x":1,"y":1} with score 113.0
+ 🎯 Waypoint selection: closest=22 (dist=2.2), target=0 (lookahead=3)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 10,
+    "y": 10
+  },
+  "velocity": {
+    "x": -3,
+    "y": 1
+  },
+  "chosenMove": {
+    "x": 1,
+    "y": 1
+  },
+  "score": "113.04",
+  "racingLineDistance": "6.3",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 8,
+    "y": 12
+  },
+  "velocity": {
+    "x": -2,
+    "y": 2
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=22 (dist=2.2), target=0 (lookahead=3)
+ 🎯 AI AI Opponent targeting waypoint: pos=(10,18), type=straight, distance=6.3
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=23 (dist=5.0), target=0 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":1} -> future pos (2.0, 14.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ ⚠️ AI boundary warning: dist=3.0, speed=3.2, penalty: 132 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":-1,"y":-1}: score=-2383.9, align=0.10, FORWARD, speed=3.2
+ 🎯 Waypoint selection: closest=23 (dist=5.1), target=0 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":2} -> future pos (2.0, 16.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ ⚠️ AI boundary warning: dist=3.0, speed=3.6, penalty: 164 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":-1,"y":0}: score=-2423.9, align=1.10, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=24 (dist=5.0), target=1 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.2 > 3, penalty: 309
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI PREDICTIVE CRASH: move {"x":-3,"y":3} -> future pos (2.0, 18.0) is ILLEGAL! Penalty: -2000
+scoreSimplifiedMove @ ai.ts:389
+ ⚠️ AI boundary warning: dist=3.0, speed=4.2, penalty: 209 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+ 🚨 AI predictive boundary danger: future dist=0.0, penalty: 210 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:438
+   Move {"x":-1,"y":1}: score=-2629.4, align=2.10, FORWARD, speed=4.2
+ 🎯 Waypoint selection: closest=23 (dist=4.0), target=0 (lookahead=2)
+   Move {"x":0,"y":-1}: score=14.9, align=0.40, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=23 (dist=4.1), target=0 (lookahead=2)
+   Move {"x":0,"y":0}: score=82.2, align=1.40, FORWARD, speed=2.8 [ZERO-ACCEL]
+ 🎯 Waypoint selection: closest=24 (dist=4.0), target=1 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (8.2), alignment=0.67, bonus=+38
+   Move {"x":0,"y":1}: score=62.2, align=2.40, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=23 (dist=3.0), target=0 (lookahead=2)
+   Move {"x":1,"y":-1}: score=-48.9, align=0.70, FORWARD, speed=1.4
+ 🎯 Waypoint selection: closest=23 (dist=3.2), target=0 (lookahead=2)
+   Move {"x":1,"y":0}: score=109.3, align=1.70, FORWARD, speed=2.2
+ 🎯 Waypoint selection: closest=24 (dist=3.0), target=1 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:360
+ 🧲 AI racing line attraction: far from line (8.2), alignment=0.84, bonus=+47
+   Move {"x":1,"y":1}: score=167.6, align=2.70, FORWARD, speed=3.2
+ 🏆 SELECTED: {"x":1,"y":1} with score 167.6 (align=2.70, FORWARD, speed=3.2)
+ 🏆 BEST MOVE SELECTED: {"x":1,"y":1} with score 167.6
+ 🎯 Waypoint selection: closest=24 (dist=3.0), target=1 (lookahead=2)
+ 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 8,
+    "y": 12
+  },
+  "velocity": {
+    "x": -2,
+    "y": 2
+  },
+  "chosenMove": {
+    "x": 1,
+    "y": 1
+  },
+  "score": "167.56",
+  "racingLineDistance": "5.8",
+  "cornerType": "straight",
+  "targetSpeed": 3
+}
+ ⏱️ Path planning timed out after 100ms
+ 
+🤖 AI AI Opponent TURN DEBUG: {
+  "position": {
+    "x": 7,
+    "y": 15
+  },
+  "velocity": {
+    "x": -1,
+    "y": 3
+  },
+  "currentLap": 0,
+  "difficulty": "medium"
+}
+ 📋 Legal moves available: 9
+ 🎯 Waypoint selection: closest=24 (dist=3.0), target=1 (lookahead=2)
+ 🎯 AI AI Opponent targeting waypoint: pos=(10,20), type=straight, distance=5.8
+ 🎯 Attempting path planning for medium AI...
+ 📝 Phase 1: Using simplified scoring system for medium AI
+ ⏱️ Path planning skipped (Phase 1 implementation)
+ 📝 Using simplified single-move evaluation (Phase 1)
+ 🔢 EVALUATING 9 ACTUALLY LEGAL MOVES (from 9 candidates):
+ 🎯 Waypoint selection: closest=0 (dist=5.1), target=2 (lookahead=2)
+ ⚠️ AI boundary warning: dist=3.0, speed=2.8, penalty: 108 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+   Move {"x":-1,"y":-1}: score=-22.3, align=1.40, FORWARD, speed=2.8
+ 🎯 Waypoint selection: closest=0 (dist=5.0), target=2 (lookahead=2)
+ ⚠️ AI crash prevention: speed 3.6 > 3, penalty: 73
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI corner safety: speed 3.6 > 3.5 at entry, penalty: 1
+scoreSimplifiedMove @ ai.ts:369
+ ⚠️ AI boundary warning: dist=3.0, speed=3.6, penalty: 164 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+   Move {"x":-1,"y":0}: score=-115.5, align=2.40, FORWARD, speed=3.6
+ 🎯 Waypoint selection: closest=0 (dist=5.1), target=2 (lookahead=2)
+ ⚠️ AI crash prevention: speed 4.5 > 3, penalty: 433
+scoreSimplifiedMove @ ai.ts:360
+ ⚠️ AI corner safety: speed 4.5 > 3.5 at entry, penalty: 57
+scoreSimplifiedMove @ ai.ts:369
+ ⚠️ AI boundary warning: dist=3.0, speed=4.5, penalty: 226 (racing line bonus)
+scoreSimplifiedMove @ ai.ts:419
+   Move {"x":-1,"y":1}: score=-536.7, align=3.40, FORWARD, speed=4.5
+ai.ts:307 🎯 Waypoint selection: closest=0 (dist=4.1), target=2 (lookahead=2)
+ai.ts:1396   Move {"x":0,"y":-1}: score=119.8, align=1.70, FORWARD, speed=2.2
+ai.ts:307 🎯 Waypoint selection: closest=0 (dist=4.0), target=2 (lookahead=2)
+ai.ts:566 ⚠️ AI crash prevention: speed 3.2 > 3, penalty: 5
+scoreSimplifiedMove @ ai.ts:566
+ai.ts:771 🧲 AI racing line attraction: far from line (7.6), alignment=0.75, bonus=+30
+ai.ts:1396   Move {"x":0,"y":0}: score=149.5, align=2.70, FORWARD, speed=3.2 [ZERO-ACCEL]
+ai.ts:307 🎯 Waypoint selection: closest=0 (dist=4.1), target=2 (lookahead=2)
+ai.ts:566 ⚠️ AI crash prevention: speed 4.1 > 3, penalty: 252
+scoreSimplifiedMove @ ai.ts:566
+ai.ts:578 ⚠️ AI corner safety: speed 4.1 > 3.5 at entry, penalty: 23
+scoreSimplifiedMove @ ai.ts:578
+ai.ts:771 🧲 AI racing line attraction: far from line (7.6), alignment=0.80, bonus=+32
+ai.ts:1396   Move {"x":0,"y":1}: score=-78.5, align=3.70, FORWARD, speed=4.1
+ai.ts:307 🎯 Waypoint selection: closest=0 (dist=3.2), target=2 (lookahead=2)
+ai.ts:771 🧲 AI racing line attraction: far from line (7.6), alignment=0.92, bonus=+37
+ai.ts:1396   Move {"x":1,"y":-1}: score=150.6, align=2.00, FORWARD, speed=2.0
+ai.ts:307 🎯 Waypoint selection: closest=0 (dist=3.0), target=2 (lookahead=2)
+ai.ts:771 🧲 AI racing line attraction: far from line (7.6), alignment=0.92, bonus=+37
+ai.ts:1396   Move {"x":1,"y":0}: score=216.6, align=3.00, FORWARD, speed=3.0
+ai.ts:307 🎯 Waypoint selection: closest=0 (dist=3.2), target=2 (lookahead=2)
+ai.ts:566 ⚠️ AI crash prevention: speed 4.0 > 3, penalty: 200
+scoreSimplifiedMove @ ai.ts:566
+ai.ts:578 ⚠️ AI corner safety: speed 4.0 > 3.5 at entry, penalty: 15
+scoreSimplifiedMove @ ai.ts:578
+ai.ts:771 🧲 AI racing line attraction: far from line (7.6), alignment=0.92, bonus=+37
+ai.ts:1396   Move {"x":1,"y":1}: score=33.7, align=4.00, FORWARD, speed=4.0
+ai.ts:1408 🏆 SELECTED: {"x":1,"y":0} with score 216.6 (align=3.00, FORWARD, speed=3.0)
+ai.ts:1416 🏆 BEST MOVE SELECTED: {"x":1,"y":0} with score 216.6
+ai.ts:307 🎯 Waypoint selection: closest=0 (dist=3.0), target=2 (lookahead=2)
+ai.ts:1421 🤖 AI AI Opponent (medium) enhanced move: {
+  "position": {
+    "x": 7,
+    "y": 15
+  },
+  "velocity": {
+    "x": -1,
+    "y": 3
+  },
+  "chosenMove": {
+    "x": 1,
+    "y": 0
+  },
+  "score": "216.65",
+  "racingLineDistance": "5.0",
+  "cornerType": "entry",
+  "targetSpeed": 2
+}
+game.ts:879 🏁 AI Opponent's Car crossed finish line! Object
+game.ts:579 ✓ AI Opponent's Car passed checkpoint 3 (valid progression) Object
+game.ts:934 ✅ AI Opponent's Car completed valid lap 1! (all checkpoints passed)
+game.ts:940 🏆 AI Opponent's Car finished the race! Time: 102.4s
+ai.ts:1328 ⏱️ Path planning timed out after 100ms

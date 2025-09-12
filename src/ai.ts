@@ -598,6 +598,11 @@ function scoreSimplifiedMove(
   // CRITICAL: Check if this move leads to an illegal position next turn
   const futurePos = { x: nextPos.x + velAfter.x, y: nextPos.y + velAfter.y }
   
+  // Calculate racing line distance early for penalty reductions
+  const distanceToRacingLine = distance(nextPos, targetPoint.pos)
+  const nearRacingLine = distanceToRacingLine < 10
+  const boundaryReduction = nearRacingLine ? 0.6 : 1.0 // 40% penalty reduction near racing line
+  
   // Check if future position would be outside track boundaries
   const futureOutsideTrack = (
     futurePos.x <= 2 || futurePos.x >= 48 || 
@@ -605,12 +610,14 @@ function scoreSimplifiedMove(
     (futurePos.x >= 12 && futurePos.x <= 38 && futurePos.y >= 10 && futurePos.y <= 25) // Inside inner boundary
   )
   
-  // ENHANCED: More aggressive predictive crash prevention
+  // ENHANCED: More aggressive predictive crash prevention - but reduced near racing line
   if (futureOutsideTrack) {
-    score -= 2000 // Even more massive penalty to ensure this move is never selected
+    // Reduce crash penalty when near racing line to allow more aggressive racing
+    const crashPenalty = nearRacingLine ? 1500 : 2000
+    score -= crashPenalty
     
     if (isFeatureEnabled('debugMode')) {
-      console.warn(`⚠️ AI PREDICTIVE CRASH: move ${JSON.stringify({x: velAfter.x, y: velAfter.y})} -> future pos (${futurePos.x.toFixed(1)}, ${futurePos.y.toFixed(1)}) is ILLEGAL! Penalty: -2000`)
+      console.warn(`⚠️ AI PREDICTIVE CRASH: move ${JSON.stringify({x: velAfter.x, y: velAfter.y})} -> future pos (${futurePos.x.toFixed(1)}, ${futurePos.y.toFixed(1)}) is ILLEGAL! Penalty: -${crashPenalty}${nearRacingLine ? ' (racing line bonus)' : ''}`)
     }
   }
   
@@ -626,32 +633,38 @@ function scoreSimplifiedMove(
   const bottomDist = 33 - nextPos.y
   const minBoundaryDist = Math.min(leftDist, rightDist, topDist, bottomDist)
   
-  // PROGRESSIVE BOUNDARY PENALTIES based on distance and speed
+  // Use previously calculated racing line variables for boundary penalties
+  // PROGRESSIVE BOUNDARY PENALTIES based on distance and speed - REDUCED for better racing
   if (minBoundaryDist < OUTER_MARGIN_3) {
     // CRITICAL: Very close to boundary - severe penalties
-    const proximityPenalty = (OUTER_MARGIN_3 - minBoundaryDist) * 300
-    const speedPenalty = futureSpeed * 200 // Heavy penalty for any speed near critical boundary
+    const baseProximityPenalty = (OUTER_MARGIN_3 - minBoundaryDist) * 250 // Reduced from 300
+    const baseSpeedPenalty = futureSpeed * 150 // Reduced from 200
+    const proximityPenalty = baseProximityPenalty * boundaryReduction
+    const speedPenalty = baseSpeedPenalty * boundaryReduction
     score -= proximityPenalty + speedPenalty
     
     if (isFeatureEnabled('debugMode')) {
-      console.warn(`🚨 AI CRITICAL boundary proximity: dist=${minBoundaryDist.toFixed(1)}, speed=${futureSpeed.toFixed(1)}, penalty: ${(proximityPenalty + speedPenalty).toFixed(0)}`)
+      console.warn(`🚨 AI CRITICAL boundary proximity: dist=${minBoundaryDist.toFixed(1)}, speed=${futureSpeed.toFixed(1)}, penalty: ${(proximityPenalty + speedPenalty).toFixed(0)}${nearRacingLine ? ' (racing line bonus)' : ''}`)
     }
   } else if (minBoundaryDist < OUTER_MARGIN_2) {
     // WARNING: Close to boundary - moderate penalties  
-    const proximityPenalty = (OUTER_MARGIN_2 - minBoundaryDist) * 100
-    const speedPenalty = futureSpeed > 2.0 ? (futureSpeed - 2.0) * 150 : 0
+    const baseProximityPenalty = (OUTER_MARGIN_2 - minBoundaryDist) * 80 // Reduced from 100
+    const baseSpeedPenalty = futureSpeed > 2.0 ? (futureSpeed - 2.0) * 120 : 0 // Reduced from 150
+    const proximityPenalty = baseProximityPenalty * boundaryReduction
+    const speedPenalty = baseSpeedPenalty * boundaryReduction
     score -= proximityPenalty + speedPenalty
     
     if (isFeatureEnabled('debugMode') && speedPenalty > 0) {
-      console.warn(`⚠️ AI boundary warning: dist=${minBoundaryDist.toFixed(1)}, speed=${futureSpeed.toFixed(1)}, penalty: ${(proximityPenalty + speedPenalty).toFixed(0)}`)
+      console.warn(`⚠️ AI boundary warning: dist=${minBoundaryDist.toFixed(1)}, speed=${futureSpeed.toFixed(1)}, penalty: ${(proximityPenalty + speedPenalty).toFixed(0)}${nearRacingLine ? ' (racing line bonus)' : ''}`)
     }
   } else if (minBoundaryDist < OUTER_MARGIN_1) {
     // CAUTION: Approaching boundary - light penalties for high speed
-    const speedPenalty = futureSpeed > 3.5 ? (futureSpeed - 3.5) * 50 : 0
+    const baseSpeedPenalty = futureSpeed > 3.5 ? (futureSpeed - 3.5) * 40 : 0 // Reduced from 50
+    const speedPenalty = baseSpeedPenalty * boundaryReduction
     score -= speedPenalty
   }
   
-  // PREDICTIVE SAFETY: Check if we're heading toward boundaries
+  // PREDICTIVE SAFETY: Check if we're heading toward boundaries - REDUCED penalties
   const predictivePos = { x: nextPos.x + velAfter.x, y: nextPos.y + velAfter.y }
   const futureBoundaryDist = Math.min(
     predictivePos.x - 2, 48 - predictivePos.x, predictivePos.y - 2, 33 - predictivePos.y
@@ -659,10 +672,12 @@ function scoreSimplifiedMove(
   
   if (futureBoundaryDist < 1.0) {
     // Next move after this one would be very close to boundary
-    score -= (1.0 - futureBoundaryDist) * 400
+    const basePenalty = (1.0 - futureBoundaryDist) * 350 // Reduced from 400
+    const penalty = basePenalty * boundaryReduction
+    score -= penalty
     
     if (isFeatureEnabled('debugMode')) {
-      console.warn(`🚨 AI predictive boundary danger: future dist=${futureBoundaryDist.toFixed(1)}, penalty: ${((1.0 - futureBoundaryDist) * 400).toFixed(0)}`)
+      console.warn(`🚨 AI predictive boundary danger: future dist=${futureBoundaryDist.toFixed(1)}, penalty: ${penalty.toFixed(0)}${nearRacingLine ? ' (racing line bonus)' : ''}`)
     }
   }
   
@@ -696,20 +711,35 @@ function scoreSimplifiedMove(
     }
   }
   
-  // 4. RACING LINE FACTOR: Stay reasonably close to optimal path
-  const lineDistance = distance(nextPos, targetPoint.pos)
-  score -= lineDistance * 8 // Moderate penalty for being off racing line
+  // 4. RACING LINE FACTOR: Stay reasonably close to optimal path - ENHANCED
+  // Note: distanceToRacingLine already calculated above for boundary reduction
+  score -= distanceToRacingLine * 6 // Reduced from 8 to allow more flexibility
   
-  // Progressive penalty for being very far off line
-  if (lineDistance > 8) {
-    score -= Math.pow(lineDistance - 8, 1.5) * 5
+  // Progressive penalty for being very far off line - less aggressive
+  if (distanceToRacingLine > 10) { // Increased threshold from 8
+    score -= Math.pow(distanceToRacingLine - 10, 1.3) * 4 // Reduced from 1.5 * 5
   }
   
-  // CRITICAL: Racing line attraction when far from optimal path
+  // Extra acceleration bonus on corner exits when following racing line
+  if (targetPoint.cornerType === 'exit' && distanceToRacingLine < 8 && futureSpeed > currentSpeed) {
+    score += (futureSpeed - currentSpeed) * 15 // Bonus for accelerating out of corners
+  }
+  
+  // ENHANCED: Strong bonus for being close to racing line
+  if (distanceToRacingLine <= 5) {
+    const proximityBonus = (5 - distanceToRacingLine) * 25 // Strong bonus for being close
+    score += proximityBonus
+    
+    if (isFeatureEnabled('debugMode') && proximityBonus > 20) {
+      console.log(`🎯 AI racing line proximity bonus: dist=${distanceToRacingLine.toFixed(1)}, bonus=+${proximityBonus.toFixed(0)}`)
+    }
+  }
+  
+  // ENHANCED: Racing line attraction - start earlier and be more aggressive
   // This helps the AI get back on track when safety measures push it off course
   const currentLineDistance = distance(currentCar.pos, targetPoint.pos)
-  if (currentLineDistance > 10) {
-    // We're very far from racing line - add strong attraction toward it
+  if (currentLineDistance > 5) { // Reduced threshold from 6 to 5
+    // We're far from racing line - add strong attraction toward it
     const currentToTarget = {
       x: targetPoint.pos.x - currentCar.pos.x,
       y: targetPoint.pos.y - currentCar.pos.y
@@ -736,11 +766,11 @@ function scoreSimplifiedMove(
           (moveDirection.y / moveMagnitude) * raceLineDirection.y
         )
         
-        // Strong bonus for moves that take us toward racing line when we're far off
-        const attractionBonus = raceLineAlignment * (currentLineDistance - 10) * 15
+        // Much stronger bonus for moves that take us toward racing line
+        const attractionBonus = raceLineAlignment * (currentLineDistance - 5) * 40 // Increased from 25 to 40
         score += attractionBonus
         
-        if (isFeatureEnabled('debugMode') && attractionBonus > 50) {
+        if (isFeatureEnabled('debugMode') && attractionBonus > 30) {
           console.log(`🧲 AI racing line attraction: far from line (${currentLineDistance.toFixed(1)}), alignment=${raceLineAlignment.toFixed(2)}, bonus=+${attractionBonus.toFixed(0)}`)
         }
       }

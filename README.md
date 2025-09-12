@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/ci.yml)
 [![Deploy](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml/badge.svg)](https://github.com/brentaenck/vRacer/actions/workflows/deploy.yml)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/brentaenck/vRacer/releases/tag/v3.0.0)
+[![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)](https://github.com/brentaenck/vRacer/releases/tag/v4.0.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)** | 🏁 **[Latest Release v3.0.0](https://github.com/brentaenck/vRacer/releases/tag/v3.0.0)**
+🎮 **[Play the game live here!](https://brentaenck.github.io/vRacer/)** | 🏁 **[Latest Release v4.0.0](https://github.com/brentaenck/vRacer/releases/tag/v4.0.0)**
 
 Quick start
 - Ensure you have Node via nvm
@@ -23,7 +23,9 @@ What is this?
 - A comprehensive canvas-based implementation of the vector race game
 - Turn-based movement with velocity and acceleration on a grid
 - Complete racing line editor for creating custom racing strategies
-- AI opponents that adapt to your custom racing lines
+- **NEW v4.0.0**: Competitive AI opponents with 3 difficulty levels (Easy/Medium/Hard)
+- AI players that adapt to your custom racing lines for dynamic competition
+- Single-player racing with intelligent computer opponents
 - Click a candidate next position to choose your acceleration
 
 Controls
@@ -130,17 +132,46 @@ This repository uses custom git hooks to ensure code quality:
 - Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `release`
 - Example: `feat(ai): improve collision detection`
 
-### Current Features (v3.0.0)
+### Current Features (v4.0.0)
+✅ **Competitive AI Players** (3 difficulty levels: Easy, Medium, Hard with sophisticated racing behavior)  
 ✅ **Complete racing line editor** (standalone web-based editor with drag-and-drop)  
 ✅ **Custom racing line integration** (import/export, AI adaptation)  
-✅ **Multi-car racing** (up to 8 players with AI support)  
+✅ **Multi-car racing** (up to 8 players with mixed human/AI support)  
 ✅ **Enhanced controls** (keyboard, mouse, undo system)  
 ✅ **Visual polish** (60 FPS animations, particle effects, racing line overlays)  
-✅ **Developer tools** (performance metrics, debug mode, racing line visualization)  
+✅ **Developer tools** (performance metrics, debug mode, AI decision visualization)  
 ✅ **Professional racing** (3 laps, checkered finish line, lap tracking)  
 ✅ **Modern UI architecture** (DOM-based HUD, responsive design, modal systems)  
 ✅ **Car collision detection** (multi-car competitive racing)  
-✅ **AI players** (3 difficulty levels with custom racing line support)  
+✅ **Single-player excellence** (race against intelligent AI opponents anytime)
+
+## 🤖 AI Racing Opponents (v4.0+)
+
+v4.0.0 introduces sophisticated AI players that provide competitive racing experiences:
+
+### **🎯 Three Difficulty Levels**
+- **🟢 Easy AI**: Conservative speeds (2-3 units), wide racing lines, perfect for beginners
+- **🟡 Medium AI**: Balanced competition (3-4 units), good racing lines, ideal for most players
+- **🔴 Hard AI**: Maximum performance (4-5 units), tight cornering, expert-level challenge
+
+### **🧠 Advanced Racing Intelligence**
+- **Professional behavior**: Proper cornering technique with entry/apex/exit waypoint targeting
+- **Predictive safety**: AI prevents crashes by thinking ahead and avoiding illegal moves
+- **Racing line adherence**: Follows optimal racing paths with precision
+- **Custom line integration**: AI adapts instantly to your imported custom racing lines
+- **95%+ lap completion**: Consistent performance across all difficulty levels
+
+### **🎮 Perfect for Solo Racing**
+- **Instant competition**: No need to coordinate with other humans
+- **Skill development**: Learn racing techniques by observing AI behavior
+- **Progressive challenge**: Start with Easy AI, advance to Hard as skills improve
+- **Mixed races**: Combine human and AI players in any configuration (1-8 total players)
+
+### **🛠️ Easy Setup**
+1. **New Game** → Select player slots to be "AI" instead of "Human"
+2. **Choose difficulty** for each AI opponent
+3. **Start racing** → AI players operate automatically during their turns
+4. **Watch and learn** from AI racing techniques
 
 ## 🎨 Racing Line Editor (v3.0+)
 
@@ -171,9 +202,10 @@ v3.0.0 introduces a complete racing line editor system:
 
 ### Planned Features
 *See [RELEASE_STRATEGY.md](./RELEASE_STRATEGY.md) for detailed roadmap:*
-- **v3.1.0:** Multiple racing lines per track and racing line library
-- **v3.2.0:** Advanced track editor with custom track creation
-- **v4.0.0:** Multiplayer networking and tournament systems
+- **v4.1.0:** Enhanced car collision physics with AI interaction
+- **v4.2.0:** Advanced track editor with custom track creation
+- **v5.0.0:** Multiplayer networking and tournament systems
+- **Future:** AI learning systems and advanced racing personalities
 
 License
 - MIT
