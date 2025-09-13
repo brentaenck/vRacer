@@ -61,8 +61,8 @@ export const FEATURES: FeatureFlags = {
   graphPaperGrid: true,       // Enhanced grid with coordinate indicators
   dualStyling: true,          // Modern UI with paper canvas - ENABLED for better UX
   
-  // Development and debugging - ENABLED for AI testing
-  debugMode: true,            // Show extra info for development
+  // Development and debugging
+  debugMode: false,           // Show extra info for development (disabled by default)
   performanceMetrics: true,   // FPS counter, render time
   aiPlayers: true,            // Computer-controlled cars
 };
