@@ -2724,7 +2724,7 @@ function drawAITargetVisualization(ctx: CanvasRenderingContext2D, car: any, play
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
     ctx.fillRect(labelX - 2, labelY - labelHeight + 2, labelWidth, labelHeight)
     
-    ctx.fillStyle = player.color
+    ctx.fillStyle = '#ffffff'  // Use white text for better visibility on dark background
     ctx.fillText(labelText, labelX, labelY)
     
     // Draw distance info
@@ -2761,12 +2761,23 @@ function drawSimplifiedAIVisualization(ctx: CanvasRenderingContext2D, car: any, 
   ctx.arc(carX, carY, 12, 0, Math.PI * 2)
   ctx.stroke()
   
-  // Draw AI label
-  ctx.fillStyle = player.color
+  // Draw AI label with background for visibility
   ctx.font = '10px Arial'
   ctx.globalAlpha = 0.8
   ctx.setLineDash([])
-  ctx.fillText('AI', carX + 8, carY - 8)
+  
+  // Add small background rectangle for text visibility
+  const labelText = 'AI'
+  const labelWidth = ctx.measureText(labelText).width + 4
+  const labelHeight = 12
+  const labelX = carX + 8
+  const labelY = carY - 8
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+  ctx.fillRect(labelX - 2, labelY - 9, labelWidth, labelHeight)
+  
+  ctx.fillStyle = '#ffffff'  // Use white text for better visibility
+  ctx.fillText(labelText, labelX, labelY)
   
   // Draw velocity vector if car is moving
   const velMagnitude = Math.sqrt(car.vel.x * car.vel.x + car.vel.y * car.vel.y)
