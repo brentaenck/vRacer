@@ -2,6 +2,115 @@
 
 This document provides detailed release summaries with context, impact analysis, and development insights for each vRacer release. For technical changelogs, see [CHANGELOG.md](./CHANGELOG.md).
 
+## 🔧 v4.0.1 - Debug System Polish: Cleaner User Experience
+*Released: January 11, 2025*
+
+### **✅ Release Summary**
+
+**Release Type**: Patch release (4.0.0 → 4.0.1)  
+**Focus**: Debug system improvements for cleaner default user experience and better development tools
+
+### **🎮 What's New for Players**
+
+#### **1. Cleaner Default Interface**
+
+vRacer now starts with a **clean, professional interface** by default. Previous versions showed debug information (racing lines, AI targeting indicators, checkpoints) that could be distracting for casual racing.
+
+**What You'll Notice:**
+- **Cleaner racing view** without technical overlays
+- **Focus on the action** - just cars, track, and racing
+- **Professional appearance** suitable for all types of users
+- **Better first impression** for new players
+
+#### **2. Easy Debug Access (When You Want It)**
+
+Developer and advanced users can still access all debug features easily:
+
+**Option 1: Browser Console Toggle**
+```javascript
+// Enable debug mode instantly
+toggleFeature('debugMode')
+```
+
+**Option 2: Code Setting** (for developers)
+```typescript
+// In src/features.ts, change:
+debugMode: true,  // Enable debug visualizations
+```
+
+**What Debug Mode Shows When Enabled:**
+- 🟢 **Racing line waypoints** with speed indicators
+- 🎯 **AI targeting lines** showing AI decision-making
+- 📍 **Checkpoint indicators** for lap validation
+- 📈 **Performance metrics** and frame rate info
+
+### **🐛 Fixed Issues**
+
+#### **3. Debug Text Visibility Problems**
+
+**Issue Resolved**: Some debug text was invisible due to poor color contrast
+
+**Before v4.0.1:**
+- AI debug labels used player colors (deep blue, purple) on black backgrounds
+- Text appeared as **black boxes with invisible text**
+- Debug information was unreadable for certain player colors
+
+**After v4.0.1:**
+- ✅ **White text on dark backgrounds** for maximum contrast
+- ✅ **Always readable** regardless of player car colors
+- ✅ **Professional appearance** for debug information
+
+### **🛠️ Technical Improvements**
+
+#### **4. Enhanced Debug System**
+
+**For Developers and Advanced Users:**
+- **Better text contrast**: All debug labels now use proper color schemes
+- **Maintained functionality**: Debug system works exactly as before when enabled
+- **Runtime control**: Easy to toggle debug mode on/off during gameplay
+- **Zero performance impact**: Changes only affect visual appearance
+
+### **🎯 Impact on Different Users**
+
+#### **5. For Casual Players**
+- **Better first experience**: Clean interface without technical distractions
+- **Focus on racing**: Nothing interfering with the pure racing experience
+- **Professional look**: Game appears polished and ready for any audience
+
+#### **6. For Developers/Advanced Users**
+- **Easy debug access**: Simple toggle to enable all debug features
+- **Better visibility**: Debug information is now always readable
+- **Improved development**: Better tools for understanding AI behavior and game mechanics
+
+#### **7. For AI Racing**
+- **Cleaner AI races**: Watch AI opponents without debug overlays by default
+- **Optional analysis**: Enable debug mode to see AI decision-making when needed
+- **Better learning**: Debug mode remains excellent for understanding racing techniques
+
+### **🚀 Quick Usage Guide**
+
+#### **8. Normal Racing (Default)**
+- Just start vRacer and enjoy clean racing
+- All AI features work perfectly without any debug display
+- Professional, distraction-free experience
+
+#### **9. Debug Mode (When Needed)**
+1. **Open browser console** (F12 in most browsers)
+2. **Type**: `toggleFeature('debugMode')`
+3. **Press Enter** - debug visualizations appear immediately
+4. **Toggle again** to turn off debug mode
+
+### **🏆 Why This Release Matters**
+
+vRacer v4.0.1 represents the **final polish** of the major v4.0.0 AI release. While v4.0.0 introduced groundbreaking AI players, it was optimized for development with debug features enabled. v4.0.1 makes vRacer truly **production-ready** with:
+
+- **Clean default experience** for all users
+- **Professional appearance** suitable for any context
+- **Preserved power-user features** for developers and enthusiasts
+- **Perfect balance** between simplicity and functionality
+
+**vRacer is now ready for mainstream use while maintaining its powerful development and analysis capabilities.**
+
 ## 🤖 v4.0.0 - Competitive AI Players: Complete Racing Intelligence
 *Released: January 11, 2025*
 

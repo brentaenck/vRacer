@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [4.0.1] - 2025-01-11
+
+### 🐛 **Debug System Improvements**
+
+#### Fixed
+- **AI Debug Text Visibility**: Resolved black text on black background issue in debug visualization
+  - AI target visualization labels now use white text (#ffffff) instead of player colors on dark backgrounds
+  - AI indicator labels now have dark backgrounds (rgba(0,0,0,0.6)) with white text for better contrast
+  - Fixed invisible text that appeared when AI players had dark colors (deep blue, purple, etc.)
+
+#### Changed
+- **Debug Mode Default Setting**: Changed `debugMode` from `true` to `false` by default in `src/features.ts`
+  - Provides cleaner default user experience without debug overlays
+  - Removes racing line visualization, AI targeting indicators, and checkpoint labels from default view
+  - Debug system remains fully functional when enabled via feature flags or runtime toggle
+
+#### 🎯 Improved
+- **User Experience**: Clean, production-ready interface by default without debug clutter
+- **Debug Accessibility**: All debug text elements now clearly readable regardless of player color scheme
+- **Development Workflow**: Debug features still easily accessible when needed for development
+
+### 🔧 Technical
+- Updated debug visualization rendering functions in `src/game.ts`
+- Enhanced text contrast and background handling for AI debug labels
+- Maintained full backward compatibility of debug system functionality
+
 ## [4.0.0] - 2025-01-11
 
 ### 🤖 **MAJOR: Competitive AI Players - Full Production Release**
