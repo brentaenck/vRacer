@@ -1385,16 +1385,33 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     if (currentPlayer && currentCar) {
       const speed = Math.sqrt(currentCar.vel.x * currentCar.vel.x + currentCar.vel.y * currentCar.vel.y)
       
-      // Build leaderboard data
-      const hudLeaderboard = leaderboard.map(({ car, player, position }) => ({
-        position,
-        playerName: player.name,
-        playerColor: player.color,
-        status: car.finished ? 
-          `🏆 ${(car.finishTime! / 1000).toFixed(1)}s` :
-          car.crashed ? '💥 Crashed' : `Lap ${car.currentLap}/${multiCarState.targetLaps}`,
-        isCurrentPlayer: player.id === currentPlayer.id
-      }))
+      // Build leaderboard data with expanded information
+      const hudLeaderboard = leaderboard.map(({ car, player, position }) => {
+        // Main status (finish/crash/racing)
+        const status = car.finished ? 
+          `🏆 Finished` :
+          car.crashed ? '💥 Crashed' : 'Racing'
+        
+        // Lap information
+        const lapStatus = car.finished ?
+          `${(car.finishTime! / 1000).toFixed(1)}s` :
+          `Lap ${car.currentLap}/${multiCarState.targetLaps}`
+        
+        // Position and velocity information
+        const positionInfo = `pos=(${car.pos.x.toFixed(0)},${car.pos.y.toFixed(0)})`
+        const velocityInfo = `vel=(${car.vel.x},${car.vel.y})`
+        
+        return {
+          position,
+          playerName: player.name,
+          playerColor: player.color,
+          status,
+          lapStatus,
+          positionInfo,
+          velocityInfo,
+          isCurrentPlayer: player.id === currentPlayer.id
+        }
+      })
       
       // Determine winner info for game completion
       const winner = leaderboard[0]

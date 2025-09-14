@@ -6,6 +6,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [4.1.0] - 2025-01-15
+
+### 🎨 **Leaderboard UI Improvements**
+
+#### 🎨 Changed
+- **Leaderboard Container Background**
+  - Updated from previous styling to muted blue-gray background (#94A3B8) with rounded corners
+  - Added consistent padding and subtle border for better visual definition
+  - Enhanced overall container appearance to match modern UI standards
+  - Maintained responsive design across all screen sizes
+
+- **Leaderboard Title Restructuring**
+  - Moved "Leaderboard" title from inside leaderboard section to Player Info section header
+  - Positioned title above current player turn indicator for better information hierarchy
+  - Increased font size to 20px to match other sidebar section headers
+  - Improved visual consistency across all UI sections
+
+- **Player Card Layout Optimization**
+  - Restructured player cards to two-line format for better information density
+  - First line: Player icon and name (with increased 16px font size for prominence)
+  - Second line: Position, velocity, and lap information (12px font size for readability)
+  - Expanded card widths from ~180-220px to 200-240px range with responsive adjustments
+  - Enhanced mobile optimization with adjusted width ranges (160-200px on small screens)
+
+#### 🔧 Technical
+- Updated CSS layout system for improved leaderboard container styling
+- Enhanced responsive design with optimized width calculations
+- Improved font size hierarchy for better readability and visual balance
+- Maintained compatibility with existing multi-car racing functionality
+
+### 🎯 **Impact on User Experience**
+- **Enhanced Readability**: Larger player names and optimized font sizes improve information scanning
+- **Better Visual Hierarchy**: Clearer separation between leaderboard sections and content
+- **Modern Appearance**: Updated container styling provides professional look and feel
+- **Improved Mobile Experience**: Responsive design ensures consistent appearance across devices
+- **Consistent UI Language**: Leaderboard styling now matches overall application design system
+
 ## [4.0.2] - 2025-01-14
 
 ### 🎨 **New Game Modal UI Improvements**

@@ -107,6 +107,9 @@ function checkAITurn() {
     aiTurnTimeout = null
   }
   
+  // Pause AI when track editor is active
+  if (isFeatureEnabled('trackEditor') && isEditorActive()) return
+  
   // Only handle AI turns in multi-car mode
   if (!isMultiCarGame(state)) return
   
@@ -186,7 +189,10 @@ function render() {
       statusEl.textContent = JSON.stringify(debugInfo, null, 2)
     }
   } else {
-    if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+    // Show track editor status if active
+    if (isFeatureEnabled('trackEditor') && isEditorActive()) {
+      statusEl.textContent = '🛠️ Track Editor Active - Game Paused'
+    } else if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car status
       const multiCarState = state as any
       const currentPlayer = multiCarState.players[multiCarState.currentPlayerIndex]
@@ -227,6 +233,9 @@ setTimeout(() => {
 // Mouse hover for improved controls
 if (isFeatureEnabled('improvedControls')) {
   canvas.addEventListener('mousemove', (e) => {
+    // Skip game mouse handling if track editor is active
+    if (isFeatureEnabled('trackEditor') && isEditorActive()) return
+    
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car mode handling
       const multiCarState = state as any
@@ -285,6 +294,9 @@ if (isFeatureEnabled('improvedControls')) {
   })
   
   canvas.addEventListener('mouseleave', () => {
+    // Skip game mouse handling if track editor is active
+    if (isFeatureEnabled('trackEditor') && isEditorActive()) return
+    
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car mode
       const multiCarState = state as any
@@ -304,6 +316,9 @@ if (isFeatureEnabled('improvedControls')) {
 }
 
 canvas.addEventListener('click', (e) => {
+  // Skip game click handling if track editor is active
+  if (isFeatureEnabled('trackEditor') && isEditorActive()) return
+  
   if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
     // Multi-car mode handling
     const multiCarState = state as any
@@ -681,16 +696,20 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'd' || e.key === 'D') { debugToggle.checked = !debugToggle.checked; debugToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'l' || e.key === 'L') { handleRacingLineKeyboardShortcut() }
   
-  // Improved controls: Undo functionality
+  // Improved controls: Undo functionality (skip if track editor is active)
   if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {
+    if (isFeatureEnabled('trackEditor') && isEditorActive()) {
+      // Let track editor handle undo instead
+      return
+    }
     state = undoMove(state)
     render()
     e.preventDefault()
     return
   }
   
-  // Improved controls: Keyboard movement
-  if (isFeatureEnabled('improvedControls')) {
+  // Improved controls: Keyboard movement (skip if track editor is active)
+  if (isFeatureEnabled('improvedControls') && !(isFeatureEnabled('trackEditor') && isEditorActive())) {
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car mode handling
       const multiCarState = state as any

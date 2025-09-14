@@ -2,6 +2,146 @@
 
 This document provides detailed release summaries with context, impact analysis, and development insights for each vRacer release. For technical changelogs, see [CHANGELOG.md](./CHANGELOG.md).
 
+## 🎨 v4.1.0 - Leaderboard UI Enhancement: Modern Racing Interface
+*Released: January 15, 2025*
+
+### **✅ Release Summary**
+
+**Release Type**: Minor feature release (4.0.2 → 4.1.0)  
+**Focus**: Leaderboard UI improvements for enhanced readability, modern appearance, and better information hierarchy
+
+### **🏁 What's New for Players**
+
+#### **1. Modern Leaderboard Container Design**
+
+**The Enhancement**: The leaderboard now features a visually distinct container that better integrates with the overall UI design.
+
+**What You'll Notice:**
+- 🎨 **Subtle blue-gray background** (#94A3B8) that provides gentle contrast without being distracting
+- 🔲 **Rounded corners and padding** creating a modern, card-like appearance
+- 📱 **Responsive design** that looks great on all screen sizes
+- ✨ **Professional appearance** matching the polished UI standards of v4.x
+
+#### **2. Improved Information Hierarchy**
+
+**The Problem**: The leaderboard title was buried inside the player list, making it less prominent than other UI sections.
+
+**Smart Restructuring:**
+- 📍 **Relocated title**: "Leaderboard" now appears in the Player Info section header
+- 📏 **Consistent sizing**: Title font size increased to 20px to match other section headers
+- 🔄 **Better flow**: Title positioned above current player turn indicator for logical reading order
+- 🎯 **Clear hierarchy**: Easier to distinguish between different UI sections
+
+#### **3. Optimized Player Card Layout**
+
+**Enhanced Information Display**:
+- 📝 **Two-line format**: More efficient use of space with better information density
+- 👤 **Line 1**: Player icon + name (16px font - larger and more prominent)
+- 📊 **Line 2**: Position, velocity, and lap details (12px font - optimized readability)
+- 📐 **Wider cards**: Expanded from 180-220px to 200-240px range for better content display
+- 📱 **Mobile optimized**: Responsive widths (160-200px on small screens)
+
+### **💡 Why These Changes Matter**
+
+#### **4. Enhanced Racing Experience During Multi-Car Races**
+
+**Before v4.1.0**: Functional but Basic
+- Leaderboard was functional but lacked visual polish
+- Information hierarchy wasn't immediately clear
+- Player names were smaller and less prominent
+- Container blended into background without definition
+
+**After v4.1.0**: Professional Racing Interface
+- ✨ **Quick information scanning**: Larger player names help identify racers instantly
+- 🎯 **Clear visual structure**: Easy to distinguish leaderboard from other UI elements
+- 📊 **Better race tracking**: Improved layout makes it easier to follow race progress
+- 🏁 **Professional appearance**: Interface quality matching the sophisticated AI racing capabilities
+
+#### **5. Improved Multi-Player Race Management**
+
+**Especially Valuable for:**
+- **4+ player races** where quick identification of player positions is crucial
+- **Mixed human/AI races** where distinguishing different player types is important
+- **Competitive racing** where rapid status checking during turns enhances strategy
+- **Spectator mode** where clear leaderboard presentation improves viewing experience
+
+### **🎮 Impact on Different Racing Scenarios**
+
+#### **6. Solo Racing Against AI**
+- **Quick status checks**: Easily see your position relative to AI opponents
+- **Performance tracking**: Clear display of your racing progress
+- **Enhanced engagement**: Professional presentation increases immersion
+
+#### **7. Multiplayer Racing Sessions**
+- **Faster player identification**: Larger names help identify whose turn it is
+- **Better race awareness**: Clearer position and progress information
+- **Improved spectating**: Others can easily follow race progress
+
+#### **8. Mobile Racing Experience**
+- **Optimized for touch**: Responsive design works perfectly on smaller screens
+- **Clear readability**: Font sizes optimized for mobile viewing
+- **Professional mobile UI**: Matches quality of desktop experience
+
+### **🔧 Technical Excellence**
+
+#### **9. Responsive Design System**
+
+**Engineering Improvements:**
+- **Adaptive width calculations**: Player cards scale appropriately across screen sizes
+- **Optimized font hierarchy**: 16px names, 12px details, 20px headers for perfect readability
+- **CSS layout enhancements**: Modern container styling with proper spacing and borders
+- **Mobile-first responsive**: Tested and optimized for mobile, tablet, and desktop
+
+#### **10. Consistent UI Language**
+
+**Design System Maturity:**
+- **Matching section headers**: Leaderboard title now consistent with other UI sections
+- **Unified visual treatment**: Container styling matches overall application design
+- **Professional color palette**: Muted blue-gray complements existing UI colors
+- **Scalable design patterns**: Changes lay foundation for future UI improvements
+
+### **🎯 Perfect Complement to AI Racing**
+
+#### **11. Enhanced AI Competition Interface**
+
+This leaderboard enhancement perfectly complements vRacer's advanced AI players (introduced in v4.0.0):
+
+- **Clear AI vs Human distinction**: Better visual hierarchy helps identify player types
+- **Race progress tracking**: Easy monitoring of AI performance during competitive races
+- **Professional presentation**: UI quality now matches the sophisticated AI capabilities
+- **Multi-difficulty racing**: Clear leaderboard for tracking performance against Easy/Medium/Hard AI
+
+### **🚀 User Experience Evolution**
+
+#### **12. Interface Maturation Journey**
+
+**v4.0.0**: Introduced groundbreaking AI players  
+**v4.0.1**: Polished debug experience for cleaner default interface  
+**v4.0.2**: Enhanced New Game modal for professional setup experience  
+**v4.1.0**: Perfected leaderboard interface for optimal racing experience  
+
+**The Result**: vRacer now offers **complete interface excellence** across all major UI components, from game setup through active racing to result tracking.
+
+### **📱 Getting the Most from the New Leaderboard**
+
+#### **13. Best Practices for Racing**
+
+**During Active Racing:**
+- **Quick glances**: Use the prominent player names to quickly identify current racer
+- **Position awareness**: Check the two-line format for rapid status updates
+- **Progress tracking**: Monitor lap progress and velocity information efficiently
+
+**For Competitive Racing:**
+- **Strategic planning**: Use clear position information for racing strategy
+- **Performance analysis**: Track velocity patterns of opponents
+- **Race management**: Better awareness of overall race progress
+
+### **🏆 Minor Release, Major Impact**
+
+vRacer v4.1.0 demonstrates that **attention to UI details creates significant user experience improvements**. While this minor release focuses on leaderboard enhancements, the cumulative effect is a more professional, readable, and engaging racing interface that better serves both casual and competitive racing scenarios.
+
+**The Enhanced Leaderboard is Active Immediately** - no configuration needed, just start racing and enjoy the improved interface!
+
 ## 🎨 v4.0.2 - New Game Modal Polish: Professional Interface Design
 *Released: January 14, 2025*
 
