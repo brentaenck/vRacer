@@ -6,6 +6,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [4.0.2] - 2025-01-14
+
+### 🎨 **New Game Modal UI Improvements**
+
+#### Fixed
+- **Setting Dropdown Alignment**: Resolved misaligned Players and Laps combo boxes that were positioning relative to race settings container instead of their individual field containers
+  - Fixed flexbox layout with proper width constraints and overflow handling
+  - Eliminated excessive gap between labels and select dropdowns
+  - Improved label-select relationship in HTML form structure
+
+- **Combo Box Width**: Increased select field widths to properly display longest text options
+  - Expanded from 140px to 200px to accommodate "10 Laps (Endurance)" text
+  - Optimized label width (90px → 80px) to provide more space for selects
+  - Updated responsive breakpoints for consistent behavior across screen sizes
+
+#### Improved
+- **Consistent Rounded Corners**: Standardized border-radius values throughout New Game modal
+  - Form elements (selects, inputs, buttons): Consistent 6px rounded corners
+  - Container elements (panels, cards): Consistent 8px rounded corners
+  - Added visual styling to section containers (Quick Setup, Race Preview, Player Setup)
+  - Enhanced both paper and dual-style themes with proper corner rounding
+
+- **Visual Container Design**: Added proper backgrounds and borders to section containers
+  - Quick Setup, Race Preview, and Player Setup sections now have visible rounded containers
+  - Added subtle paper texture and shadows for depth in paper theme
+  - Applied modern dark containers with appropriate shadows in dual-style theme
+  - Improved visual hierarchy and professional appearance
+
+#### 🔧 Technical
+- Enhanced CSS layout system with fixed-width form elements and proper containment
+- Updated dual-style overrides to maintain consistency across both themes
+- Improved responsive design with adjusted breakpoints for wider select fields
+- Added comprehensive border-radius standardization across modal components
+
+### 🎯 **Impact on User Experience**
+- **Professional Appearance**: Eliminated jarring transitions between square and rounded corners
+- **Better Usability**: All text in dropdowns now fully visible and properly aligned
+- **Visual Consistency**: Harmonious design language throughout the interface
+- **Responsive Design**: Improved layout behavior across desktop, tablet, and mobile devices
+
 ## [4.0.1] - 2025-01-11
 
 ### 🐛 **Debug System Improvements**

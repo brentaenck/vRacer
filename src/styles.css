@@ -885,7 +885,7 @@
   background: var(--ui-bg-tertiary);
   color: var(--ui-text-primary);
   border: 1px solid var(--ui-border-medium);
-  border-radius: 4px;
+  border-radius: 6px; /* Increased from 4px for consistency */
   padding: 4px 8px;
   min-width: 24px;
   text-align: center;
@@ -958,12 +958,18 @@
 }
 
 /* Modern action buttons in modals */
-.dual-style-enabled .action-buttons,
-.dual-style-enabled .preset-buttons {
+.dual-style-enabled .action-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
+}
+
+.dual-style-enabled .preset-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: var(--spacing-sm);
 }
 
 .dual-style-enabled .btn-action,
@@ -982,12 +988,11 @@
 
 .dual-style-enabled .preset-btn {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: flex-start; /* Match the 2-line layout */
   gap: var(--spacing-xs);
-  text-align: center;
-  min-width: 120px;
-  padding: var(--spacing-lg) !important;
+  text-align: left;
+  min-height: 32px;
+  padding: var(--spacing-xs) var(--spacing-sm) !important;
   background: var(--ui-bg-primary) !important;
   color: var(--ui-text-primary) !important;
   border: 1px solid var(--ui-border-medium) !important;
@@ -1000,17 +1005,33 @@
 }
 
 .dual-style-enabled .preset-icon {
-  font-size: 24px;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.dual-style-enabled .preset-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .dual-style-enabled .preset-name {
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--ui-text-primary);
+  margin: 0;
 }
 
 .dual-style-enabled .preset-desc {
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.1;
   color: var(--ui-text-secondary);
+  margin: 0;
 }
 
 /* ========================================
@@ -1035,6 +1056,10 @@
   background: var(--ui-bg-primary) !important;
   color: var(--ui-text-primary);
   border: 1px solid var(--ui-border-light);
+  border-radius: var(--radius-lg) !important; /* Add consistent rounded corners */
+  padding: var(--spacing-md) !important;
+  margin-bottom: var(--spacing-sm) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Settings groups and preview stats - Level 3 */
@@ -1124,17 +1149,45 @@
 /* Setting items and labels */
 .dual-style-enabled .setting-item {
   color: var(--ui-text-primary);
+  /* Ensure proper containment and positioning in dual-style */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  /* Force label to behave as flex container and not expand beyond bounds */
+  gap: var(--spacing-xs); /* Reduced gap to eliminate big space */
+  justify-content: space-between; /* Spread label and select to fill space properly */
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .dual-style-enabled .setting-label {
   color: var(--ui-text-primary) !important;
   font-weight: 500;
+  /* Match reduced label width */
+  min-width: 80px;
+  max-width: 80px;
+  width: 80px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dual-style-enabled .setting-select {
   background: var(--ui-bg-secondary) !important;
   color: var(--ui-text-primary) !important;
   border: 1px solid var(--ui-border-medium) !important;
+  /* Match the increased width for longer text */
+  min-width: 200px;
+  max-width: 200px;
+  width: 200px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  box-sizing: border-box;
+  position: relative;
+  /* Force select to stay within bounds */
+  margin: 0;
+  vertical-align: top;
 }
 
 /* Split panel body styling */
@@ -2523,7 +2576,7 @@ kbd {
   font-size: 24px;
   cursor: pointer;
   padding: var(--spacing-xs);
-  border-radius: 4px;
+  border-radius: 6px; /* Increased from 4px for consistency */
   transition: all var(--transition-fast);
   line-height: 1;
   width: 32px;
@@ -2617,7 +2670,7 @@ kbd {
   padding: var(--spacing-md);
   background: var(--paper-aged);
   border: 2px solid var(--pencil-light);
-  border-radius: 6px;
+  border-radius: 8px; /* Increased from 6px to match larger container style */
   cursor: pointer;
   transition: all var(--transition-fast);
   /* Paper texture */
@@ -3190,21 +3243,21 @@ kbd {
 }
 
 /* =============================================================================
-   ENHANCED NEW GAME MODAL STYLES
+   ENHANCED NEW GAME MODAL STYLES - OPTIMIZED LAYOUT
    ============================================================================= */
 
-/* New Game Modal Container */
+/* New Game Modal Container - More space efficient */
 .new-game-modal {
-  max-width: 800px;
+  max-width: 780px;
   width: 95%;
 }
 
-/* Split Panel Body Layout */
+/* Split Panel Body Layout - Optimized */
 .split-panel-body {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: var(--spacing-xl);
-  min-height: 400px;
+  grid-template-columns: 320px 1fr; /* Increased to 320px to fit wider selects (80px + 200px) */
+  gap: var(--spacing-lg);
+  min-height: 340px; /* Reduced from 380px due to compact preset buttons */
 }
 
 /* =============================================================================
@@ -3214,11 +3267,14 @@ kbd {
 .race-settings-panel {
   background: var(--paper-aged);
   border-radius: 8px;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   border: 2px solid var(--pencil-dark);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
+  /* Ensure proper containment */
+  overflow: hidden;
+  position: relative;
   /* Paper texture */
   background-image: radial-gradient(circle at 1px 1px, var(--paper-shadow) 0.5px, transparent 0);
   background-size: 15px 15px;
@@ -3232,66 +3288,99 @@ kbd {
 .race-preview-section {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  /* Add visual container styling with rounded corners */
+  background: var(--paper-bg);
+  border: 1px solid var(--pencil-light);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  /* Subtle paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-aged) 0.8px, transparent 0);
+  background-size: 18px 18px;
+  /* Slight shadow for depth */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .section-title {
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--pencil-dark);
-  margin: 0;
+  margin: 0 0 var(--spacing-sm) 0; /* Increased bottom margin for better spacing */
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  /* Hand-drawn underline */
-  border-bottom: 2px solid var(--pencil-dark);
-  border-image: repeating-linear-gradient(
-    90deg,
-    var(--pencil-dark) 0px,
-    var(--pencil-dark) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
-  padding-bottom: var(--spacing-xs);
+  gap: 6px;
+  /* Simplified underline */
+  border-bottom: 1px solid var(--pencil-medium);
+  padding-bottom: 6px;
   transform: rotate(-0.1deg);
 }
 
-/* Settings Group */
+/* Settings Group - Reduced nesting */
 .settings-group {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
+  /* Ensure proper containment of setting items */
+  overflow: visible;
+  position: relative;
 }
 
 .setting-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs); /* Reduced gap to eliminate big space */
   color: var(--pencil-dark);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  padding: var(--spacing-xs) 0;
+  min-height: 32px; /* Ensure consistent height */
+  /* Ensure proper containment and positioning */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  /* Force label to behave as flex container and not expand beyond bounds */
+  justify-content: space-between; /* Spread label and select to fill space properly */
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .setting-label {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  flex: 1;
+  gap: 6px;
+  min-width: 80px; /* Slightly reduced for more select space */
+  max-width: 80px; 
+  width: 80px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .setting-select {
   background: var(--paper-bg);
-  border: 2px solid var(--pencil-medium);
+  border: 1px solid var(--pencil-medium);
   color: var(--pencil-dark);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: 4px;
-  font-size: 13px;
+  padding: 6px var(--spacing-sm);
+  border-radius: 6px; /* Increased from 4px for consistency */
+  font-size: 12px;
   font-family: var(--font-primary);
-  min-width: 120px;
+  min-width: 200px; /* Increased further to definitely fit longest text */
+  max-width: 200px; 
+  width: 200px;
+  flex-shrink: 0; /* Don't shrink */
+  flex-grow: 0; /* Don't grow */
   transition: all var(--transition-fast);
+  /* Ensure proper positioning within container */
+  box-sizing: border-box;
+  position: relative;
+  /* Force select to stay within bounds */
+  margin: 0;
+  vertical-align: top;
   /* Paper texture */
   background-image: radial-gradient(circle at 1px 1px, var(--paper-aged) 0.5px, transparent 0);
   background-size: 10px 10px;
@@ -3303,24 +3392,23 @@ kbd {
   box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
 }
 
-/* Quick Setup Presets */
+/* Quick Setup Presets - Compact Layout */
 .preset-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
 }
 
 .preset-btn {
   background: var(--paper-aged);
-  border: 2px solid var(--pencil-light);
+  border: 1px solid var(--pencil-light);
   color: var(--pencil-dark);
-  padding: var(--spacing-sm);
-  border-radius: 6px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 6px; /* Increased from 4px for consistency */
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--spacing-xs);
   font-family: var(--font-primary);
   /* Paper texture */
@@ -3328,7 +3416,9 @@ kbd {
   background-size: 12px 12px;
   /* Hand-drawn style */
   transform: rotate(0.1deg);
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  min-height: 32px; /* Ensure consistent height for 2 lines */
 }
 
 .preset-btn:hover {
@@ -3348,37 +3438,52 @@ kbd {
 
 .preset-icon {
   font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px; /* Slight alignment adjustment */
+  line-height: 1;
+}
+
+.preset-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0; /* Allow text wrapping if needed */
 }
 
 .preset-name {
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
 }
 
 .preset-desc {
   font-size: 11px;
-  opacity: 0.8;
+  opacity: 0.75;
+  line-height: 1.1;
+  margin: 0;
 }
 
-/* Race Preview Stats */
+/* Race Preview Stats - Compact */
 .preview-stats {
   display: flex;
   justify-content: space-between;
-  gap: var(--spacing-sm);
+  gap: 6px;
 }
 
 .preview-stat {
   background: var(--bg-secondary);
   border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
+  border-radius: 6px; /* Standardized from var(--radius-sm) */
+  padding: 6px var(--spacing-xs);
   text-align: center;
   flex: 1;
 }
 
 .stat-value {
   display: block;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-accent);
   line-height: 1;
@@ -3386,34 +3491,45 @@ kbd {
 
 .stat-label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
-  margin-top: var(--spacing-xs);
+  margin-top: 2px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 /* =============================================================================
-   RIGHT PANEL: PLAYER SETUP
+   RIGHT PANEL: PLAYER SETUP - OPTIMIZED
    ============================================================================= */
 
 .player-setup-panel {
   display: flex;
   flex-direction: column;
+  min-height: 0; /* Allow shrinking */
 }
 
 .players-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  /* Add visual container styling with rounded corners */
+  background: var(--paper-bg);
+  border: 1px solid var(--pencil-light);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  /* Subtle paper texture */
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-aged) 0.8px, transparent 0);
+  background-size: 18px 18px;
+  /* Slight shadow for depth */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Player Grid Layout */
+/* Player Grid Layout - Optimized */
 .player-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   flex: 1;
 }
 
@@ -3442,11 +3558,11 @@ kbd {
 
 .player-card-header {
   background: var(--paper-bg);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-bottom: 2px solid var(--pencil-dark);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--pencil-medium);
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 
 .player-color {
@@ -3475,7 +3591,7 @@ kbd {
 }
 
 .player-number {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--pencil-dark);
   margin: 0;
@@ -3483,20 +3599,20 @@ kbd {
 }
 
 .player-card-body {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   flex: 1;
 }
 
 .player-name {
   background: var(--paper-bg);
-  border: 2px solid var(--pencil-medium);
+  border: 1px solid var(--pencil-medium);
   color: var(--pencil-dark);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: 4px;
-  font-size: 13px;
+  padding: 6px var(--spacing-sm);
+  border-radius: 6px; /* Increased from 4px for consistency */
+  font-size: 12px;
   font-family: var(--font-primary);
   width: 100%;
   transition: all var(--transition-fast);
@@ -3511,11 +3627,13 @@ kbd {
   box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
 }
 
-/* AI Controls */
+/* AI Controls - Optimized layout */
 .player-ai-controls {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
 }
 
 .ai-toggle {
@@ -3563,7 +3681,7 @@ kbd {
 }
 
 .ai-toggle-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-secondary);
 }
@@ -3572,11 +3690,13 @@ kbd {
   background: var(--bg-secondary);
   border: 1px solid var(--border-secondary);
   color: var(--text-primary);
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
+  padding: 4px var(--spacing-xs);
+  border-radius: 6px; /* Standardized from var(--radius-sm) */
+  font-size: 10px;
   font-family: var(--font-primary);
   transition: all var(--transition-fast);
+  min-width: 70px;
+  margin-left: var(--spacing-xs);
 }
 
 .player-ai-diff:focus {
@@ -3593,74 +3713,85 @@ kbd {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-lg) var(--spacing-xl);
-  gap: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .footer-status {
-  flex: 1;
-  color: var(--text-secondary);
-  font-size: 14px;
+  color: var(--text-primary);
+  font-size: 13px;
   font-weight: 500;
 }
 
 .footer-actions {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   align-items: center;
 }
 
 .btn-secondary {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-secondary);
+  background: var(--bg-secondary);
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  border: 1px solid var(--border-secondary);
   padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
+  border-radius: 8px; /* Standardized from var(--radius-md) */
+  font-size: 13px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .btn-secondary:hover {
-  background: var(--bg-accent);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
   border-color: var(--border-accent);
-  transform: translateY(-1px);
-}
-
-.btn-primary {
-  background: var(--text-accent);
-  color: var(--bg-primary);
-  font-weight: 600;
-  font-size: 14px;
-  padding: var(--spacing-md) var(--spacing-xl);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:hover {
-  background: var(--racing-blue);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
 }
 
 /* =============================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE OPTIMIZATIONS FOR NEW GAME MODAL
    ============================================================================= */
 
+/* Medium screens - adjust grid layout */
 @media (max-width: 1024px) {
+  .split-panel-body {
+    grid-template-columns: 340px 1fr; /* Further increased for medium screens */
+    gap: var(--spacing-md);
+  }
+  
+  .race-settings-panel {
+    padding: var(--spacing-sm);
+  }
+  
+  .section-title {
+    font-size: 15px;
+  }
+  
+  .setting-label {
+    font-size: 12px;
+    min-width: 70px;
+    max-width: 70px;
+    width: 70px;
+  }
+  
+  .setting-select {
+    min-width: 180px; /* Further increased for medium screens */
+    max-width: 180px;
+    width: 180px;
+    font-size: 11px;
+  }
+}
+
+/* Tablet and smaller - stack panels vertically */
+@media (max-width: 768px) {
   .new-game-modal {
-    max-width: 700px;
+    max-width: 95%;
+    width: 100%;
+    margin: var(--spacing-md);
   }
   
   .split-panel-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
+    min-height: auto;
   }
   
   .race-settings-panel {
@@ -3672,13 +3803,21 @@ kbd {
   }
   
   .preset-buttons {
-    flex-direction: row;
+    grid-template-columns: 1fr 1fr;
     gap: var(--spacing-xs);
   }
   
   .preset-btn {
-    padding: var(--spacing-xs);
-    flex: 1;
+    padding: 6px;
+    min-height: 28px;
+  }
+  
+  .preset-icon {
+    font-size: 16px;
+  }
+  
+  .preset-content {
+    gap: 1px;
   }
   
   .preset-name {
@@ -3686,65 +3825,115 @@ kbd {
   }
   
   .preset-desc {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .new-game-modal {
-    max-width: 95%;
-    width: 95%;
-  }
-  
-  .split-panel-body {
-    gap: var(--spacing-md);
-  }
-  
-  .race-settings-panel {
-    padding: var(--spacing-md);
+    font-size: 10px;
   }
   
   .player-grid {
     grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
   }
   
   .enhanced-footer {
     flex-direction: column;
     gap: var(--spacing-sm);
+    padding: var(--spacing-md);
     text-align: center;
   }
   
   .footer-actions {
-    justify-content: center;
     width: 100%;
-  }
-  
-  .btn-primary {
-    flex: 1;
+    justify-content: center;
   }
 }
 
+/* Mobile - further optimizations */
 @media (max-width: 480px) {
-  .player-grid {
-    grid-template-columns: 1fr;
+  .modal-content {
+    margin: var(--spacing-sm);
   }
   
-  .preview-stats {
-    flex-direction: row;
+  .section-title {
+    font-size: 14px;
+    gap: 4px;
+  }
+  
+  .setting-item {
+    font-size: 12px;
     gap: var(--spacing-xs);
   }
   
-  .preset-buttons {
-    flex-direction: column;
+  .setting-label {
+    min-width: 70px;
+    max-width: 70px;
+    width: 70px;
+    font-size: 11px;
+  }
+  
+  .setting-select {
+    min-width: 120px; /* Increased to fit longer text on mobile */
+    max-width: 120px;
+    width: 120px;
+    font-size: 10px;
+    padding: 4px 6px;
   }
   
   .preset-btn {
-    padding: var(--spacing-sm);
+    padding: 4px 6px;
+    min-height: 24px;
+  }
+  
+  .preset-icon {
+    font-size: 14px;
+    margin-top: 1px;
+  }
+  
+  .preset-content {
+    gap: 0;
+  }
+  
+  .preset-name {
+    font-size: 11px;
+    line-height: 1.1;
   }
   
   .preset-desc {
-    display: block;
+    font-size: 9px;
+    line-height: 1;
+  }
+  
+  .preview-stat {
+    padding: 4px 2px;
+  }
+  
+  .stat-value {
+    font-size: 14px;
+  }
+  
+  .stat-label {
+    font-size: 9px;
+  }
+  
+  .player-card-header {
+    padding: 6px var(--spacing-xs);
+  }
+  
+  .player-number {
+    font-size: 11px;
+  }
+  
+  .player-name {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+  
+  .ai-toggle-label {
+    font-size: 10px;
+  }
+  
+  .player-ai-diff {
+    font-size: 9px;
+    padding: 2px 4px;
+    min-width: 60px;
   }
 }
 
