@@ -158,6 +158,9 @@ const TrackEditor = {
         // Property inputs
         this.setupPropertyInputs();
         
+        // File management buttons
+        this.setupFileManagement();
+        
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
         
@@ -166,6 +169,9 @@ const TrackEditor = {
             this.updateCanvasRect();
             this.render();
         });
+        
+        // Auto-save setup
+        this.setupAutoSave();
     },
     
     // Set up property input handlers
@@ -178,6 +184,7 @@ const TrackEditor = {
         if (trackName) {
             trackName.addEventListener('change', (e) => {
                 this.track.metadata.name = e.target.value;
+                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -185,6 +192,7 @@ const TrackEditor = {
         if (trackAuthor) {
             trackAuthor.addEventListener('change', (e) => {
                 this.track.metadata.author = e.target.value;
+                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -192,6 +200,7 @@ const TrackEditor = {
         if (trackDifficulty) {
             trackDifficulty.addEventListener('change', (e) => {
                 this.track.metadata.difficulty = e.target.value;
+                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -199,6 +208,7 @@ const TrackEditor = {
         if (trackDescription) {
             trackDescription.addEventListener('change', (e) => {
                 this.track.metadata.description = e.target.value;
+                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -261,6 +271,10 @@ const TrackEditor = {
                 // We don't add the first point again, but we mark the boundary as closed
                 if (!boundary.closed) {
                     boundary.closed = true;
+                    
+                    // Track change for auto-save
+                    this.incrementAutoSave();
+                    
                     this.updateStatus(`${this.boundaryType} boundary completed!`);
                     this.validateTrack();
                     this.updateStats();
@@ -273,6 +287,10 @@ const TrackEditor = {
         
         // Add point to boundary
         boundary.push({ x: pos.x, y: pos.y });
+        
+        // Track change for auto-save
+        this.incrementAutoSave();
+        
         this.updateStats();
         this.updateOutput();
         this.render();
@@ -309,6 +327,9 @@ const TrackEditor = {
             if (boundary.length < 3) {
                 delete boundary.closed;
             }
+            
+            // Track change for auto-save
+            this.incrementAutoSave();
             
             // Update everything
             this.validateTrack();
@@ -401,6 +422,9 @@ const TrackEditor = {
     // Handle mouse up
     handleMouseUp(e) {
         if (this.isDragging && this.dragPointIndex !== -1) {
+            // Track change for auto-save
+            this.incrementAutoSave();
+            
             // Finish dragging
             this.isDragging = false;
             const pointNum = this.dragPointIndex + 1;
@@ -428,8 +452,322 @@ const TrackEditor = {
         }
     },
     
+    // Show save dialog
+    showSaveDialog() {
+        const name = prompt('Enter track name:', this.track.metadata.name || 'Untitled Track');
+        if (name) {
+            this.saveTrack(name);
+        }
+    },
+    
+    // Save track with given name
+    saveTrack(name) {
+        try {
+            this.track.metadata.name = name;
+            this.track.metadata.lastModified = new Date().toISOString();
+            
+            // Store boundary closed states in metadata (since JSON doesn't preserve array properties)
+            this.track.metadata.boundaries = {
+                outerClosed: !!this.track.track.outer.closed,
+                innerClosed: !!this.track.track.inner.closed
+            };
+            
+            FileManager.saveTrack(this.track, name);
+            this.updateStatus(`Track "${name}" saved successfully`);
+            this.autoSaveActions = 0; // Reset since we just saved
+        } catch (error) {
+            console.error('Save failed:', error);
+            this.updateStatus('Save failed: ' + error.message, 'error');
+        }
+    },
+    
+    // Show load dialog
+    showLoadDialog() {
+        const tracks = FileManager.listSavedTracks();
+        if (tracks.length === 0) {
+            alert('No saved tracks found.');
+            return;
+        }
+        
+        // Create simple dialog
+        let message = 'Select track to load:\n\n';
+        tracks.forEach((track, index) => {
+            const modified = new Date(track.modified).toLocaleDateString();
+            message += `${index + 1}. ${track.displayName} (${modified})\n`;
+        });
+        
+        const choice = prompt(message + '\nEnter number (1-' + tracks.length + '):', '1');
+        const trackIndex = parseInt(choice) - 1;
+        
+        if (trackIndex >= 0 && trackIndex < tracks.length) {
+            this.loadTrack(tracks[trackIndex].name);
+        }
+    },
+    
+    // Load track by name
+    loadTrack(name) {
+        try {
+            const trackData = FileManager.loadTrack(name);
+            if (trackData) {
+                this.loadTrackData(trackData);
+                this.updateStatus(`Track "${name}" loaded successfully`);
+            } else {
+                this.updateStatus('Track not found', 'error');
+            }
+        } catch (error) {
+            console.error('Load failed:', error);
+            this.updateStatus('Load failed: ' + error.message, 'error');
+        }
+    },
+    
+    // Load track data into editor
+    loadTrackData(trackData) {
+        this.track = trackData;
+        
+        // Restore boundary closed states from metadata (since JSON doesn't preserve array properties)
+        if (this.track.metadata && this.track.metadata.boundaries) {
+            if (this.track.metadata.boundaries.outerClosed) {
+                this.track.track.outer.closed = true;
+            }
+            if (this.track.metadata.boundaries.innerClosed) {
+                this.track.track.inner.closed = true;
+            }
+        }
+        
+        // Reset editor state
+        this.selectedTool = 'pen';
+        this.selectedMode = 'outer';
+        this.selectedPointIndex = -1;
+        this.hoveredPointIndex = -1;
+        this.isDrawing = false;
+        
+        // Update UI
+        this.updatePropertyInputs();
+        this.updateToolUI();
+        this.updateModeUI();
+        this.render();
+    },
+    
+    // Export track as JSON file
+    exportTrack() {
+        try {
+            const name = this.track.metadata.name || 'track';
+            const cleanName = name.replace(/[^a-zA-Z0-9-_]/g, '_');
+            
+            // Update metadata before export
+            this.track.metadata.lastModified = new Date().toISOString();
+            this.track.metadata.version = '1.0.0';
+            
+            // Store boundary closed states in metadata (since JSON doesn't preserve array properties)
+            this.track.metadata.boundaries = {
+                outerClosed: !!this.track.track.outer.closed,
+                innerClosed: !!this.track.track.inner.closed
+            };
+            
+            FileManager.exportTrack(this.track, `${cleanName}.json`);
+            this.updateStatus(`Track exported as ${cleanName}.json`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            this.updateStatus('Export failed: ' + error.message, 'error');
+        }
+    },
+    
+    // Import track from JSON file
+    async importTrack() {
+        try {
+            const hasUnsavedChanges = this.autoSaveActions > 0;
+            if (hasUnsavedChanges) {
+                const shouldContinue = confirm('You have unsaved changes. Import track anyway?');
+                if (!shouldContinue) return;
+            }
+            
+            this.updateStatus('Select JSON file to import...');
+            const trackData = await FileManager.importTrack();
+            
+            if (trackData) {
+                this.loadTrackData(trackData);
+                this.updateStatus(`Track "${trackData.metadata?.name || 'Imported Track'}" imported successfully`);
+                this.fitView(); // Fit the view to show the imported track
+            } else {
+                this.updateStatus('Import cancelled');
+            }
+        } catch (error) {
+            console.error('Import failed:', error);
+            this.updateStatus('Import failed: ' + error.message, 'error');
+        }
+    },
+    
+    // Show manage tracks dialog
+    showManageTracksDialog() {
+        const tracks = FileManager.listSavedTracks();
+        
+        if (tracks.length === 0) {
+            alert('No saved tracks to manage.');
+            return;
+        }
+        
+        // Create dialog content
+        let message = 'Manage Saved Tracks:\n\n';
+        tracks.forEach((track, index) => {
+            const modified = new Date(track.modified).toLocaleDateString();
+            const size = track.pointCount + track.waypointCount;
+            message += `${index + 1}. "${track.displayName}" by ${track.author}\n`;
+            message += `   Modified: ${modified} | Points: ${size} | Difficulty: ${track.difficulty}\n\n`;
+        });
+        
+        message += 'Actions:\n';
+        message += 'D + number: Delete track (e.g., "D1")\n';
+        message += 'CLEAR ALL: Delete all saved tracks\n';
+        message += 'Press Cancel or Enter to close\n\n';
+        
+        const action = prompt(message + 'Enter action:', '');
+        
+        if (!action) return; // User cancelled
+        
+        this.processManageAction(action.trim().toUpperCase(), tracks);
+    },
+    
+    // Process manage tracks action
+    processManageAction(action, tracks) {
+        try {
+            if (action === 'CLEAR ALL') {
+                const confirm = prompt(
+                    `⚠️  WARNING: This will permanently delete ALL ${tracks.length} saved tracks!\n\n` +
+                    'Type "DELETE ALL" to confirm:', 
+                    ''
+                );
+                
+                if (confirm === 'DELETE ALL') {
+                    this.clearAllTracks(tracks);
+                } else {
+                    this.updateStatus('Clear all tracks cancelled');
+                }
+                
+            } else if (action.startsWith('D') && action.length > 1) {
+                const trackNumber = parseInt(action.substring(1));
+                
+                if (trackNumber >= 1 && trackNumber <= tracks.length) {
+                    this.deleteTrack(tracks[trackNumber - 1]);
+                } else {
+                    this.updateStatus('Invalid track number', 'error');
+                }
+                
+            } else if (action !== '') {
+                this.updateStatus('Unknown action. Use D1, D2, etc. or CLEAR ALL', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Manage tracks error:', error);
+            this.updateStatus('Action failed: ' + error.message, 'error');
+        }
+    },
+    
+    // Delete single track
+    deleteTrack(track) {
+        const confirm = window.confirm(
+            `Delete track "${track.displayName}" by ${track.author}?\n\n` +
+            `Modified: ${new Date(track.modified).toLocaleString()}\n` +
+            `This action cannot be undone.`
+        );
+        
+        if (confirm) {
+            try {
+                const success = FileManager.deleteTrack(track.name);
+                if (success) {
+                    this.updateStatus(`Track "${track.displayName}" deleted successfully`);
+                } else {
+                    this.updateStatus('Failed to delete track', 'error');
+                }
+            } catch (error) {
+                console.error('Delete track error:', error);
+                this.updateStatus('Delete failed: ' + error.message, 'error');
+            }
+        } else {
+            this.updateStatus('Delete cancelled');
+        }
+    },
+    
+    // Clear all tracks
+    clearAllTracks(tracks) {
+        let deletedCount = 0;
+        let errors = [];
+        
+        for (const track of tracks) {
+            try {
+                const success = FileManager.deleteTrack(track.name);
+                if (success) {
+                    deletedCount++;
+                } else {
+                    errors.push(track.displayName);
+                }
+            } catch (error) {
+                errors.push(`${track.displayName} (${error.message})`);
+            }
+        }
+        
+        // Also clear auto-save
+        try {
+            FileManager.clearAutoSave();
+        } catch (error) {
+            console.warn('Failed to clear auto-save:', error);
+        }
+        
+        if (errors.length === 0) {
+            this.updateStatus(`Successfully deleted all ${deletedCount} tracks and cleared auto-save`);
+        } else {
+            this.updateStatus(
+                `Deleted ${deletedCount}/${tracks.length} tracks. Errors: ${errors.join(', ')}`, 
+                'error'
+            );
+        }
+    },
+    
+    // Create new track (with confirmation)
+    newTrack() {
+        const hasUnsavedChanges = this.autoSaveActions > 0;
+        if (hasUnsavedChanges) {
+            const shouldContinue = confirm('You have unsaved changes. Create new track anyway?');
+            if (!shouldContinue) return;
+        }
+        
+        this.loadBlankTemplate();
+        this.updateStatus('New track created');
+        // Note: loadBlankTemplate() already calls render()
+    },
+    
     // Handle keyboard shortcuts
     handleKeyDown(e) {
+        // File operations
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case 's':
+                    e.preventDefault();
+                    this.showSaveDialog();
+                    break;
+                case 'o':
+                    e.preventDefault();
+                    this.showLoadDialog();
+                    break;
+                case 'i':
+                    e.preventDefault();
+                    this.importTrack();
+                    break;
+                case 'e':
+                    e.preventDefault();
+                    this.exportTrack();
+                    break;
+                case 'n':
+                    e.preventDefault();
+                    this.newTrack();
+                    break;
+                case 'm':
+                    e.preventDefault();
+                    this.showManageTracksDialog();
+                    break;
+            }
+            return;
+        }
+        
         // Don't handle shortcuts if user is typing in inputs
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
             return;
@@ -842,13 +1180,100 @@ const TrackEditor = {
         
         this.track.metadata.name = 'Simple Oval';
         this.track.metadata.description = 'A basic oval racing circuit';
-        
         this.updatePropertyInputs();
-        this.validateTrack();
-        this.updateStats();
-        this.updateOutput();
-        this.fitView();
-        this.render();
+    },
+    
+    // Setup file management event handlers
+    setupFileManagement() {
+        // Save button
+        const saveBtn = document.getElementById('saveTrackBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.showSaveDialog());
+        }
+        
+        // Load button
+        const loadBtn = document.getElementById('loadTrackBtn');
+        if (loadBtn) {
+            loadBtn.addEventListener('click', () => this.showLoadDialog());
+        }
+        
+        // Export button
+        const exportBtn = document.getElementById('exportTrackBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportTrack());
+        }
+        
+        // Import button
+        const importBtn = document.getElementById('importTrackBtn');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => this.importTrack());
+        }
+        
+        // Manage Tracks button
+        const manageBtn = document.getElementById('manageTracksBtn');
+        if (manageBtn) {
+            manageBtn.addEventListener('click', () => this.showManageTracksDialog());
+        }
+        
+        // New Track button
+        const newTrackBtn = document.getElementById('newTrackBtn');
+        if (newTrackBtn) {
+            newTrackBtn.addEventListener('click', () => this.newTrack());
+        }
+    },
+    
+    // Setup auto-save functionality
+    setupAutoSave() {
+        // Auto-save every 30 seconds
+        setInterval(() => {
+            this.performAutoSave();
+        }, 30000);
+        
+        // Auto-save on significant actions
+        this.autoSaveActions = 0;
+        
+        // Check for existing auto-save on load
+        if (FileManager.hasAutoSave()) {
+            this.offerAutoSaveRestore();
+        }
+    },
+    
+    // Perform auto-save
+    performAutoSave() {
+        if (this.autoSaveActions > 0) {
+            // Store boundary closed states before auto-save
+            this.track.metadata.boundaries = {
+                outerClosed: !!this.track.track.outer.closed,
+                innerClosed: !!this.track.track.inner.closed
+            };
+            
+            FileManager.autoSave(this.track);
+            this.autoSaveActions = 0;
+            console.log('🔄 Track auto-saved');
+        }
+    },
+    
+    // Increment auto-save counter for significant actions
+    incrementAutoSave() {
+        this.autoSaveActions++;
+    },
+    
+    // Offer to restore auto-saved track
+    offerAutoSaveRestore() {
+        const autoSaveData = FileManager.loadAutoSave();
+        if (!autoSaveData) return;
+        
+        const autoSaveTime = new Date(autoSaveData.metadata.autoSaveTime).toLocaleString();
+        const shouldRestore = confirm(
+            `Found auto-saved track from ${autoSaveTime}.\n\nRestore auto-saved progress?`
+        );
+        
+        if (shouldRestore) {
+            this.loadTrackData(autoSaveData);
+            this.updateStatus('Restored auto-saved track');
+        } else {
+            FileManager.clearAutoSave();
+        }
     },
     
     loadBlankTemplate() {
