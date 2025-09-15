@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vRacer Track & Racing Line Editor</title>
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1>🏁 vRacer Track Editor</h1>
+                <span class="version">v1.0.0 Beta</span>
+            </div>
+            <div class="header-center">
+                <div class="mode-selector">
+                    <button id="trackMode" class="mode-btn active" data-mode="track">
+                        🗿 Track Design
+                    </button>
+                    <button id="racingLineMode" class="mode-btn" data-mode="racing">
+                        🏁 Racing Line
+                    </button>
+                    <button id="previewMode" class="mode-btn" data-mode="preview">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="newTrackBtn" class="btn btn-secondary">New Track</button>
+                <button id="loadTrackBtn" class="btn btn-secondary">Load</button>
+                <button id="saveTrackBtn" class="btn btn-primary">Save</button>
+                <button id="exportTrackBtn" class="btn btn-primary">Export</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar - Tools & Options -->
+            <aside class="sidebar left-sidebar">
+                <!-- Track Design Tools -->
+                <div id="trackTools" class="panel">
+                    <h3>🔨 Track Tools</h3>
+                    <div class="tool-palette">
+                        <button class="tool-btn active" data-tool="pen" title="Draw Track Boundary (P)">
+                            ✏️ Pen
+                        </button>
+                        <button class="tool-btn" data-tool="eraser" title="Erase Points (E)">
+                            🗑️ Eraser
+                        </button>
+                        <button class="tool-btn" data-tool="move" title="Move Points (M)">
+                            ↔️ Move
+                        </button>
+                        <button class="tool-btn" data-tool="startfinish" title="Set Start/Finish (S)">
+                            🏁 Start/Finish
+                        </button>
+                    </div>
+                    
+                    <div class="boundary-selector">
+                        <h4>Boundary Type</h4>
+                        <label><input type="radio" name="boundary" value="outer" checked> Outer Track</label>
+                        <label><input type="radio" name="boundary" value="inner"> Inner (Holes)</label>
+                    </div>
+                </div>
+
+                <!-- Racing Line Tools -->
+                <div id="racingLineTools" class="panel" style="display: none;">
+                    <h3>🏎️ Racing Line Tools</h3>
+                    <div class="tool-palette">
+                        <button class="tool-btn active" data-tool="select" title="Select Waypoint (S)">
+                            👆 Select
+                        </button>
+                        <button class="tool-btn" data-tool="add" title="Add Waypoint (A)">
+                            ➕ Add
+                        </button>
+                        <button class="tool-btn" data-tool="delete" title="Delete Waypoint (D)">
+                            ❌ Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View Options -->
+                <div class="panel">
+                    <h3>👁️ View Options</h3>
+                    <div class="control-group">
+                        <label><input type="checkbox" id="showGrid" checked> Show Grid</label>
+                        <label><input type="checkbox" id="snapToGrid" checked> Snap to Grid</label>
+                        <label><input type="checkbox" id="showTrackBounds" checked> Show Track</label>
+                        <label><input type="checkbox" id="showRacingLine" checked> Show Racing Line</label>
+                        <label><input type="checkbox" id="showWaypoints" checked> Show Waypoints</label>
+                        <label><input type="checkbox" id="showValidation"> Show Validation</label>
+                    </div>
+                </div>
+
+                <!-- Templates -->
+                <div class="panel">
+                    <h3>📋 Templates</h3>
+                    <div class="template-list">
+                        <button class="template-btn" data-template="oval">🔄 Simple Oval</button>
+                        <button class="template-btn" data-template="figure8">🎱 Figure 8</button>
+                        <button class="template-btn" data-template="circuit">🏎️ GP Circuit</button>
+                        <button class="template-btn" data-template="blank">📄 Blank Canvas</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Canvas Area -->
+            <main class="canvas-container">
+                <div class="canvas-toolbar">
+                    <div class="viewport-controls">
+                        <button id="zoomIn" class="btn btn-small">🔍 +</button>
+                        <button id="zoomOut" class="btn btn-small">🔍 -</button>
+                        <button id="fitView" class="btn btn-small">📐 Fit</button>
+                        <button id="resetView" class="btn btn-small">🎯 Reset</button>
+                    </div>
+                    <div class="canvas-info">
+                        <span>Zoom: <span id="zoomLevel">100%</span></span>
+                        <span>|</span>
+                        <span>Grid: <span id="gridSize">20px</span></span>
+                        <span>|</span>
+                        <span id="mousePosition">Mouse: (0, 0)</span>
+                    </div>
+                </div>
+                
+                <div class="canvas-wrapper">
+                    <canvas id="trackCanvas" width="1200" height="800"></canvas>
+                    <div class="canvas-overlay" id="canvasOverlay">
+                        <!-- Dynamic overlay content (tooltips, etc.) -->
+                    </div>
+                </div>
+                
+                <div class="status-bar">
+                    <span id="status">Ready - Select a tool to begin editing</span>
+                    <div class="status-right">
+                        <span id="selectedInfo">Nothing selected</span>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar - Properties & Validation -->
+            <aside class="sidebar right-sidebar">
+                <!-- Track Properties -->
+                <div class="panel">
+                    <h3>📋 Track Properties</h3>
+                    <div class="property-group">
+                        <label>
+                            Track Name:
+                            <input type="text" id="trackName" value="New Track" class="property-input">
+                        </label>
+                        <label>
+                            Author:
+                            <input type="text" id="trackAuthor" value="Anonymous" class="property-input">
+                        </label>
+                        <label>
+                            Difficulty:
+                            <select id="trackDifficulty" class="property-select">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Hard">Hard</option>
+                                <option value="Expert">Expert</option>
+                            </select>
+                        </label>
+                        <label>
+                            Description:
+                            <textarea id="trackDescription" class="property-textarea" placeholder="Describe your track..." rows="3"></textarea>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Waypoint Editor (Racing Line Mode) -->
+                <div id="waypointEditor" class="panel" style="display: none;">
+                    <h3>🎯 Waypoint Editor</h3>
+                    
+                    <div id="noWaypointSelection" class="no-selection">
+                        <p>Select a waypoint to edit its properties</p>
+                        <p><small>Double-click to add waypoints</small></p>
+                    </div>
+                    
+                    <div id="waypointProperties" class="waypoint-properties" style="display: none;">
+                        <h4>Waypoint <span id="waypointIndex">0</span></h4>
+                        
+                        <div class="control-group">
+                            <label>Position X: <input type="number" id="posX" step="0.1"></label>
+                            <label>Position Y: <input type="number" id="posY" step="0.1"></label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Target Speed: 
+                                <input type="range" id="targetSpeed" min="1" max="6" step="1" value="3">
+                                <span id="speedValue">3</span>
+                            </label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label><input type="checkbox" id="brakeZone"> Brake Zone</label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Corner Type:
+                                <select id="cornerType">
+                                    <option value="straight">Straight</option>
+                                    <option value="entry">Entry</option>
+                                    <option value="apex">Apex</option>
+                                    <option value="exit">Exit</option>
+                                </select>
+                            </label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Safe Zone:
+                                <select id="safeZone">
+                                    <option value="left">Left</option>
+                                    <option value="right">Right</option>
+                                    <option value="top">Top</option>
+                                    <option value="bottom">Bottom</option>
+                                </select>
+                            </label>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="insertWaypoint" class="btn btn-small btn-primary">Insert</button>
+                            <button id="deleteWaypoint" class="btn btn-small btn-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="panel">
+                    <h3>📊 Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Track Points:</span>
+                            <span id="trackPointCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Racing Waypoints:</span>
+                            <span id="waypointCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Track Length:</span>
+                            <span id="trackLength" class="stat-value">0 units</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Speed:</span>
+                            <span id="avgSpeed" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Results -->
+                <div id="validationResults" class="panel" style="display: none;">
+                    <h3>✅ Validation</h3>
+                    <div id="validationErrors" class="validation-errors"></div>
+                    <div id="validationWarnings" class="validation-warnings"></div>
+                    <div id="validationMetrics" class="validation-metrics"></div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom Panel - Code Output -->
+        <section class="bottom-panel">
+            <div class="panel-header">
+                <h3>📄 Generated Output</h3>
+                <div class="panel-controls">
+                    <div class="output-tabs">
+                        <button id="jsonTab" class="output-tab active">JSON Track</button>
+                        <button id="tsTab" class="output-tab">TypeScript</button>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="copyOutput" class="btn btn-small btn-primary">Copy</button>
+                        <button id="downloadOutput" class="btn btn-small btn-secondary">Download</button>
+                    </div>
+                </div>
+            </div>
+            <div class="code-container">
+                <pre id="outputCode" class="code-preview"><code>// Track data will be generated here...</code></pre>
+            </div>
+        </section>
+    </div>
+
+    <!-- Load JavaScript modules -->
+    <script src="js/utils.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/track-renderer.js"></script>
+    <script src="js/track-editor.js"></script>
+    <script src="js/racing-line-editor.js"></script>
+    <script src="js/file-manager.js"></script>
+    
+    <!-- Initialize the editor -->
+    <script>
+        // Initialize the unified track editor
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🏁 vRacer Track Editor v1.0.0 Beta');
+            console.log('🚀 Initializing unified track and racing line editor...');
+            
+            // Initialize all modules
+            TrackEditor.init();
+            console.log('✅ Track Editor initialized');
+        });
+    </script>
+</body>
+</html>
