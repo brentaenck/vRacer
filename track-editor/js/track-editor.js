@@ -73,6 +73,9 @@ const TrackEditor = {
     hoveredPoint: null,
     mousePos: { x: 0, y: 0 },
     dragStart: null,
+    isDragging: false,
+    dragPointIndex: -1,
+    dragBoundaryType: 'outer',
     
     // Initialize the editor
     init() {
@@ -277,12 +280,108 @@ const TrackEditor = {
         this.updateStatus(`Added point to ${this.boundaryType} boundary (${boundary.length} points)`);
     },
     
+    // Handle eraser tool
+    handleEraserTool(pos) {
+        const boundary = this.boundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
+        
+        // Find closest point within eraser range
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        const eraseRange = 8; // pixels
+        
+        for (let i = 0; i < boundary.length; i++) {
+            const point = boundary[i];
+            const distance = Math.sqrt(
+                Math.pow(pos.x - point.x, 2) + Math.pow(pos.y - point.y, 2)
+            );
+            
+            if (distance <= eraseRange && distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+            }
+        }
+        
+        if (closestIndex !== -1) {
+            // Remove the point
+            boundary.splice(closestIndex, 1);
+            
+            // If we removed points and now have fewer than 3, mark as not closed
+            if (boundary.length < 3) {
+                delete boundary.closed;
+            }
+            
+            // Update everything
+            this.validateTrack();
+            this.updateStats();
+            this.updateOutput();
+            this.render();
+            
+            this.updateStatus(`Removed point from ${this.boundaryType} boundary (${boundary.length} points remaining)`);
+        } else {
+        this.updateStatus(`No ${this.boundaryType} boundary point found to erase`);
+        }
+    },
+    
+    // Handle move tool
+    handleMoveTool(pos) {
+        const boundary = this.boundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
+        
+        // Find closest point within selection range
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        const selectRange = 10; // pixels
+        
+        for (let i = 0; i < boundary.length; i++) {
+            const point = boundary[i];
+            const distance = Math.sqrt(
+                Math.pow(pos.x - point.x, 2) + Math.pow(pos.y - point.y, 2)
+            );
+            
+            if (distance <= selectRange && distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+            }
+        }
+        
+        if (closestIndex !== -1) {
+            // Start dragging this point
+            this.selectedPoints = [closestIndex];
+            this.isDragging = true;
+            this.dragPointIndex = closestIndex;
+            this.dragBoundaryType = this.boundaryType;
+            
+            this.updateStatus(`Selected ${this.boundaryType} boundary point ${closestIndex + 1} - drag to move`);
+        } else {
+            // Deselect if clicking empty space
+            this.selectedPoints = [];
+            this.updateStatus(`Move tool active - click on a ${this.boundaryType} boundary point to select and drag`);
+        }
+        
+        this.render();
+    },
+    
     // Handle mouse move
     handleMouseMove(e) {
         const pos = this.getCanvasPosition(e);
         const worldPos = this.screenToWorld(pos);
         
         this.mousePos = worldPos;
+        
+        // Handle dragging for move tool
+        if (this.isDragging && this.dragPointIndex !== -1) {
+            const boundary = this.dragBoundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
+            const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
+            
+            if (boundary[this.dragPointIndex]) {
+                boundary[this.dragPointIndex].x = snappedPos.x;
+                boundary[this.dragPointIndex].y = snappedPos.y;
+                
+                // Update validation and output during drag
+                this.validateTrack();
+                this.updateStats();
+                this.updateOutput();
+            }
+        }
         
         // Update mouse position display
         const mousePositionEl = document.getElementById('mousePosition');
@@ -291,14 +390,23 @@ const TrackEditor = {
             mousePositionEl.textContent = `Mouse: (${snappedPos.x.toFixed(1)}, ${snappedPos.y.toFixed(1)})`;
         }
         
-    // Update hover state and render if needed
-        this.updateHover(worldPos);
-        this.updateLoopCloseStatus(worldPos);
+        // Update hover state and render if needed (but not during dragging)
+        if (!this.isDragging) {
+            this.updateHover(worldPos);
+            this.updateLoopCloseStatus(worldPos);
+        }
         this.render();
     },
     
     // Handle mouse up
     handleMouseUp(e) {
+        if (this.isDragging && this.dragPointIndex !== -1) {
+            // Finish dragging
+            this.isDragging = false;
+            const pointNum = this.dragPointIndex + 1;
+            this.updateStatus(`Moved ${this.dragBoundaryType} boundary point ${pointNum} - click another point to select`);
+            this.dragPointIndex = -1;
+        }
         this.dragStart = null;
     },
     
@@ -353,7 +461,11 @@ const TrackEditor = {
                 this.setMode('preview');
                 break;
             case 'escape':
+                // Clear selections and stop dragging
                 this.selectedPoints = [];
+                this.isDragging = false;
+                this.dragPointIndex = -1;
+                this.updateStatus(`${this.tool} tool active`);
                 this.render();
                 break;
         }
@@ -381,27 +493,39 @@ const TrackEditor = {
     
     // Set editor tool
     setTool(tool) {
+        // Clear any existing selections/dragging when changing tools
+        this.selectedPoints = [];
+        this.isDragging = false;
+        this.dragPointIndex = -1;
+        
         this.tool = tool;
         this.updateToolUI();
-        this.updateStatus(`Selected ${tool} tool`);
         
-        // Update cursor based on tool
+        // Update status with tool-specific instructions
         switch (tool) {
             case 'pen':
+                this.updateStatus(`Pen tool active - click to add ${this.boundaryType} boundary points`);
                 this.canvas.style.cursor = 'crosshair';
                 break;
             case 'eraser':
+                this.updateStatus(`Eraser tool active - click on ${this.boundaryType} boundary points to remove them`);
                 this.canvas.style.cursor = 'not-allowed';
                 break;
             case 'move':
+                this.updateStatus(`Move tool active - click on ${this.boundaryType} boundary points to select and drag`);
                 this.canvas.style.cursor = 'move';
                 break;
             case 'startfinish':
+                this.updateStatus(`Start/Finish tool active - click to place racing start/finish line`);
                 this.canvas.style.cursor = 'crosshair';
                 break;
             default:
+                this.updateStatus(`${tool} tool selected`);
                 this.canvas.style.cursor = 'default';
         }
+        
+        // Re-render to update visual state
+        this.render();
     },
     
     // Update mode UI
@@ -519,23 +643,63 @@ const TrackEditor = {
         // This would be used for highlighting hovered elements
         this.hoveredPoint = null;
         
-        // Check track boundary points
-        const allPoints = [...this.track.track.outer, ...this.track.track.inner];
-        for (let i = 0; i < allPoints.length; i++) {
-            const point = allPoints[i];
-            const distance = Math.sqrt(
-                Math.pow(worldPos.x - point.x, 2) + Math.pow(worldPos.y - point.y, 2)
-            );
+        // Only check hover for current boundary type when using eraser/move tools
+        if (this.tool === 'eraser' || this.tool === 'move') {
+            const boundary = this.boundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
+            const hoverRange = this.tool === 'eraser' ? 8 : 10;
             
-            if (distance <= 5) {
-                this.hoveredPoint = { type: 'track', index: i, point };
-                this.canvas.style.cursor = 'pointer';
-                return;
+            for (let i = 0; i < boundary.length; i++) {
+                const point = boundary[i];
+                const distance = Math.sqrt(
+                    Math.pow(worldPos.x - point.x, 2) + Math.pow(worldPos.y - point.y, 2)
+                );
+                
+                if (distance <= hoverRange) {
+                    this.hoveredPoint = { 
+                        type: 'track', 
+                        index: i, 
+                        point, 
+                        boundary: this.boundaryType,
+                        tool: this.tool 
+                    };
+                    this.canvas.style.cursor = this.tool === 'eraser' ? 'not-allowed' : 'grab';
+                    return;
+                }
+            }
+        } else {
+            // Check all boundary points for other tools
+            const allPoints = [...this.track.track.outer, ...this.track.track.inner];
+            for (let i = 0; i < allPoints.length; i++) {
+                const point = allPoints[i];
+                const distance = Math.sqrt(
+                    Math.pow(worldPos.x - point.x, 2) + Math.pow(worldPos.y - point.y, 2)
+                );
+                
+                if (distance <= 5) {
+                    this.hoveredPoint = { type: 'track', index: i, point };
+                    this.canvas.style.cursor = 'pointer';
+                    return;
+                }
             }
         }
         
-        // Reset cursor if not hovering over anything
-        this.canvas.style.cursor = this.tool === 'pen' ? 'crosshair' : 'default';
+        // Reset cursor based on current tool
+        switch (this.tool) {
+            case 'pen':
+                this.canvas.style.cursor = 'crosshair';
+                break;
+            case 'eraser':
+                this.canvas.style.cursor = 'not-allowed';
+                break;
+            case 'move':
+                this.canvas.style.cursor = this.isDragging ? 'grabbing' : 'move';
+                break;
+            case 'startfinish':
+                this.canvas.style.cursor = 'crosshair';
+                break;
+            default:
+                this.canvas.style.cursor = 'default';
+        }
     },
     
     escapeHtml(text) {
@@ -946,14 +1110,54 @@ const TrackEditor = {
     
     // Render preview elements
     renderPreview() {
-        // Render hover effects, tool previews, etc.
+        // Render hover effects for different tools
         if (this.hoveredPoint) {
             const point = this.hoveredPoint.point;
-            this.ctx.strokeStyle = '#ffffff';
-            this.ctx.lineWidth = 2 / this.view.zoom;
-            this.ctx.beginPath();
-            this.ctx.arc(point.x, point.y, 6 / this.view.zoom, 0, Math.PI * 2);
-            this.ctx.stroke();
+            
+            if (this.hoveredPoint.tool === 'eraser') {
+                // Red highlight for eraser
+                this.ctx.strokeStyle = '#ef4444';
+                this.ctx.fillStyle = '#ef444444';
+                this.ctx.lineWidth = 2 / this.view.zoom;
+                this.ctx.beginPath();
+                this.ctx.arc(point.x, point.y, 8 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+            } else if (this.hoveredPoint.tool === 'move') {
+                // Blue highlight for move
+                this.ctx.strokeStyle = '#3b82f6';
+                this.ctx.fillStyle = '#3b82f644';
+                this.ctx.lineWidth = 2 / this.view.zoom;
+                this.ctx.beginPath();
+                this.ctx.arc(point.x, point.y, 8 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+            } else {
+                // Default white highlight
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 2 / this.view.zoom;
+                this.ctx.beginPath();
+                this.ctx.arc(point.x, point.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.stroke();
+            }
+        }
+        
+        // Render selected points for move tool
+        if (this.tool === 'move' && this.selectedPoints.length > 0) {
+            const boundary = this.boundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
+            
+            for (const pointIndex of this.selectedPoints) {
+                if (boundary[pointIndex]) {
+                    const point = boundary[pointIndex];
+                    this.ctx.strokeStyle = '#22c55e';
+                    this.ctx.fillStyle = '#22c55e44';
+                    this.ctx.lineWidth = 3 / this.view.zoom;
+                    this.ctx.beginPath();
+                    this.ctx.arc(point.x, point.y, 10 / this.view.zoom, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                }
+            }
         }
         
         // Tool-specific previews
