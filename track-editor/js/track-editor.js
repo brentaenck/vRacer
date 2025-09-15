@@ -254,10 +254,16 @@ const TrackEditor = {
             );
             
             if (distance <= 10) {
-                // Close the loop
-                this.updateStatus(`${this.boundaryType} boundary completed!`);
-                this.validateTrack();
-                this.render();
+                // Close the loop by adding a marker or flag
+                // We don't add the first point again, but we mark the boundary as closed
+                if (!boundary.closed) {
+                    boundary.closed = true;
+                    this.updateStatus(`${this.boundaryType} boundary completed!`);
+                    this.validateTrack();
+                    this.updateStats();
+                    this.updateOutput();
+                    this.render();
+                }
                 return;
             }
         }
@@ -285,8 +291,9 @@ const TrackEditor = {
             mousePositionEl.textContent = `Mouse: (${snappedPos.x.toFixed(1)}, ${snappedPos.y.toFixed(1)})`;
         }
         
-        // Update hover state and render if needed
+    // Update hover state and render if needed
         this.updateHover(worldPos);
+        this.updateLoopCloseStatus(worldPos);
         this.render();
     },
     
@@ -537,6 +544,37 @@ const TrackEditor = {
         return div.innerHTML;
     },
     
+    // Check if a boundary loop is closed
+    isLoopClosed(points) {
+        if (points.length < 3) return false;
+        const first = points[0];
+        const last = points[points.length - 1];
+        const distance = Math.sqrt(
+            Math.pow(last.x - first.x, 2) + Math.pow(last.y - first.y, 2)
+        );
+        return distance <= 10;
+    },
+    
+    // Update status message for loop closure feedback
+    updateLoopCloseStatus(worldPos) {
+        if (this.tool !== 'pen' || this.mode !== 'track') return;
+        
+        const boundary = this.boundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
+        if (boundary.length < 3 || boundary.closed) return;
+        
+        const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
+        const firstPoint = boundary[0];
+        const distanceToFirst = Math.sqrt(
+            Math.pow(snappedPos.x - firstPoint.x, 2) + Math.pow(snappedPos.y - firstPoint.y, 2)
+        );
+        
+        if (distanceToFirst <= 10) {
+            this.updateStatus(`Click to close ${this.boundaryType} boundary loop (${boundary.length} points)`);
+        } else if (boundary.length >= 3) {
+            this.updateStatus(`Drawing ${this.boundaryType} boundary - click near first point to close loop (${boundary.length} points)`);
+        }
+    },
+    
     // View controls
     zoomIn() {
         this.view.zoom = Math.min(this.view.zoom * 1.2, 5.0);
@@ -628,6 +666,7 @@ const TrackEditor = {
             { x: 400, y: 300 },
             { x: 100, y: 300 }
         ];
+        this.track.track.outer.closed = true; // Mark as closed
         
         this.track.track.inner = [
             { x: 150, y: 150 },
@@ -635,6 +674,7 @@ const TrackEditor = {
             { x: 350, y: 250 },
             { x: 150, y: 250 }
         ];
+        this.track.track.inner.closed = true; // Mark as closed
         
         this.track.metadata.name = 'Simple Oval';
         this.track.metadata.description = 'A basic oval racing circuit';
@@ -652,6 +692,10 @@ const TrackEditor = {
         this.track.track.outer = [];
         this.track.track.inner = [];
         this.track.racingLine.waypoints = [];
+        
+        // Reset closed flags
+        delete this.track.track.outer.closed;
+        delete this.track.track.inner.closed;
         
         this.track.metadata.name = 'New Track';
         this.track.metadata.description = '';
@@ -830,18 +874,12 @@ const TrackEditor = {
             this.ctx.lineTo(points[i].x, points[i].y);
         }
         
-        // If it's a closed boundary, close the path
-        if (points.length >= 3) {
-            const first = points[0];
-            const last = points[points.length - 1];
-            const distance = Math.sqrt(
-                Math.pow(last.x - first.x, 2) + Math.pow(last.y - first.y, 2)
-            );
-            
-            if (distance <= 10) {
-                this.ctx.closePath();
-                this.ctx.fill();
-            }
+        // Check if boundary is marked as closed or if points are close enough
+        const isClosed = points.closed || (points.length >= 3 && this.isLoopClosed(points));
+        
+        if (isClosed) {
+            this.ctx.closePath();
+            this.ctx.fill();
         }
         
         this.ctx.stroke();
@@ -852,6 +890,15 @@ const TrackEditor = {
             this.ctx.beginPath();
             this.ctx.arc(point.x, point.y, 3 / this.view.zoom, 0, Math.PI * 2);
             this.ctx.fill();
+        }
+        
+        // If closed, highlight the first point differently
+        if (isClosed && points.length > 0) {
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.lineWidth = 2 / this.view.zoom;
+            this.ctx.beginPath();
+            this.ctx.arc(points[0].x, points[0].y, 5 / this.view.zoom, 0, Math.PI * 2);
+            this.ctx.stroke();
         }
     },
     
@@ -913,25 +960,59 @@ const TrackEditor = {
         if (this.tool === 'pen' && this.mode === 'track') {
             const boundary = this.boundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
             
-            if (boundary.length > 0 && this.mousePos) {
+            if (boundary.length > 0 && this.mousePos && !boundary.closed) {
                 const snappedPos = this.view.snapToGrid ? this.snapToGrid(this.mousePos) : this.mousePos;
                 const lastPoint = boundary[boundary.length - 1];
                 
-                // Preview line from last point to mouse
-                this.ctx.strokeStyle = '#ffffff66';
-                this.ctx.setLineDash([5, 5]);
-                this.ctx.lineWidth = 1 / this.view.zoom;
-                this.ctx.beginPath();
-                this.ctx.moveTo(lastPoint.x, lastPoint.y);
-                this.ctx.lineTo(snappedPos.x, snappedPos.y);
-                this.ctx.stroke();
-                this.ctx.setLineDash([]);
+                // Check if we're near the first point for loop closure
+                let nearFirstPoint = false;
+                if (boundary.length >= 3) {
+                    const firstPoint = boundary[0];
+                    const distanceToFirst = Math.sqrt(
+                        Math.pow(snappedPos.x - firstPoint.x, 2) + Math.pow(snappedPos.y - firstPoint.y, 2)
+                    );
+                    
+                    if (distanceToFirst <= 10) {
+                        nearFirstPoint = true;
+                        
+                        // Highlight first point for loop closure
+                        this.ctx.strokeStyle = '#ffcc00';
+                        this.ctx.fillStyle = '#ffcc0044';
+                        this.ctx.lineWidth = 3 / this.view.zoom;
+                        this.ctx.beginPath();
+                        this.ctx.arc(firstPoint.x, firstPoint.y, 8 / this.view.zoom, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.stroke();
+                        
+                        // Draw closing line preview
+                        this.ctx.strokeStyle = '#ffcc0088';
+                        this.ctx.setLineDash([3, 3]);
+                        this.ctx.lineWidth = 2 / this.view.zoom;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(lastPoint.x, lastPoint.y);
+                        this.ctx.lineTo(firstPoint.x, firstPoint.y);
+                        this.ctx.stroke();
+                        this.ctx.setLineDash([]);
+                    }
+                }
                 
-                // Preview point
-                this.ctx.fillStyle = '#ffffff88';
-                this.ctx.beginPath();
-                this.ctx.arc(snappedPos.x, snappedPos.y, 3 / this.view.zoom, 0, Math.PI * 2);
-                this.ctx.fill();
+                if (!nearFirstPoint) {
+                    // Normal preview line from last point to mouse
+                    this.ctx.strokeStyle = '#ffffff66';
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.lineWidth = 1 / this.view.zoom;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(lastPoint.x, lastPoint.y);
+                    this.ctx.lineTo(snappedPos.x, snappedPos.y);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                    
+                    // Preview point
+                    this.ctx.fillStyle = '#ffffff88';
+                    this.ctx.beginPath();
+                    this.ctx.arc(snappedPos.x, snappedPos.y, 3 / this.view.zoom, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
             }
         }
     }
