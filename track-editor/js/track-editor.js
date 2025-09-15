@@ -86,6 +86,11 @@ const TrackEditor = {
         this.ctx = this.canvas.getContext('2d');
         this.updateCanvasRect();
         
+        // Initialize racing line editor
+        if (typeof RacingLineEditor !== 'undefined') {
+            RacingLineEditor.init();
+        }
+        
         // Set up event listeners
         this.setupEventListeners();
         this.setupUI();
@@ -146,6 +151,23 @@ const TrackEditor = {
         document.getElementById('showTrackBounds')?.addEventListener('change', (e) => {
             this.view.showTrackBounds = e.target.checked;
             this.render();
+        });
+        
+        document.getElementById('showValidation')?.addEventListener('change', (e) => {
+            this.view.showValidation = e.target.checked;
+            
+            // Show/hide validation panel
+            const validationResults = document.getElementById('validationResults');
+            if (validationResults) {
+                validationResults.style.display = e.target.checked ? 'block' : 'none';
+            }
+            
+            // Update display if enabled
+            if (e.target.checked) {
+                this.validateTrack();
+                this.validateRacingLine();
+                this.updateValidationDisplay();
+            }
         });
         
         // Template buttons
@@ -232,6 +254,10 @@ const TrackEditor = {
         
         if (this.mode === 'track') {
             this.handleTrackMouseDown(worldPos);
+        } else if (this.mode === 'racing') {
+            if (typeof RacingLineEditor !== 'undefined') {
+                RacingLineEditor.handleRacingLineMouseDown(worldPos, e);
+            }
         }
     },
     
@@ -388,19 +414,31 @@ const TrackEditor = {
         
         this.mousePos = worldPos;
         
-        // Handle dragging for move tool
-        if (this.isDragging && this.dragPointIndex !== -1) {
-            const boundary = this.dragBoundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
-            const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
-            
-            if (boundary[this.dragPointIndex]) {
-                boundary[this.dragPointIndex].x = snappedPos.x;
-                boundary[this.dragPointIndex].y = snappedPos.y;
+        if (this.mode === 'track') {
+            // Handle dragging for move tool
+            if (this.isDragging && this.dragPointIndex !== -1) {
+                const boundary = this.dragBoundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
+                const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
                 
-                // Update validation and output during drag
-                this.validateTrack();
-                this.updateStats();
-                this.updateOutput();
+                if (boundary[this.dragPointIndex]) {
+                    boundary[this.dragPointIndex].x = snappedPos.x;
+                    boundary[this.dragPointIndex].y = snappedPos.y;
+                    
+                    // Update validation and output during drag
+                    this.validateTrack();
+                    this.updateStats();
+                    this.updateOutput();
+                }
+            }
+            
+            // Update hover state and render if needed (but not during dragging)
+            if (!this.isDragging) {
+                this.updateHover(worldPos);
+                this.updateLoopCloseStatus(worldPos);
+            }
+        } else if (this.mode === 'racing') {
+            if (typeof RacingLineEditor !== 'undefined') {
+                RacingLineEditor.handleRacingLineMouseMove(worldPos);
             }
         }
         
@@ -411,25 +449,26 @@ const TrackEditor = {
             mousePositionEl.textContent = `Mouse: (${snappedPos.x.toFixed(1)}, ${snappedPos.y.toFixed(1)})`;
         }
         
-        // Update hover state and render if needed (but not during dragging)
-        if (!this.isDragging) {
-            this.updateHover(worldPos);
-            this.updateLoopCloseStatus(worldPos);
-        }
         this.render();
     },
     
     // Handle mouse up
     handleMouseUp(e) {
-        if (this.isDragging && this.dragPointIndex !== -1) {
-            // Track change for auto-save
-            this.incrementAutoSave();
-            
-            // Finish dragging
-            this.isDragging = false;
-            const pointNum = this.dragPointIndex + 1;
-            this.updateStatus(`Moved ${this.dragBoundaryType} boundary point ${pointNum} - click another point to select`);
-            this.dragPointIndex = -1;
+        if (this.mode === 'track') {
+            if (this.isDragging && this.dragPointIndex !== -1) {
+                // Track change for auto-save
+                this.incrementAutoSave();
+                
+                // Finish dragging
+                this.isDragging = false;
+                const pointNum = this.dragPointIndex + 1;
+                this.updateStatus(`Moved ${this.dragBoundaryType} boundary point ${pointNum} - click another point to select`);
+                this.dragPointIndex = -1;
+            }
+        } else if (this.mode === 'racing') {
+            if (typeof RacingLineEditor !== 'undefined') {
+                RacingLineEditor.handleRacingLineMouseUp();
+            }
         }
         this.dragStart = null;
     },
@@ -446,9 +485,10 @@ const TrackEditor = {
             // Add waypoint for racing line
             const pos = this.getCanvasPosition(e);
             const worldPos = this.screenToWorld(pos);
-            const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
             
-            this.addWaypoint(snappedPos);
+            if (typeof RacingLineEditor !== 'undefined') {
+                RacingLineEditor.handleRacingLineDoubleClick(worldPos);
+            }
         }
     },
     
@@ -816,14 +856,30 @@ const TrackEditor = {
         this.updateStatus(`Switched to ${mode} mode`);
         
         // Show/hide relevant tool panels
+        const trackTools = document.getElementById('trackTools');
+        const racingLineTools = document.getElementById('racingLineTools');
+        const waypointEditor = document.getElementById('waypointEditor');
+        
         if (mode === 'track') {
-            document.getElementById('trackTools').style.display = 'block';
-            document.getElementById('racingLineTools').style.display = 'none';
-            document.getElementById('waypointEditor').style.display = 'none';
+            if (trackTools) trackTools.style.display = 'block';
+            if (racingLineTools) racingLineTools.style.display = 'none';
+            if (waypointEditor) waypointEditor.style.display = 'none';
+            
+            // Reset racing line editor state when leaving racing mode
+            if (typeof RacingLineEditor !== 'undefined') {
+                RacingLineEditor.selectWaypoint(null);
+            }
+            
         } else if (mode === 'racing') {
-            document.getElementById('trackTools').style.display = 'none';
-            document.getElementById('racingLineTools').style.display = 'block';
-            document.getElementById('waypointEditor').style.display = 'block';
+            if (trackTools) trackTools.style.display = 'none';
+            if (racingLineTools) racingLineTools.style.display = 'block';
+            if (waypointEditor) waypointEditor.style.display = 'block';
+            
+            // Initialize racing line tools when entering racing mode
+            if (typeof RacingLineEditor !== 'undefined') {
+                RacingLineEditor.setRacingLineTool('select');
+                RacingLineEditor.updateWaypointEditor();
+            }
         }
         
         this.render();
@@ -1360,6 +1416,157 @@ const TrackEditor = {
         this.render();
         
         this.updateStatus(`Added waypoint (${this.track.racingLine.waypoints.length} total)`);
+        
+        // Validate racing line after adding waypoint
+        this.validateRacingLine();
+    },
+    
+    // Validate racing line against track boundaries
+    validateRacingLine() {
+        if (!this.track.racingLine.waypoints.length) {
+            this.track.validation.racingLineValid = true;
+            this.track.validation.errors = this.track.validation.errors.filter(error => !error.includes('racing line'));
+            this.track.validation.warnings = this.track.validation.warnings.filter(warning => !warning.includes('racing line'));
+            return;
+        }
+        
+        const waypoints = this.track.racingLine.waypoints;
+        const outerBoundary = this.track.track.outer;
+        const innerBoundary = this.track.track.inner;
+        
+        let racingLineErrors = [];
+        let racingLineWarnings = [];
+        
+        // Check if track boundaries exist
+        if (outerBoundary.length < 3) {
+            racingLineErrors.push('Racing line requires track outer boundary');
+        } else {
+            // Validate each waypoint is within track boundaries
+            for (let i = 0; i < waypoints.length; i++) {
+                const waypoint = waypoints[i];
+                const isInside = this.isPointInTrack(waypoint.pos, outerBoundary, innerBoundary);
+                
+                if (!isInside) {
+                    racingLineErrors.push(`Waypoint ${i} is outside track boundaries`);
+                }
+            }
+        }
+        
+        // Check for reasonable speed transitions
+        for (let i = 0; i < waypoints.length - 1; i++) {
+            const current = waypoints[i];
+            const next = waypoints[i + 1];
+            const speedDiff = Math.abs(current.targetSpeed - next.targetSpeed);
+            
+            if (speedDiff > 2) {
+                racingLineWarnings.push(`Large speed change between waypoints ${i} and ${i + 1}`);
+            }
+        }
+        
+        // Update validation state
+        this.track.validation.racingLineValid = racingLineErrors.length === 0;
+        
+        // Remove old racing line errors/warnings
+        this.track.validation.errors = this.track.validation.errors.filter(error => !error.includes('racing line') && !error.includes('Waypoint'));
+        this.track.validation.warnings = this.track.validation.warnings.filter(warning => !warning.includes('racing line') && !error.includes('waypoint'));
+        
+        // Add new racing line errors/warnings
+        this.track.validation.errors.push(...racingLineErrors);
+        this.track.validation.warnings.push(...racingLineWarnings);
+        
+        // Update validation display if visible
+        this.updateValidationDisplay();
+    },
+    
+    // Check if point is within track boundaries (inside outer, outside inner)
+    isPointInTrack(point, outerBoundary, innerBoundary) {
+        // Check if point is inside outer boundary
+        const insideOuter = this.isPointInPolygon(point, outerBoundary);
+        if (!insideOuter) {
+            return false;
+        }
+        
+        // Check if point is outside inner boundary (if exists)
+        if (innerBoundary.length >= 3) {
+            const insideInner = this.isPointInPolygon(point, innerBoundary);
+            if (insideInner) {
+                return false; // Point is in inner boundary (hole), so not valid
+            }
+        }
+        
+        return true;
+    },
+    
+    // Point-in-polygon test using ray casting algorithm
+    isPointInPolygon(point, polygon) {
+        if (polygon.length < 3) return false;
+        
+        let inside = false;
+        const x = point.x;
+        const y = point.y;
+        
+        let j = polygon.length - 1;
+        for (let i = 0; i < polygon.length; i++) {
+            const xi = polygon[i].x;
+            const yi = polygon[i].y;
+            const xj = polygon[j].x;
+            const yj = polygon[j].y;
+            
+            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+            
+            j = i;
+        }
+        
+        return inside;
+    },
+    
+    // Update validation display in the UI
+    updateValidationDisplay() {
+        if (!this.view.showValidation) return;
+        
+        const validationResults = document.getElementById('validationResults');
+        const validationErrors = document.getElementById('validationErrors');
+        const validationWarnings = document.getElementById('validationWarnings');
+        const validationMetrics = document.getElementById('validationMetrics');
+        
+        if (validationResults) {
+            validationResults.style.display = 'block';
+        }
+        
+        // Display errors
+        if (validationErrors) {
+            if (this.track.validation.errors.length > 0) {
+                validationErrors.innerHTML = this.track.validation.errors.map(error => 
+                    `<div class="validation-error">❌ ${error}</div>`
+                ).join('');
+            } else {
+                validationErrors.innerHTML = '<div class="validation-success">✅ No errors</div>';
+            }
+        }
+        
+        // Display warnings
+        if (validationWarnings) {
+            if (this.track.validation.warnings.length > 0) {
+                validationWarnings.innerHTML = this.track.validation.warnings.map(warning => 
+                    `<div class="validation-warning">⚠️ ${warning}</div>`
+                ).join('');
+            } else {
+                validationWarnings.innerHTML = '<div class="validation-success">✅ No warnings</div>';
+            }
+        }
+        
+        // Display metrics
+        if (validationMetrics) {
+            const metrics = this.track.validation.metrics;
+            validationMetrics.innerHTML = `
+                <div>Track Length: ${metrics.trackLength.toFixed(1)} units</div>
+                <div>Complexity: ${metrics.complexity.toFixed(0)}%</div>
+                <div>Track Valid: ${this.track.validation.trackValid ? '✅' : '❌'}</div>
+                <div>Racing Line Valid: ${this.track.validation.racingLineValid ? '✅' : '❌'}</div>
+            `;
+        }
     },
     
     // Main render function
@@ -1496,39 +1703,151 @@ const TrackEditor = {
         const waypoints = this.track.racingLine.waypoints;
         if (waypoints.length < 2) return;
         
-        this.ctx.strokeStyle = '#22c55e';
-        this.ctx.lineWidth = 2 / this.view.zoom;
-        
-        this.ctx.beginPath();
-        this.ctx.moveTo(waypoints[0].pos.x, waypoints[0].pos.y);
-        
-        for (let i = 1; i < waypoints.length; i++) {
-            this.ctx.lineTo(waypoints[i].pos.x, waypoints[i].pos.y);
+        // Render racing line segments with speed-based color coding (different from waypoint colors)
+        for (let i = 0; i < waypoints.length; i++) {
+            const current = waypoints[i];
+            const next = waypoints[(i + 1) % waypoints.length];
+            
+            if (!current || !next) continue;
+            
+            // Get speed-based color
+            const speedColors = {
+                1: '#ef4444', // Red - slowest
+                2: '#f59e0b', // Orange
+                3: '#eab308', // Yellow
+                4: '#22c55e', // Green
+                5: '#3b82f6', // Blue
+                6: '#8b5cf6'  // Purple - fastest
+            };
+            
+            const speed = current.targetSpeed || 3;
+            const lineColor = speedColors[speed] || '#22c55e';
+            
+            // Draw line segment
+            this.ctx.strokeStyle = lineColor;
+            this.ctx.lineWidth = 3 / this.view.zoom; // Thicker for better visibility
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(current.pos.x, current.pos.y);
+            this.ctx.lineTo(next.pos.x, next.pos.y);
+            this.ctx.stroke();
         }
         
-        this.ctx.stroke();
+        // If closed loop, connect last to first
+        if (waypoints.length >= 3) {
+            const first = waypoints[0];
+            const last = waypoints[waypoints.length - 1];
+            
+            const speed = last.targetSpeed || 3;
+            const speedColors = {
+                1: '#ef4444', 2: '#f59e0b', 3: '#eab308',
+                4: '#22c55e', 5: '#3b82f6', 6: '#8b5cf6'
+            };
+            const lineColor = speedColors[speed] || '#22c55e';
+            
+            this.ctx.strokeStyle = lineColor;
+            this.ctx.lineWidth = 3 / this.view.zoom;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(last.pos.x, last.pos.y);
+            this.ctx.lineTo(first.pos.x, first.pos.y);
+            this.ctx.stroke();
+        }
     },
     
     // Render waypoints
     renderWaypoints() {
         const waypoints = this.track.racingLine.waypoints;
         
-        for (const waypoint of waypoints) {
-            // Color based on speed
-            const speedColors = ['#ef4444', '#f59e0b', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'];
-            const colorIndex = Math.min(Math.floor(waypoint.targetSpeed || 3) - 1, speedColors.length - 1);
+        for (let i = 0; i < waypoints.length; i++) {
+            const waypoint = waypoints[i];
             
-            this.ctx.fillStyle = speedColors[colorIndex] || '#22c55e';
+            // Get waypoint shape and color based on corner type (matching racing line editor)
+            // Note: Racing line segments use speed colors, waypoints use corner type colors
+            const cornerShapes = {
+                'straight': 'circle',
+                'entry': 'triangle', 
+                'apex': 'diamond',
+                'exit': 'square'
+            };
             
+            const cornerColors = {
+                'straight': '#3b82f6', // Blue - straight sections
+                'entry': '#f59e0b',    // Orange - corner entries
+                'apex': '#ef4444',     // Red - apex points
+                'exit': '#22c55e'      // Green - corner exits
+            };
+            
+            const cornerType = waypoint.cornerType || 'straight';
+            const baseColor = cornerColors[cornerType] || '#3b82f6';
+            const shape = cornerShapes[cornerType] || 'circle';
+            
+            // Check if this waypoint is selected or hovered
+            const isSelected = (typeof RacingLineEditor !== 'undefined') && (RacingLineEditor.selectedWaypoint === i);
+            const isHovered = (typeof RacingLineEditor !== 'undefined') && (RacingLineEditor.hoveredWaypoint === i);
+            
+            const size = isSelected ? 8 : (isHovered ? 6 : 5);
+            
+            this.ctx.fillStyle = baseColor;
+            
+            // Draw waypoint shape
             this.ctx.beginPath();
-            this.ctx.arc(waypoint.pos.x, waypoint.pos.y, 4 / this.view.zoom, 0, Math.PI * 2);
+            
+            switch (shape) {
+                case 'circle':
+                    this.ctx.arc(waypoint.pos.x, waypoint.pos.y, size / this.view.zoom, 0, Math.PI * 2);
+                    break;
+                    
+                case 'triangle':
+                    const triSize = size / this.view.zoom;
+                    this.ctx.moveTo(waypoint.pos.x, waypoint.pos.y - triSize);
+                    this.ctx.lineTo(waypoint.pos.x - triSize * 0.866, waypoint.pos.y + triSize * 0.5);
+                    this.ctx.lineTo(waypoint.pos.x + triSize * 0.866, waypoint.pos.y + triSize * 0.5);
+                    this.ctx.closePath();
+                    break;
+                    
+                case 'diamond':
+                    const dimSize = size / this.view.zoom;
+                    this.ctx.moveTo(waypoint.pos.x, waypoint.pos.y - dimSize);
+                    this.ctx.lineTo(waypoint.pos.x + dimSize, waypoint.pos.y);
+                    this.ctx.lineTo(waypoint.pos.x, waypoint.pos.y + dimSize);
+                    this.ctx.lineTo(waypoint.pos.x - dimSize, waypoint.pos.y);
+                    this.ctx.closePath();
+                    break;
+                    
+                case 'square':
+                    const sqSize = size / this.view.zoom;
+                    this.ctx.rect(waypoint.pos.x - sqSize, waypoint.pos.y - sqSize, sqSize * 2, sqSize * 2);
+                    break;
+            }
+            
             this.ctx.fill();
             
-            // Brake zone indicator
-            if (waypoint.brakeZone) {
-                this.ctx.strokeStyle = '#ef4444';
+            // Selection highlight
+            if (isSelected) {
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 3 / this.view.zoom;
+                this.ctx.stroke();
+            } else if (isHovered) {
+                this.ctx.strokeStyle = '#ffffff';
                 this.ctx.lineWidth = 2 / this.view.zoom;
                 this.ctx.stroke();
+            }
+            
+            // Brake zone indicator - orange outline
+            if (waypoint.brakeZone) {
+                this.ctx.strokeStyle = '#f59e0b';
+                this.ctx.lineWidth = 3 / this.view.zoom;
+                this.ctx.stroke();
+            }
+            
+            // Draw waypoint index number for selected waypoint
+            if (isSelected && this.view.zoom > 0.5) {
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = `${12 / this.view.zoom}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(i.toString(), waypoint.pos.x, waypoint.pos.y - 15 / this.view.zoom);
             }
         }
     },
