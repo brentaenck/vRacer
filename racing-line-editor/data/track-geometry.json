@@ -281,5 +281,51 @@
       "direction": { "x": -1, "y": 0.3 },
       "description": "Top side of track - mainly leftward for counter-clockwise"
     }
-  ]
+  ],
+  "checkpoints": {
+    "description": "Lap validation checkpoints - placed to detect proper racing progression",
+    "validationOrder": "sequential",
+    "segments": [
+      {
+        "id": 0,
+        "name": "Checkpoint 1 - Bottom Side",
+        "segment": {
+          "a": { "x": 25, "y": 33 },
+          "b": { "x": 25, "y": 25 }
+        },
+        "description": "First checkpoint after start/finish - bottom section",
+        "expectedDirection": "counter-clockwise"
+      },
+      {
+        "id": 1,
+        "name": "Checkpoint 2 - Right Side",
+        "segment": {
+          "a": { "x": 48, "y": 17.5 },
+          "b": { "x": 38, "y": 17.5 }
+        },
+        "description": "Second checkpoint - right section after bottom turn",
+        "expectedDirection": "counter-clockwise"
+      },
+      {
+        "id": 2,
+        "name": "Checkpoint 3 - Top Side",
+        "segment": {
+          "a": { "x": 25, "y": 10 },
+          "b": { "x": 25, "y": 2 }
+        },
+        "description": "Third checkpoint - top section after right turn",
+        "expectedDirection": "counter-clockwise"
+      },
+      {
+        "id": 3,
+        "name": "Checkpoint 4 - Left Side",
+        "segment": {
+          "a": { "x": 12, "y": 17.5 },
+          "b": { "x": 2, "y": 17.5 }
+        },
+        "description": "Final checkpoint - left section before returning to start/finish",
+        "expectedDirection": "counter-clockwise"
+      }
+    ]
+  }
 }

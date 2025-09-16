@@ -30,6 +30,23 @@
                         <label><input type="checkbox" id="showRacingLine" checked> Show Racing Line</label>
                         <label><input type="checkbox" id="showWaypoints" checked> Show Waypoints</label>
                         <label><input type="checkbox" id="showTrackBounds" checked> Show Track Bounds</label>
+                        <label><input type="checkbox" id="showCheckpoints" checked> Show Checkpoints</label>
+                        <label><input type="checkbox" id="showDirectionArrows" checked> Show Direction Arrows</label>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h3>Track Configuration</h3>
+                    <div class="control-group">
+                        <label for="racingDirection">Racing Direction:</label>
+                        <select id="racingDirection">
+                            <option value="counter-clockwise">Counter-Clockwise</option>
+                            <option value="clockwise">Clockwise</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <button id="addCheckpoint" class="btn btn-secondary btn-small">Add Checkpoint</button>
+                        <button id="validateTrack" class="btn btn-primary btn-small">Validate Track</button>
                     </div>
                 </div>
             </aside>
@@ -109,6 +126,32 @@
                 </div>
                 
                 <div class="panel">
+                    <h3>Checkpoint Editor</h3>
+                    
+                    <div id="checkpointList" class="checkpoint-list">
+                        <p class="no-selection">No checkpoints selected</p>
+                    </div>
+                    
+                    <div id="checkpointEditor" class="checkpoint-editor" style="display: none;">
+                        <h4>Checkpoint <span id="checkpointIndex">0</span></h4>
+                        
+                        <div class="control-group">
+                            <label for="checkpointName">Name:</label>
+                            <input type="text" id="checkpointName" placeholder="Checkpoint Name">
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="checkpointDescription">Description:</label>
+                            <textarea id="checkpointDescription" rows="2" placeholder="Checkpoint description"></textarea>
+                        </div>
+                        
+                        <div class="control-group">
+                            <button id="deleteCheckpoint" class="btn btn-danger btn-small">Delete Checkpoint</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
                     <h3>Racing Line Stats</h3>
                     <div class="stats-grid">
                         <div class="stat-item">
@@ -118,6 +161,14 @@
                         <div class="stat-item">
                             <span class="stat-label">Avg Speed:</span>
                             <span id="avgSpeed" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Racing Direction:</span>
+                            <span id="directionDisplay" class="stat-value">Counter-Clockwise</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Checkpoints:</span>
+                            <span id="totalCheckpoints" class="stat-value">0</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">Selected:</span>
@@ -148,14 +199,19 @@
         // Phase 2 Interactive Editor Implementation
         let trackData = null;
         let racingLine = [];
+        let checkpoints = [];
+        let racingDirection = 'counter-clockwise';
         
         // Interactive state
         let selectedWaypointIndex = null;
+        let selectedCheckpointIndex = null;
         let isDragging = false;
         let editHistory = [];
         let historyIndex = -1;
         let dragOffset = { x: 0, y: 0 };
         let hoveredWaypointIndex = null;
+        let hoveredCheckpointIndex = null;
+        let editMode = 'waypoint'; // 'waypoint' or 'checkpoint'
         
         // Canvas references
         let canvas, ctx;
@@ -170,14 +226,21 @@
         function updateStats() {
             const totalEl = document.getElementById('totalWaypoints');
             const avgEl = document.getElementById('avgSpeed');
+            const directionEl = document.getElementById('directionDisplay');
+            const checkpointsEl = document.getElementById('totalCheckpoints');
             
             if (totalEl) totalEl.textContent = racingLine.length.toString();
+            if (checkpointsEl) checkpointsEl.textContent = checkpoints.length.toString();
             
             if (racingLine.length > 0) {
                 const avgSpeed = (racingLine.reduce((sum, wp) => sum + wp.targetSpeed, 0) / racingLine.length).toFixed(1);
                 if (avgEl) avgEl.textContent = avgSpeed;
             } else {
                 if (avgEl) avgEl.textContent = '0';
+            }
+            
+            if (directionEl) {
+                directionEl.textContent = racingDirection === 'counter-clockwise' ? 'Counter-Clockwise' : 'Clockwise';
             }
         }
 
@@ -560,7 +623,26 @@
                     comment: wp.comment || ''
                 }));
                 
-                updateStatus(`Loaded: ${trackData.metadata.name} (${racingLine.length} waypoints)`);
+                // Load racing direction
+                racingDirection = trackData.racingLine?.direction || 'counter-clockwise';
+                
+                // Load checkpoints if available
+                checkpoints = trackData.checkpoints?.segments ? trackData.checkpoints.segments.map(cp => ({
+                    id: cp.id,
+                    name: cp.name,
+                    segment: {
+                        a: { x: cp.segment.a.x, y: cp.segment.a.y },
+                        b: { x: cp.segment.b.x, y: cp.segment.b.y }
+                    },
+                    description: cp.description,
+                    expectedDirection: cp.expectedDirection
+                })) : [];
+                
+                // Update UI controls
+                const directionSelect = document.getElementById('racingDirection');
+                if (directionSelect) directionSelect.value = racingDirection;
+                
+                updateStatus(`Loaded: ${trackData.metadata.name} (${racingLine.length} waypoints, ${checkpoints.length} checkpoints)`);
                 updateStats();
                 generateCode();
                 
@@ -679,6 +761,19 @@
             ctx.lineTo(startB.x, startB.y);
             ctx.stroke();
             
+            // Draw checkered pattern on start/finish line
+            const lineLength = Math.sqrt((startB.x - startA.x) ** 2 + (startB.y - startA.y) ** 2);
+            const checkSize = Math.min(lineLength / 8, 10);
+            ctx.save();
+            for (let i = 0; i < 8; i++) {
+                const progress = i / 8;
+                const x = startA.x + (startB.x - startA.x) * progress;
+                const y = startA.y + (startB.y - startA.y) * progress;
+                ctx.fillStyle = (i % 2 === 0) ? '#000000' : '#ffffff';
+                ctx.fillRect(x - checkSize/2, y - 2, checkSize, 4);
+            }
+            ctx.restore();
+            
             // Draw racing line if enabled
             if (document.getElementById('showRacingLine').checked && racingLine.length > 1) {
                 ctx.strokeStyle = '#4CAF50';
@@ -696,6 +791,76 @@
                 // Connect back to start
                 ctx.lineTo(firstPoint.x, firstPoint.y);
                 ctx.stroke();
+            }
+            
+            // Draw checkpoints if enabled
+            if (document.getElementById('showCheckpoints').checked && checkpoints.length > 0) {
+                checkpoints.forEach((checkpoint, index) => {
+                    const cpA = worldToCanvas(checkpoint.segment.a);
+                    const cpB = worldToCanvas(checkpoint.segment.b);
+                    
+                    // Checkpoint line
+                    ctx.strokeStyle = selectedCheckpointIndex === index ? '#FF6B6B' : '#FFA500';
+                    ctx.lineWidth = selectedCheckpointIndex === index ? 4 : 3;
+                    ctx.beginPath();
+                    ctx.moveTo(cpA.x, cpA.y);
+                    ctx.lineTo(cpB.x, cpB.y);
+                    ctx.stroke();
+                    
+                    // Checkpoint label
+                    const midX = (cpA.x + cpB.x) / 2;
+                    const midY = (cpA.y + cpB.y) / 2;
+                    ctx.fillStyle = '#FFA500';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${index + 1}`, midX, midY - 8);
+                    
+                    // Hover effect
+                    if (hoveredCheckpointIndex === index) {
+                        ctx.strokeStyle = '#FF6B6B';
+                        ctx.lineWidth = 5;
+                        ctx.setLineDash([5, 5]);
+                        ctx.beginPath();
+                        ctx.moveTo(cpA.x, cpA.y);
+                        ctx.lineTo(cpB.x, cpB.y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                });
+            }
+            
+            // Draw direction arrows if enabled
+            if (document.getElementById('showDirectionArrows').checked && racingLine.length > 1) {
+                ctx.strokeStyle = racingDirection === 'counter-clockwise' ? '#2196F3' : '#FF5722';
+                ctx.fillStyle = racingDirection === 'counter-clockwise' ? '#2196F3' : '#FF5722';
+                ctx.lineWidth = 2;
+                
+                // Draw arrows along the racing line every few waypoints
+                for (let i = 0; i < racingLine.length - 1; i += 4) {
+                    const current = worldToCanvas(racingLine[i].pos);
+                    const next = worldToCanvas(racingLine[i + 1].pos);
+                    
+                    const dx = next.x - current.x;
+                    const dy = next.y - current.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (length > 20) { // Only draw if segment is long enough
+                        const unitX = dx / length;
+                        const unitY = dy / length;
+                        
+                        const arrowX = current.x + dx * 0.6;
+                        const arrowY = current.y + dy * 0.6;
+                        
+                        const arrowSize = 8;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(arrowX, arrowY);
+                        ctx.lineTo(arrowX - arrowSize * unitX - arrowSize * unitY * 0.5, arrowY - arrowSize * unitY + arrowSize * unitX * 0.5);
+                        ctx.lineTo(arrowX - arrowSize * unitX + arrowSize * unitY * 0.5, arrowY - arrowSize * unitY - arrowSize * unitX * 0.5);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
             }
             
             // Draw waypoints if enabled
@@ -839,7 +1004,9 @@
                     version: '1.0',
                     created: new Date().toISOString(),
                     totalWaypoints: racingLine.length,
-                    averageSpeed: (racingLine.reduce((sum, wp) => sum + wp.targetSpeed, 0) / racingLine.length).toFixed(1)
+                    averageSpeed: (racingLine.reduce((sum, wp) => sum + wp.targetSpeed, 0) / racingLine.length).toFixed(1),
+                    racingDirection: racingDirection,
+                    totalCheckpoints: checkpoints.length
                 },
                 track: {
                     bounds: trackData.track.bounds,
@@ -849,8 +1016,14 @@
                 },
                 racingLine: {
                     waypoints: racingLine,
-                    racingDirection: 'counter-clockwise' // Default from track-analysis.ts
-                }
+                    direction: racingDirection // Current user setting
+                },
+                checkpoints: {
+                    description: 'Lap validation checkpoints - placed to detect proper racing progression',
+                    validationOrder: 'sequential',
+                    segments: checkpoints
+                },
+                safeZones: trackData.safeZones || [] // Include safe zones if available
             };
             
             // Create and download JSON file
@@ -898,6 +1071,27 @@
                         comment: wp.comment || ''
                     }));
                     
+                    // Update racing direction
+                    if (importData.racingLine?.direction) {
+                        racingDirection = importData.racingLine.direction;
+                        const directionSelect = document.getElementById('racingDirection');
+                        if (directionSelect) directionSelect.value = racingDirection;
+                    }
+                    
+                    // Update checkpoints
+                    if (importData.checkpoints?.segments) {
+                        checkpoints = importData.checkpoints.segments.map(cp => ({
+                            id: cp.id,
+                            name: cp.name,
+                            segment: {
+                                a: { x: cp.segment.a.x, y: cp.segment.a.y },
+                                b: { x: cp.segment.b.x, y: cp.segment.b.y }
+                            },
+                            description: cp.description,
+                            expectedDirection: cp.expectedDirection
+                        }));
+                    }
+                    
                     // Update track data if available
                     if (importData.track) {
                         trackData = {
@@ -909,11 +1103,12 @@
                     
                     // Refresh display
                     selectWaypoint(null);
+                    selectedCheckpointIndex = null;
                     updateStats();
                     generateCode();
                     renderTrack();
                     
-                    updateStatus(`Racing line imported: ${racingLine.length} waypoints from ${file.name}`);
+                    updateStatus(`Data imported: ${racingLine.length} waypoints, ${checkpoints.length} checkpoints from ${file.name}`);
                     
                 } catch (error) {
                     console.error('Import error:', error);
@@ -922,6 +1117,105 @@
             };
             
             input.click();
+        }
+        
+        // Checkpoint Management Functions
+        function addNewCheckpoint() {
+            if (!trackData) {
+                updateStatus('No track data loaded');
+                return;
+            }
+            
+            // Add a checkpoint in the center of the track
+            const bounds = trackData.track.bounds.track;
+            const centerX = (bounds.minX + bounds.maxX) / 2;
+            const centerY = (bounds.minY + bounds.maxY) / 2;
+            
+            const newCheckpoint = {
+                id: checkpoints.length,
+                name: `Checkpoint ${checkpoints.length + 1}`,
+                segment: {
+                    a: { x: centerX - 5, y: centerY },
+                    b: { x: centerX + 5, y: centerY }
+                },
+                description: `User-added checkpoint ${checkpoints.length + 1}`,
+                expectedDirection: racingDirection
+            };
+            
+            saveState();
+            checkpoints.push(newCheckpoint);
+            updateStats();
+            renderTrack();
+            updateStatus(`Added new checkpoint: ${newCheckpoint.name}`);
+        }
+        
+        function validateTrackConfiguration() {
+            if (!trackData) {
+                updateStatus('No track data loaded');
+                return;
+            }
+            
+            const issues = [];
+            const warnings = [];
+            
+            // Validate racing line direction consistency
+            if (racingLine.length > 3) {
+                let directionChanges = 0;
+                for (let i = 1; i < racingLine.length - 1; i++) {
+                    const prev = racingLine[i - 1].pos;
+                    const curr = racingLine[i].pos;
+                    const next = racingLine[i + 1].pos;
+                    
+                    const cross1 = (curr.x - prev.x) * (next.y - curr.y) - (curr.y - prev.y) * (next.x - curr.x);
+                    const cross2 = racingLine[i - 1] ? (curr.x - prev.x) * (racingLine[i - 1].pos.y - curr.y) - (curr.y - prev.y) * (racingLine[i - 1].pos.x - curr.x) : cross1;
+                    
+                    if (Math.sign(cross1) !== Math.sign(cross2) && Math.abs(cross1) > 1) {
+                        directionChanges++;
+                    }
+                }
+                
+                if (directionChanges > racingLine.length * 0.3) {
+                    warnings.push(`Racing line has ${directionChanges} direction inconsistencies - consider smoothing`);
+                }
+            }
+            
+            // Validate checkpoint coverage
+            if (checkpoints.length < 3) {
+                warnings.push('Consider adding more checkpoints for better lap validation');
+            }
+            
+            // Validate checkpoint spacing
+            if (checkpoints.length > 1) {
+                for (let i = 0; i < checkpoints.length - 1; i++) {
+                    const cp1 = checkpoints[i];
+                    const cp2 = checkpoints[i + 1];
+                    const midX1 = (cp1.segment.a.x + cp1.segment.b.x) / 2;
+                    const midY1 = (cp1.segment.a.y + cp1.segment.b.y) / 2;
+                    const midX2 = (cp2.segment.a.x + cp2.segment.b.x) / 2;
+                    const midY2 = (cp2.segment.a.y + cp2.segment.b.y) / 2;
+                    
+                    const distance = Math.sqrt((midX2 - midX1) ** 2 + (midY2 - midY1) ** 2);
+                    if (distance < 5) {
+                        warnings.push(`Checkpoints ${i + 1} and ${i + 2} are very close together`);
+                    }
+                }
+            }
+            
+            // Display results
+            let statusMessage = 'Track Validation: ';
+            if (issues.length === 0 && warnings.length === 0) {
+                statusMessage += 'All checks passed! ✓';
+            } else {
+                statusMessage += `${issues.length} issues, ${warnings.length} warnings`;
+            }
+            
+            updateStatus(statusMessage);
+            
+            if (issues.length > 0 || warnings.length > 0) {
+                console.log('Track Validation Results:');
+                issues.forEach(issue => console.log('❌ ISSUE:', issue));
+                warnings.forEach(warning => console.log('⚠️ WARNING:', warning));
+            }
         }
 
         // Event listeners
@@ -958,9 +1252,21 @@
             document.getElementById('importJsonBtn').addEventListener('click', importRacingLineJson);
             
             // Set up checkboxes to re-render when changed
-            ['showGrid', 'showRacingLine', 'showWaypoints', 'showTrackBounds', 'snapToGrid'].forEach(id => {
+            ['showGrid', 'showRacingLine', 'showWaypoints', 'showTrackBounds', 'snapToGrid', 'showCheckpoints', 'showDirectionArrows'].forEach(id => {
                 document.getElementById(id).addEventListener('change', renderTrack);
             });
+            
+            // Racing direction change handler
+            document.getElementById('racingDirection').addEventListener('change', (e) => {
+                racingDirection = e.target.value;
+                updateStats();
+                renderTrack();
+                updateStatus(`Racing direction changed to ${racingDirection}`);
+            });
+            
+            // Checkpoint management handlers
+            document.getElementById('addCheckpoint').addEventListener('click', addNewCheckpoint);
+            document.getElementById('validateTrack').addEventListener('click', validateTrackConfiguration);
             
             updateStatus('Ready - Interactive editing enabled');
         });
