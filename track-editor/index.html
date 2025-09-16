@@ -57,6 +57,9 @@
                         <button class="tool-btn" data-tool="startfinish" title="Set Start/Finish (S)">
                             🏁 Start/Finish
                         </button>
+                        <button class="tool-btn" data-tool="checkpoint" title="Place Checkpoint (C)">
+                            🎯 Checkpoint
+                        </button>
                     </div>
                     
                     <div class="boundary-selector">
@@ -82,6 +85,22 @@
                     </div>
                 </div>
 
+                <!-- Track Configuration -->
+                <div class="panel">
+                    <h3>🧭 Track Configuration</h3>
+                    <div class="control-group">
+                        <label>Racing Direction:
+                            <select id="racingDirection" class="property-select">
+                                <option value="counter-clockwise">Counter-Clockwise</option>
+                                <option value="clockwise">Clockwise</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="button-group">
+                        <button id="validateTrack" class="btn btn-small btn-primary">Validate Track</button>
+                    </div>
+                </div>
+
                 <!-- View Options -->
                 <div class="panel">
                     <h3>👁️ View Options</h3>
@@ -91,6 +110,8 @@
                         <label><input type="checkbox" id="showTrackBounds" checked> Show Track</label>
                         <label><input type="checkbox" id="showRacingLine" checked> Show Racing Line</label>
                         <label><input type="checkbox" id="showWaypoints" checked> Show Waypoints</label>
+                        <label><input type="checkbox" id="showCheckpoints" checked> Show Checkpoints</label>
+                        <label><input type="checkbox" id="showDirectionArrows" checked> Show Direction Arrows</label>
                         <label><input type="checkbox" id="showValidation"> Show Validation</label>
                     </div>
                 </div>
@@ -170,6 +191,33 @@
                     </div>
                 </div>
 
+                <!-- Checkpoint Editor -->
+                <div id="checkpointEditor" class="panel" style="display: none;">
+                    <h3>🎯 Checkpoint Editor</h3>
+                    
+                    <div id="checkpointList" class="checkpoint-list">
+                        <p>No checkpoints available</p>
+                    </div>
+                    
+                    <div id="checkpointProperties" class="checkpoint-properties" style="display: none;">
+                        <h4>Checkpoint <span id="checkpointIndex">0</span></h4>
+                        
+                        <div class="control-group">
+                            <label>Name: <input type="text" id="checkpointName" class="property-input"></label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Description: 
+                                <textarea id="checkpointDescription" class="property-textarea" rows="2"></textarea>
+                            </label>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="deleteCheckpoint" class="btn btn-small btn-danger">Delete Checkpoint</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Waypoint Editor (Racing Line Mode) -->
                 <div id="waypointEditor" class="panel" style="display: none;">
                     <h3>🎯 Waypoint Editor</h3>
@@ -238,6 +286,14 @@
                         <div class="stat-item">
                             <span class="stat-label">Racing Waypoints:</span>
                             <span id="waypointCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Checkpoints:</span>
+                            <span id="checkpointCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Racing Direction:</span>
+                            <span id="racingDirectionDisplay" class="stat-value">Counter-Clockwise</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">Track Length:</span>

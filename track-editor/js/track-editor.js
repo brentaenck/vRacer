@@ -64,6 +64,8 @@ const TrackEditor = {
         showTrackBounds: true,
         showRacingLine: true,
         showWaypoints: true,
+        showCheckpoints: true,
+        showDirectionArrows: true,
         showValidation: false
     },
     
@@ -76,6 +78,12 @@ const TrackEditor = {
     isDragging: false,
     dragPointIndex: -1,
     dragBoundaryType: 'outer',
+    
+    // Checkpoint interaction state
+    selectedCheckpointIndex: null,
+    selectedCheckpointEndpoint: null, // 'a' or 'b'
+    hoveredCheckpoint: null,
+    isDraggingCheckpoint: false,
     
     // Initialize the editor
     init() {
@@ -150,6 +158,26 @@ const TrackEditor = {
         
         document.getElementById('showTrackBounds')?.addEventListener('change', (e) => {
             this.view.showTrackBounds = e.target.checked;
+            this.render();
+        });
+
+        document.getElementById('showRacingLine')?.addEventListener('change', (e) => {
+            this.view.showRacingLine = e.target.checked;
+            this.render();
+        });
+
+        document.getElementById('showWaypoints')?.addEventListener('change', (e) => {
+            this.view.showWaypoints = e.target.checked;
+            this.render();
+        });
+
+        document.getElementById('showCheckpoints')?.addEventListener('change', (e) => {
+            this.view.showCheckpoints = e.target.checked;
+            this.render();
+        });
+
+        document.getElementById('showDirectionArrows')?.addEventListener('change', (e) => {
+            this.view.showDirectionArrows = e.target.checked;
             this.render();
         });
         
@@ -234,6 +262,30 @@ const TrackEditor = {
                 this.updateOutput();
             });
         }
+        
+        // Racing direction control
+        const racingDirection = document.getElementById('racingDirection');
+        if (racingDirection) {
+            racingDirection.addEventListener('change', (e) => {
+                this.track.racingLine.direction = e.target.value;
+                this.updateStats();
+                this.render();
+                this.incrementAutoSave();
+                this.updateOutput();
+                this.updateStatus(`Racing direction changed to ${e.target.value}`);
+            });
+        }
+        
+        // Checkpoint management buttons
+        const validateTrackBtn = document.getElementById('validateTrack');
+        if (validateTrackBtn) {
+            validateTrackBtn.addEventListener('click', () => this.validateTrackConfiguration());
+        }
+        
+        const deleteCheckpointBtn = document.getElementById('deleteCheckpoint');
+        if (deleteCheckpointBtn) {
+            deleteCheckpointBtn.addEventListener('click', () => this.deleteSelectedCheckpoint());
+        }
     },
     
     // Set up UI state
@@ -243,6 +295,12 @@ const TrackEditor = {
         this.updateStats();
         this.updateOutput();
         this.updateStatus('Ready - Select a tool to begin editing');
+        
+        // Initialize racing direction dropdown
+        const racingDirectionSelect = document.getElementById('racingDirection');
+        if (racingDirectionSelect) {
+            racingDirectionSelect.value = this.track.racingLine.direction || 'counter-clockwise';
+        }
     },
     
     // Handle mouse down
@@ -278,7 +336,156 @@ const TrackEditor = {
             case 'startfinish':
                 this.handleStartFinishTool(snappedPos);
                 break;
+            case 'checkpoint':
+                this.handleCheckpointTool(snappedPos);
+                break;
         }
+    },
+    
+    // Handle start/finish line tool
+    handleStartFinishTool(pos) {
+        // Start/finish line requires two points
+        if (!this.startFinishState) {
+            this.startFinishState = {
+                placing: false,
+                firstPoint: null,
+                previewPoint: null
+            };
+        }
+        
+        if (!this.startFinishState.placing) {
+            // First click - start placing start/finish line
+            this.startFinishState.placing = true;
+            this.startFinishState.firstPoint = { x: pos.x, y: pos.y };
+            this.startFinishState.previewPoint = null;
+            
+            this.updateStatus('Click second point to complete start/finish line');
+            this.render();
+        } else {
+            // Second click - complete start/finish line
+            const secondPoint = { x: pos.x, y: pos.y };
+            
+            // Validate line length
+            const distance = Math.sqrt(
+                Math.pow(secondPoint.x - this.startFinishState.firstPoint.x, 2) +
+                Math.pow(secondPoint.y - this.startFinishState.firstPoint.y, 2)
+            );
+            
+            if (distance < 10) {
+                this.updateStatus('Start/finish line too short - click farther away from first point');
+                return;
+            }
+            
+            // Set the start/finish line in track data
+            this.track.track.startLine = {
+                a: { x: this.startFinishState.firstPoint.x, y: this.startFinishState.firstPoint.y },
+                b: { x: secondPoint.x, y: secondPoint.y }
+            };
+            
+            // Reset state
+            this.startFinishState = {
+                placing: false,
+                firstPoint: null,
+                previewPoint: null
+            };
+            
+            // Track change for auto-save
+            this.incrementAutoSave();
+            
+            // Update everything
+            this.updateStats();
+            this.updateOutput();
+            this.render();
+            
+            this.updateStatus(`Start/finish line placed (${distance.toFixed(1)} units long)`);
+        }
+    },
+    
+    // Handle checkpoint tool (placement and selection/editing)
+    handleCheckpointTool(pos) {
+        // Initialize checkpoint state if needed
+        if (!this.checkpointState) {
+            this.checkpointState = {
+                placing: false,
+                firstPoint: null,
+                previewPoint: null
+            };
+        }
+        
+        // If currently placing a checkpoint, continue with placement logic
+        if (this.checkpointState.placing) {
+            // Second click - complete checkpoint
+            const secondPoint = { x: pos.x, y: pos.y };
+            
+            // Validate line length
+            const distance = Math.sqrt(
+                Math.pow(secondPoint.x - this.checkpointState.firstPoint.x, 2) +
+                Math.pow(secondPoint.y - this.checkpointState.firstPoint.y, 2)
+            );
+            
+            if (distance < 6) {
+                this.updateStatus('Checkpoint line too short - click farther away from first point');
+                return;
+            }
+            
+            // Create checkpoint in track data
+            const newCheckpoint = {
+                id: this.track.track.checkpoints.length,
+                name: `Checkpoint ${this.track.track.checkpoints.length + 1}`,
+                segment: {
+                    a: { x: this.checkpointState.firstPoint.x, y: this.checkpointState.firstPoint.y },
+                    b: { x: secondPoint.x, y: secondPoint.y }
+                },
+                description: `User-added checkpoint ${this.track.track.checkpoints.length + 1}`,
+                expectedDirection: this.track.racingLine.direction || 'counter-clockwise'
+            };
+            this.track.track.checkpoints.push(newCheckpoint);
+            
+            // Reset state
+            this.checkpointState = {
+                placing: false,
+                firstPoint: null,
+                previewPoint: null
+            };
+            
+            // Track change for auto-save
+            this.incrementAutoSave();
+            
+            
+            // Update everything
+            this.updateStats();
+            this.updateOutput();
+            this.render();
+            
+            this.updateStatus(`Checkpoint placed (${distance.toFixed(1)} units long)`);
+            return;
+        }
+        
+        // Check if clicking on existing checkpoint for selection/editing
+        const checkpointHit = this.findCheckpointHit(pos);
+        if (checkpointHit) {
+            // Select checkpoint and endpoint
+            this.selectedCheckpointIndex = checkpointHit.index;
+            this.selectedCheckpointEndpoint = checkpointHit.endpoint;
+            this.isDraggingCheckpoint = true;
+            
+            const checkpoint = this.track.track.checkpoints[checkpointHit.index];
+            this.updateStatus(`Selected ${checkpoint.name} (${checkpointHit.endpoint} endpoint) - drag to move, Del to delete`);
+            this.render();
+            return;
+        }
+        
+        // No checkpoint hit, start new checkpoint placement
+        this.checkpointState.placing = true;
+        this.checkpointState.firstPoint = { x: pos.x, y: pos.y };
+        this.checkpointState.previewPoint = null;
+        
+        // Clear any existing checkpoint selection
+        this.selectedCheckpointIndex = null;
+        this.selectedCheckpointEndpoint = null;
+        
+        this.updateStatus('Click second point to complete checkpoint');
+        this.render();
     },
     
     // Handle pen tool
@@ -431,11 +638,35 @@ const TrackEditor = {
                 }
             }
             
-            // Update hover state and render if needed (but not during dragging)
-            if (!this.isDragging) {
-                this.updateHover(worldPos);
-                this.updateLoopCloseStatus(worldPos);
+            // Handle checkpoint endpoint dragging
+            if (this.isDraggingCheckpoint && this.selectedCheckpointIndex !== null && this.selectedCheckpointEndpoint) {
+                const checkpoint = this.track.track.checkpoints[this.selectedCheckpointIndex];
+                const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
+                
+                if (checkpoint) {
+                    // Update the selected endpoint
+                    if (this.selectedCheckpointEndpoint === 'a') {
+                        checkpoint.segment.a.x = snappedPos.x;
+                        checkpoint.segment.a.y = snappedPos.y;
+                    } else if (this.selectedCheckpointEndpoint === 'b') {
+                        checkpoint.segment.b.x = snappedPos.x;
+                        checkpoint.segment.b.y = snappedPos.y;
+                    }
+                    
+                    // Update validation and output during drag
+                    this.validateTrack();
+                    this.updateStats();
+                    this.updateOutput();
+                }
             }
+            
+        // Update hover state and render if needed (but not during dragging)
+        if (!this.isDragging) {
+            this.updateHover(worldPos);
+            this.updateLoopCloseStatus(worldPos);
+            this.updateStartFinishPreview(worldPos);
+            this.updateCheckpointPreview(worldPos);
+        }
         } else if (this.mode === 'racing') {
             if (typeof RacingLineEditor !== 'undefined') {
                 RacingLineEditor.handleRacingLineMouseMove(worldPos);
@@ -464,6 +695,17 @@ const TrackEditor = {
                 const pointNum = this.dragPointIndex + 1;
                 this.updateStatus(`Moved ${this.dragBoundaryType} boundary point ${pointNum} - click another point to select`);
                 this.dragPointIndex = -1;
+            }
+            
+            // Handle checkpoint dragging completion
+            if (this.isDraggingCheckpoint && this.selectedCheckpointIndex !== null) {
+                // Track change for auto-save
+                this.incrementAutoSave();
+                
+                // Finish checkpoint dragging
+                this.isDraggingCheckpoint = false;
+                const checkpoint = this.track.track.checkpoints[this.selectedCheckpointIndex];
+                this.updateStatus(`Moved ${checkpoint.name} (${this.selectedCheckpointEndpoint} endpoint) - Del to delete, click elsewhere to deselect`);
             }
         } else if (this.mode === 'racing') {
             if (typeof RacingLineEditor !== 'undefined') {
@@ -826,6 +1068,9 @@ const TrackEditor = {
             case 's':
                 this.setTool('startfinish');
                 break;
+            case 'c':
+                this.setTool('checkpoint');
+                break;
             case 'g':
                 document.getElementById('showGrid')?.click();
                 break;
@@ -838,10 +1083,20 @@ const TrackEditor = {
             case '3':
                 this.setMode('preview');
                 break;
+            case 'delete':
+            case 'backspace':
+                // Delete selected checkpoint
+                if (this.selectedCheckpointIndex !== null) {
+                    this.deleteCheckpointByIndex(this.selectedCheckpointIndex);
+                }
+                break;
             case 'escape':
                 // Clear selections and stop dragging
                 this.selectedPoints = [];
+                this.selectedCheckpointIndex = null;
+                this.selectedCheckpointEndpoint = null;
                 this.isDragging = false;
+                this.isDraggingCheckpoint = false;
                 this.dragPointIndex = -1;
                 this.updateStatus(`${this.tool} tool active`);
                 this.render();
@@ -892,6 +1147,15 @@ const TrackEditor = {
         this.isDragging = false;
         this.dragPointIndex = -1;
         
+        // Reset start/finish state when switching away from start/finish tool
+        if (this.tool === 'startfinish' && tool !== 'startfinish') {
+            this.startFinishState = {
+                placing: false,
+                firstPoint: null,
+                previewPoint: null
+            };
+        }
+        
         this.tool = tool;
         this.updateToolUI();
         
@@ -911,6 +1175,10 @@ const TrackEditor = {
                 break;
             case 'startfinish':
                 this.updateStatus(`Start/Finish tool active - click to place racing start/finish line`);
+                this.canvas.style.cursor = 'crosshair';
+                break;
+            case 'checkpoint':
+                this.updateStatus(`Checkpoint tool active - click to place/select checkpoints, drag endpoints to edit, Del to delete`);
                 this.canvas.style.cursor = 'crosshair';
                 break;
             default:
@@ -940,6 +1208,8 @@ const TrackEditor = {
     updateStats() {
         const trackPointCount = document.getElementById('trackPointCount');
         const waypointCount = document.getElementById('waypointCount');
+        const checkpointCount = document.getElementById('checkpointCount');
+        const racingDirectionDisplay = document.getElementById('racingDirectionDisplay');
         const trackLength = document.getElementById('trackLength');
         const avgSpeed = document.getElementById('avgSpeed');
         
@@ -950,6 +1220,15 @@ const TrackEditor = {
         
         if (waypointCount) {
             waypointCount.textContent = this.track.racingLine.waypoints.length;
+        }
+        
+        if (checkpointCount) {
+            checkpointCount.textContent = this.track.track.checkpoints.length;
+        }
+        
+        if (racingDirectionDisplay) {
+            const direction = this.track.racingLine.direction || 'counter-clockwise';
+            racingDirectionDisplay.textContent = direction === 'counter-clockwise' ? 'Counter-Clockwise' : 'Clockwise';
         }
         
         if (trackLength) {
@@ -985,7 +1264,31 @@ const TrackEditor = {
         const outputCode = document.getElementById('outputCode');
         if (!outputCode) return;
         
-        const jsonOutput = JSON.stringify(this.track, null, 2);
+        // Create enhanced export data with checkpoint metadata
+        const exportData = {
+            ...this.track,
+            // Ensure checkpoints have proper metadata structure
+            track: {
+                ...this.track.track,
+                checkpoints: this.track.track.checkpoints.length > 0 ? {
+                    description: 'Lap validation checkpoints - placed to detect proper racing progression',
+                    validationOrder: 'sequential',
+                    segments: this.track.track.checkpoints
+                } : []
+            },
+            racingLine: {
+                ...this.track.racingLine,
+                direction: this.track.racingLine.direction || 'counter-clockwise'
+            },
+            metadata: {
+                ...this.track.metadata,
+                racingDirection: this.track.racingLine.direction || 'counter-clockwise',
+                totalCheckpoints: this.track.track.checkpoints.length,
+                lastModified: new Date().toISOString()
+            }
+        };
+        
+        const jsonOutput = JSON.stringify(exportData, null, 2);
         outputCode.innerHTML = `<code>${this.escapeHtml(jsonOutput)}</code>`;
     },
     
@@ -1036,6 +1339,17 @@ const TrackEditor = {
         // Check if mouse is hovering over any points
         // This would be used for highlighting hovered elements
         this.hoveredPoint = null;
+        this.hoveredCheckpoint = null;
+        
+        // Check for checkpoint hover when using checkpoint tool
+        if (this.tool === 'checkpoint') {
+            const checkpointHit = this.findCheckpointHit(worldPos);
+            if (checkpointHit) {
+                this.hoveredCheckpoint = checkpointHit;
+                this.canvas.style.cursor = 'grab';
+                return;
+            }
+        }
         
         // Only check hover for current boundary type when using eraser/move tools
         if (this.tool === 'eraser' || this.tool === 'move') {
@@ -1060,8 +1374,8 @@ const TrackEditor = {
                     return;
                 }
             }
-        } else {
-            // Check all boundary points for other tools
+        } else if (this.tool !== 'checkpoint') {
+            // Check all boundary points for other tools (but not checkpoint tool)
             const allPoints = [...this.track.track.outer, ...this.track.track.inner];
             for (let i = 0; i < allPoints.length; i++) {
                 const point = allPoints[i];
@@ -1089,6 +1403,9 @@ const TrackEditor = {
                 this.canvas.style.cursor = this.isDragging ? 'grabbing' : 'move';
                 break;
             case 'startfinish':
+                this.canvas.style.cursor = 'crosshair';
+                break;
+            case 'checkpoint':
                 this.canvas.style.cursor = 'crosshair';
                 break;
             default:
@@ -1130,6 +1447,54 @@ const TrackEditor = {
             this.updateStatus(`Click to close ${this.boundaryType} boundary loop (${boundary.length} points)`);
         } else if (boundary.length >= 3) {
             this.updateStatus(`Drawing ${this.boundaryType} boundary - click near first point to close loop (${boundary.length} points)`);
+        }
+    },
+    
+    // Update start/finish line preview
+    updateStartFinishPreview(worldPos) {
+        if (this.tool !== 'startfinish' || this.mode !== 'track') return;
+        
+        if (this.startFinishState && this.startFinishState.placing && this.startFinishState.firstPoint) {
+            const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
+            this.startFinishState.previewPoint = { x: snappedPos.x, y: snappedPos.y };
+            
+            // Calculate distance for status update
+            const distance = Math.sqrt(
+                Math.pow(snappedPos.x - this.startFinishState.firstPoint.x, 2) +
+                Math.pow(snappedPos.y - this.startFinishState.firstPoint.y, 2)
+            );
+            
+            if (distance < 10) {
+                this.updateStatus(`Start/finish line too short (${distance.toFixed(1)} units) - move farther from first point`);
+            } else {
+                this.updateStatus(`Click to complete start/finish line (${distance.toFixed(1)} units long)`);
+            }
+            
+            this.render();
+        }
+    },
+    
+    // Update checkpoint preview
+    updateCheckpointPreview(worldPos) {
+        if (this.tool !== 'checkpoint' || this.mode !== 'track') return;
+        
+        if (this.checkpointState && this.checkpointState.placing && this.checkpointState.firstPoint) {
+            const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
+            this.checkpointState.previewPoint = { x: snappedPos.x, y: snappedPos.y };
+            
+            // Calculate distance for status update
+            const distance = Math.sqrt(
+                Math.pow(snappedPos.x - this.checkpointState.firstPoint.x, 2) +
+                Math.pow(snappedPos.y - this.checkpointState.firstPoint.y, 2)
+            );
+            
+            if (distance < 6) {
+                this.updateStatus(`Checkpoint line too short (${distance.toFixed(1)} units) - move farther from first point`);
+            } else {
+                this.updateStatus(`Click to complete checkpoint (${distance.toFixed(1)} units long)`);
+            }
+            
+            this.render();
         }
     },
     
@@ -1522,6 +1887,128 @@ const TrackEditor = {
         return inside;
     },
     
+    // Render start/finish line
+    renderStartFinishLine() {
+        // Render existing start/finish line
+        if (this.track.track.startLine && this.track.track.startLine.a && this.track.track.startLine.b) {
+            const line = this.track.track.startLine;
+            
+            // Checkered flag pattern
+            this.renderCheckeredLine(line.a, line.b, '#000000', '#ffffff', 6);
+            
+            // Add "START" and "FINISH" text
+            this.ctx.fillStyle = '#000000';
+            this.ctx.font = `${14 / this.view.zoom}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            
+            const midX = (line.a.x + line.b.x) / 2;
+            const midY = (line.a.y + line.b.y) / 2;
+            
+            // Calculate perpendicular offset for text
+            const dx = line.b.x - line.a.x;
+            const dy = line.b.y - line.a.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const perpX = -dy / length * 15 / this.view.zoom;
+            const perpY = dx / length * 15 / this.view.zoom;
+            
+            // Draw START/FINISH text above the line
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.strokeStyle = '#000000';
+            this.ctx.lineWidth = 2 / this.view.zoom;
+            
+            this.ctx.strokeText('START/FINISH', midX + perpX, midY + perpY);
+            this.ctx.fillText('START/FINISH', midX + perpX, midY + perpY);
+        }
+        
+        // Render preview for start/finish line tool
+        if (this.tool === 'startfinish' && this.startFinishState) {
+            if (this.startFinishState.firstPoint) {
+                // Draw first point
+                this.ctx.fillStyle = '#ff0000';
+                this.ctx.beginPath();
+                this.ctx.arc(this.startFinishState.firstPoint.x, this.startFinishState.firstPoint.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Draw preview line if placing
+                if (this.startFinishState.placing && this.startFinishState.previewPoint) {
+                    const distance = Math.sqrt(
+                        Math.pow(this.startFinishState.previewPoint.x - this.startFinishState.firstPoint.x, 2) +
+                        Math.pow(this.startFinishState.previewPoint.y - this.startFinishState.firstPoint.y, 2)
+                    );
+                    
+                    // Use different colors based on validity
+                    const lineColor = distance >= 10 ? '#00ff00' : '#ff6666';
+                    
+                    this.ctx.strokeStyle = lineColor;
+                    this.ctx.lineWidth = 4 / this.view.zoom;
+                    this.ctx.setLineDash([8 / this.view.zoom, 4 / this.view.zoom]);
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.startFinishState.firstPoint.x, this.startFinishState.firstPoint.y);
+                    this.ctx.lineTo(this.startFinishState.previewPoint.x, this.startFinishState.previewPoint.y);
+                    this.ctx.stroke();
+                    
+                    this.ctx.setLineDash([]); // Reset dash pattern
+                    
+                    // Draw second point preview
+                    this.ctx.fillStyle = lineColor;
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.startFinishState.previewPoint.x, this.startFinishState.previewPoint.y, 4 / this.view.zoom, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+        }
+    },
+    
+    // Render checkered pattern line
+    renderCheckeredLine(pointA, pointB, color1, color2, segmentLength) {
+        const dx = pointB.x - pointA.x;
+        const dy = pointB.y - pointA.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const unitX = dx / length;
+        const unitY = dy / length;
+        
+        // Calculate perpendicular for line width
+        const perpX = -unitY * 3 / this.view.zoom;
+        const perpY = unitX * 3 / this.view.zoom;
+        
+        const numSegments = Math.ceil(length / segmentLength);
+        const actualSegmentLength = length / numSegments;
+        
+        for (let i = 0; i < numSegments; i++) {
+            const t1 = (i * actualSegmentLength) / length;
+            const t2 = ((i + 1) * actualSegmentLength) / length;
+            
+            const x1 = pointA.x + dx * t1;
+            const y1 = pointA.y + dy * t1;
+            const x2 = pointA.x + dx * t2;
+            const y2 = pointA.y + dy * t2;
+            
+            // Alternate colors
+            this.ctx.fillStyle = (i % 2 === 0) ? color1 : color2;
+            
+            // Draw segment as a rectangle
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1 + perpX, y1 + perpY);
+            this.ctx.lineTo(x2 + perpX, y2 + perpY);
+            this.ctx.lineTo(x2 - perpX, y2 - perpY);
+            this.ctx.lineTo(x1 - perpX, y1 - perpY);
+            this.ctx.closePath();
+            this.ctx.fill();
+        }
+        
+        // Add border
+        this.ctx.strokeStyle = '#333333';
+        this.ctx.lineWidth = 1 / this.view.zoom;
+        this.ctx.beginPath();
+        this.ctx.moveTo(pointA.x + perpX, pointA.y + perpY);
+        this.ctx.lineTo(pointB.x + perpX, pointB.y + perpY);
+        this.ctx.moveTo(pointA.x - perpX, pointA.y - perpY);
+        this.ctx.lineTo(pointB.x - perpX, pointB.y - perpY);
+        this.ctx.stroke();
+    },
+    
     // Update validation display in the UI
     updateValidationDisplay() {
         if (!this.view.showValidation) return;
@@ -1593,6 +2080,9 @@ const TrackEditor = {
             this.renderTrack();
         }
         
+        // Render start/finish line
+        this.renderStartFinishLine();
+        
         // Render racing line
         if (this.view.showRacingLine && this.mode !== 'track') {
             this.renderRacingLine();
@@ -1601,6 +2091,16 @@ const TrackEditor = {
         // Render waypoints
         if (this.view.showWaypoints && this.mode !== 'track') {
             this.renderWaypoints();
+        }
+        
+        // Render checkpoints
+        if (this.view.showCheckpoints) {
+            this.renderCheckpoints();
+        }
+        
+        // Render direction arrows
+        if (this.view.showDirectionArrows && this.track.racingLine.waypoints.length > 1) {
+            this.renderDirectionArrows();
         }
         
         // Render preview elements
@@ -1852,6 +2352,141 @@ const TrackEditor = {
         }
     },
     
+    // Render checkpoints
+    renderCheckpoints() {
+        const checkpoints = this.track.track.checkpoints;
+        if (!checkpoints || checkpoints.length === 0) return;
+        
+        checkpoints.forEach((checkpoint, index) => {
+            const segment = checkpoint.segment;
+            const isSelected = this.selectedCheckpointIndex === index;
+            const isHovered = this.hoveredCheckpoint && this.hoveredCheckpoint.index === index;
+            
+            // Choose colors based on state
+            let lineColor = '#ffa500'; // Default orange
+            let endpointColor = '#ffa500';
+            let lineWidth = 3;
+            
+            if (isSelected) {
+                lineColor = '#ff6b6b'; // Red for selected
+                lineWidth = 4;
+            } else if (isHovered) {
+                lineColor = '#ffdd00'; // Yellow for hovered
+                lineWidth = 3.5;
+            }
+            
+            // Draw checkpoint line
+            this.ctx.strokeStyle = lineColor;
+            this.ctx.lineWidth = lineWidth / this.view.zoom;
+            this.ctx.beginPath();
+            this.ctx.moveTo(segment.a.x, segment.a.y);
+            this.ctx.lineTo(segment.b.x, segment.b.y);
+            this.ctx.stroke();
+            
+            // Draw checkpoint number
+            const midX = (segment.a.x + segment.b.x) / 2;
+            const midY = (segment.a.y + segment.b.y) / 2;
+            
+            this.ctx.fillStyle = lineColor;
+            this.ctx.font = `${12 / this.view.zoom}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(`${index + 1}`, midX, midY - 10 / this.view.zoom);
+            
+            // Draw endpoint A
+            const isEndpointASelected = isSelected && this.selectedCheckpointEndpoint === 'a';
+            this.ctx.fillStyle = isEndpointASelected ? '#ff3333' : lineColor;
+            this.ctx.strokeStyle = isEndpointASelected ? '#ffffff' : lineColor;
+            this.ctx.lineWidth = isEndpointASelected ? 2 / this.view.zoom : 1 / this.view.zoom;
+            
+            this.ctx.beginPath();
+            this.ctx.arc(segment.a.x, segment.a.y, isEndpointASelected ? 5 / this.view.zoom : 3 / this.view.zoom, 0, Math.PI * 2);
+            this.ctx.fill();
+            if (isEndpointASelected) {
+                this.ctx.stroke();
+            }
+            
+            // Draw endpoint B
+            const isEndpointBSelected = isSelected && this.selectedCheckpointEndpoint === 'b';
+            this.ctx.fillStyle = isEndpointBSelected ? '#ff3333' : lineColor;
+            this.ctx.strokeStyle = isEndpointBSelected ? '#ffffff' : lineColor;
+            this.ctx.lineWidth = isEndpointBSelected ? 2 / this.view.zoom : 1 / this.view.zoom;
+            
+            this.ctx.beginPath();
+            this.ctx.arc(segment.b.x, segment.b.y, isEndpointBSelected ? 5 / this.view.zoom : 3 / this.view.zoom, 0, Math.PI * 2);
+            this.ctx.fill();
+            if (isEndpointBSelected) {
+                this.ctx.stroke();
+            }
+            
+            // Add endpoint labels for selected checkpoint
+            if (isSelected) {
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.lineWidth = 2 / this.view.zoom;
+                this.ctx.font = `${10 / this.view.zoom}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                
+                // Label A endpoint
+                this.ctx.strokeText('A', segment.a.x, segment.a.y - 12 / this.view.zoom);
+                this.ctx.fillText('A', segment.a.x, segment.a.y - 12 / this.view.zoom);
+                
+                // Label B endpoint
+                this.ctx.strokeText('B', segment.b.x, segment.b.y - 12 / this.view.zoom);
+                this.ctx.fillText('B', segment.b.x, segment.b.y - 12 / this.view.zoom);
+            }
+        });
+    },
+    
+    // Render direction arrows along racing line
+    renderDirectionArrows() {
+        const waypoints = this.track.racingLine.waypoints;
+        if (waypoints.length < 2) return;
+        
+        const direction = this.track.racingLine.direction || 'counter-clockwise';
+        const arrowColor = direction === 'counter-clockwise' ? '#2196f3' : '#ff5722';
+        
+        this.ctx.fillStyle = arrowColor;
+        this.ctx.strokeStyle = arrowColor;
+        this.ctx.lineWidth = 2 / this.view.zoom;
+        
+        // Draw arrows every few waypoints
+        for (let i = 0; i < waypoints.length; i += 4) {
+            const current = waypoints[i];
+            const next = waypoints[(i + 1) % waypoints.length];
+            
+            const dx = next.pos.x - current.pos.x;
+            const dy = next.pos.y - current.pos.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            if (length > 20 / this.view.zoom) { // Only draw if segment is long enough
+                const unitX = dx / length;
+                const unitY = dy / length;
+                
+                // Position arrow at 60% along the segment
+                const arrowX = current.pos.x + dx * 0.6;
+                const arrowY = current.pos.y + dy * 0.6;
+                
+                const arrowSize = 8 / this.view.zoom;
+                
+                // Draw arrow triangle
+                this.ctx.beginPath();
+                this.ctx.moveTo(arrowX, arrowY);
+                this.ctx.lineTo(
+                    arrowX - arrowSize * unitX - arrowSize * unitY * 0.5,
+                    arrowY - arrowSize * unitY + arrowSize * unitX * 0.5
+                );
+                this.ctx.lineTo(
+                    arrowX - arrowSize * unitX + arrowSize * unitY * 0.5,
+                    arrowY - arrowSize * unitY - arrowSize * unitX * 0.5
+                );
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+        }
+    },
+    
     // Render preview elements
     renderPreview() {
         // Render hover effects for different tools
@@ -1963,6 +2598,231 @@ const TrackEditor = {
                 }
             }
         }
+        
+        // Checkpoint tool preview
+        if (this.tool === 'checkpoint' && this.mousePos) {
+            const snappedPos = this.view.snapToGrid ? this.snapToGrid(this.mousePos) : this.mousePos;
+            
+            // Initialize checkpoint state if needed
+            if (!this.checkpointState) {
+                this.checkpointState = {
+                    placing: false,
+                    firstPoint: null,
+                    previewPoint: null
+                };
+            }
+            
+            if (!this.checkpointState.placing || !this.checkpointState.firstPoint) {
+                // Preview first point
+                this.ctx.fillStyle = '#00ff00aa';
+                this.ctx.strokeStyle = '#00ff00';
+                this.ctx.lineWidth = 2 / this.view.zoom;
+                this.ctx.beginPath();
+                this.ctx.arc(snappedPos.x, snappedPos.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+            } else {
+                // Preview checkpoint segment
+                const firstPoint = this.checkpointState.firstPoint;
+                const length = Math.sqrt(
+                    Math.pow(snappedPos.x - firstPoint.x, 2) + 
+                    Math.pow(snappedPos.y - firstPoint.y, 2)
+                );
+                
+                // Color based on length validity (minimum 6 pixels)
+                const isValidLength = length >= 6;
+                const previewColor = isValidLength ? '#00ff00' : '#ff0000';
+                const previewColorAlpha = isValidLength ? '#00ff00aa' : '#ff0000aa';
+                
+                // Draw preview line
+                this.ctx.strokeStyle = previewColorAlpha;
+                this.ctx.lineWidth = 3 / this.view.zoom;
+                this.ctx.beginPath();
+                this.ctx.moveTo(firstPoint.x, firstPoint.y);
+                this.ctx.lineTo(snappedPos.x, snappedPos.y);
+                this.ctx.stroke();
+                
+                // Draw first point (already placed)
+                this.ctx.fillStyle = '#00ff00';
+                this.ctx.strokeStyle = '#00ff00';
+                this.ctx.lineWidth = 2 / this.view.zoom;
+                this.ctx.beginPath();
+                this.ctx.arc(firstPoint.x, firstPoint.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Draw second point preview
+                this.ctx.fillStyle = previewColorAlpha;
+                this.ctx.strokeStyle = previewColor;
+                this.ctx.lineWidth = 2 / this.view.zoom;
+                this.ctx.beginPath();
+                this.ctx.arc(snappedPos.x, snappedPos.y, 4 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Show length indicator
+                if (length > 0) {
+                    const midX = (firstPoint.x + snappedPos.x) / 2;
+                    const midY = (firstPoint.y + snappedPos.y) / 2;
+                    
+                    this.ctx.fillStyle = previewColor;
+                    this.ctx.font = `${12 / this.view.zoom}px monospace`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(`${length.toFixed(1)}px`, midX, midY - 10 / this.view.zoom);
+                }
+            }
+        }
+    },
+    
+    // Checkpoint Utility Functions
+    findCheckpointHit(pos) {
+        const hitRadius = 8; // pixels
+        
+        for (let i = 0; i < this.track.track.checkpoints.length; i++) {
+            const checkpoint = this.track.track.checkpoints[i];
+            
+            // Check endpoint A
+            const distanceA = Math.sqrt(
+                Math.pow(pos.x - checkpoint.segment.a.x, 2) + 
+                Math.pow(pos.y - checkpoint.segment.a.y, 2)
+            );
+            
+            if (distanceA <= hitRadius) {
+                return { index: i, endpoint: 'a', distance: distanceA };
+            }
+            
+            // Check endpoint B
+            const distanceB = Math.sqrt(
+                Math.pow(pos.x - checkpoint.segment.b.x, 2) + 
+                Math.pow(pos.y - checkpoint.segment.b.y, 2)
+            );
+            
+            if (distanceB <= hitRadius) {
+                return { index: i, endpoint: 'b', distance: distanceB };
+            }
+        }
+        
+        return null;
+    },
+    
+    // Delete checkpoint by index
+    deleteCheckpointByIndex(index) {
+        if (index < 0 || index >= this.track.track.checkpoints.length) {
+            return false;
+        }
+        
+        const checkpoint = this.track.track.checkpoints[index];
+        this.track.track.checkpoints.splice(index, 1);
+        
+        // Re-number remaining checkpoints
+        this.track.track.checkpoints.forEach((cp, i) => {
+            cp.id = i;
+            cp.name = cp.name.replace(/Checkpoint \d+/, `Checkpoint ${i + 1}`);
+        });
+        
+        // Clear selection if this was the selected checkpoint
+        if (this.selectedCheckpointIndex === index) {
+            this.selectedCheckpointIndex = null;
+            this.selectedCheckpointEndpoint = null;
+        }
+        
+        // Update everything
+        this.incrementAutoSave();
+        this.updateStats();
+        this.updateOutput();
+        this.render();
+        
+        this.updateStatus(`Deleted ${checkpoint.name}`);
+        return true;
+    },
+    
+    // Checkpoint Management Functions
+    deleteSelectedCheckpoint() {
+        // Delete the currently selected checkpoint
+        if (this.selectedCheckpointIndex !== undefined && this.selectedCheckpointIndex !== null) {
+            this.deleteCheckpointByIndex(this.selectedCheckpointIndex);
+        } else {
+            this.updateStatus('No checkpoint selected - click on a checkpoint to select it first');
+        }
+    },
+    
+    validateTrackConfiguration() {
+        const issues = [];
+        const warnings = [];
+        
+        // Validate racing line direction consistency
+        if (this.track.racingLine.waypoints.length > 3) {
+            let directionChanges = 0;
+            for (let i = 1; i < this.track.racingLine.waypoints.length - 1; i++) {
+                const prev = this.track.racingLine.waypoints[i - 1].pos;
+                const curr = this.track.racingLine.waypoints[i].pos;
+                const next = this.track.racingLine.waypoints[i + 1].pos;
+                
+                const cross1 = (curr.x - prev.x) * (next.y - curr.y) - (curr.y - prev.y) * (next.x - curr.x);
+                
+                if (i > 1) {
+                    const prevPrev = this.track.racingLine.waypoints[i - 2].pos;
+                    const cross2 = (prev.x - prevPrev.x) * (curr.y - prev.y) - (prev.y - prevPrev.y) * (curr.x - prev.x);
+                    
+                    if (Math.sign(cross1) !== Math.sign(cross2) && Math.abs(cross1) > 1) {
+                        directionChanges++;
+                    }
+                }
+            }
+            
+            if (directionChanges > this.track.racingLine.waypoints.length * 0.3) {
+                warnings.push(`Racing line has ${directionChanges} direction inconsistencies - consider smoothing`);
+            }
+        }
+        
+        // Validate checkpoint coverage
+        if (this.track.track.checkpoints.length < 3) {
+            warnings.push('Consider adding more checkpoints for better lap validation');
+        }
+        
+        // Validate checkpoint spacing
+        if (this.track.track.checkpoints.length > 1) {
+            for (let i = 0; i < this.track.track.checkpoints.length - 1; i++) {
+                const cp1 = this.track.track.checkpoints[i];
+                const cp2 = this.track.track.checkpoints[i + 1];
+                
+                const midX1 = (cp1.segment.a.x + cp1.segment.b.x) / 2;
+                const midY1 = (cp1.segment.a.y + cp1.segment.b.y) / 2;
+                const midX2 = (cp2.segment.a.x + cp2.segment.b.x) / 2;
+                const midY2 = (cp2.segment.a.y + cp2.segment.b.y) / 2;
+                
+                const distance = Math.sqrt((midX2 - midX1) ** 2 + (midY2 - midY1) ** 2);
+                if (distance < 5) {
+                    warnings.push(`Checkpoints ${i + 1} and ${i + 2} are very close together`);
+                }
+            }
+        }
+        
+        // Validate track boundaries exist
+        if (this.track.track.outer.length < 3) {
+            issues.push('Track requires outer boundary with at least 3 points');
+        }
+        
+        // Display results
+        let statusMessage = 'Track Validation: ';
+        if (issues.length === 0 && warnings.length === 0) {
+            statusMessage += 'All checks passed! ✓';
+        } else {
+            statusMessage += `${issues.length} issues, ${warnings.length} warnings`;
+        }
+        
+        this.updateStatus(statusMessage);
+        
+        if (issues.length > 0 || warnings.length > 0) {
+            console.log('Track Validation Results:');
+            issues.forEach(issue => console.log('❌ ISSUE:', issue));
+            warnings.forEach(warning => console.log('⚠️ WARNING:', warning));
+        }
+        
+        // Update validation in track data
+        this.track.validation.errors = [...this.track.validation.errors.filter(e => !e.includes('validation')), ...issues];
+        this.track.validation.warnings = [...this.track.validation.warnings.filter(w => !w.includes('validation')), ...warnings];
+        this.updateValidationDisplay();
     }
 };
 
