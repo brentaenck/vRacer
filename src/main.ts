@@ -5,6 +5,7 @@ import { performanceTracker, PerformanceBenchmark } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { initializeTrackEditor, isEditorActive } from './track-editor-ui'
 import { setupEditorCanvas, drawEditorOverlay } from './track-editor-canvas'
+import { initializeStandaloneTrackEditor } from './track-editor-integration/standalone-integration'
 import { chooseAIMove } from './ai'
 import { initializeRacingLineUI, isRacingLineVisible, handleRacingLineKeyboardShortcut } from './racing-line-ui'
 
@@ -89,6 +90,9 @@ initializeDualStyling()
 
 // Initialize track editor UI system
 initializeTrackEditor()
+
+// Initialize standalone track editor integration
+initializeStandaloneTrackEditor()
 
 // Initialize track editor canvas handlers
 setupEditorCanvas(canvas)

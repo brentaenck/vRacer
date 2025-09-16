@@ -2,6 +2,9 @@
    vRacer Modern UI Design System
    ======================================== */
 
+/* Import track editor modal styles */
+@import url('./track-editor-integration/modal-styles.css');
+
 :root {
   /* Paper-Based Color Palette */
   --paper-bg: #fefef8;           /* Cream paper background */

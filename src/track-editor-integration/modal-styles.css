@@ -1,0 +1,297 @@
+/**
+ * Track Editor Modal Styles
+ * 
+ * Styling for the integrated track editor modal that embeds the standalone editor.
+ * Follows the main vRacer design system while providing a full-screen editor experience.
+ */
+
+/* =============================================================================
+   MODAL CONTAINER
+   ============================================================================= */
+
+.track-editor-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* Above everything else */
+  
+  /* Animation */
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
+   MODAL CONTENT
+   ============================================================================= */
+
+.track-editor-modal-content {
+  background: var(--bg-secondary, #1a1a2e);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  width: 95vw;
+  height: 95vh;
+  max-width: 1800px;
+  max-height: 1200px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--accent-primary, #00d4ff);
+}
+
+/* =============================================================================
+   MODAL HEADER
+   ============================================================================= */
+
+.track-editor-modal-header {
+  background: var(--bg-primary, #0f0f1e);
+  color: var(--text-primary, #ffffff);
+  padding: 1rem 2rem;
+  border-bottom: 2px solid var(--accent-primary, #00d4ff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 12px 12px 0 0;
+}
+
+.track-editor-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-primary, #00d4ff);
+}
+
+.track-editor-modal-header .close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #cccccc);
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.track-editor-modal-header .close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary, #ffffff);
+  transform: scale(1.1);
+}
+
+/* =============================================================================
+   TRACK EDITOR CONTAINER
+   ============================================================================= */
+
+.track-editor-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+#trackEditorFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--bg-secondary, #1a1a2e);
+}
+
+/* Loading indicator for iframe */
+.track-editor-container::before {
+  content: 'Loading Track Editor...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-secondary, #cccccc);
+  font-size: 1.2rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+#trackEditorFrame[src] + .track-editor-container::before {
+  display: none;
+}
+
+/* =============================================================================
+   MODAL FOOTER
+   ============================================================================= */
+
+.track-editor-modal-footer {
+  background: var(--bg-primary, #0f0f1e);
+  padding: 1rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+  border-radius: 0 0 12px 12px;
+}
+
+.track-editor-modal-footer .btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.track-editor-modal-footer .btn-primary {
+  background: var(--accent-primary, #00d4ff);
+  color: var(--bg-primary, #0f0f1e);
+}
+
+.track-editor-modal-footer .btn-primary:hover {
+  background: var(--accent-secondary, #00b4d8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.track-editor-modal-footer .btn-secondary {
+  background: transparent;
+  color: var(--text-primary, #ffffff);
+  border: 2px solid var(--text-secondary, #cccccc);
+}
+
+.track-editor-modal-footer .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--text-primary, #ffffff);
+  transform: translateY(-1px);
+}
+
+/* =============================================================================
+   CONFIG MODAL INTEGRATION
+   ============================================================================= */
+
+.config-section.track-editor-section {
+  background: var(--bg-secondary, #1a1a2e);
+  border: 2px solid var(--accent-primary, #00d4ff);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.track-editor-section h3 {
+  color: var(--accent-primary, #00d4ff);
+  margin: 0 0 0.75rem 0;
+  font-size: 1.2rem;
+}
+
+.track-editor-section p {
+  color: var(--text-secondary, #cccccc);
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.config-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+#openTrackEditor {
+  padding: 0.75rem 2rem;
+  background: var(--accent-primary, #00d4ff);
+  color: var(--bg-primary, #0f0f1e);
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#openTrackEditor:hover {
+  background: var(--accent-secondary, #00b4d8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+}
+
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================= */
+
+@media (max-width: 1200px) {
+  .track-editor-modal-content {
+    width: 98vw;
+    height: 98vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .track-editor-modal-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .track-editor-modal-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .track-editor-modal-footer {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .track-editor-modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* =============================================================================
+   DARK MODE COMPATIBILITY
+   ============================================================================= */
+
+@media (prefers-color-scheme: dark) {
+  .track-editor-modal {
+    --bg-primary: #0f0f1e;
+    --bg-secondary: #1a1a2e;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --accent-primary: #00d4ff;
+    --accent-secondary: #00b4d8;
+  }
+}
+
+/* =============================================================================
+   ACCESSIBILITY
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .track-editor-modal,
+  .track-editor-modal-header .close-btn,
+  .track-editor-modal-footer .btn,
+  #openTrackEditor {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+.track-editor-modal-header .close-btn:focus,
+.track-editor-modal-footer .btn:focus,
+#openTrackEditor:focus {
+  outline: 3px solid var(--accent-primary, #00d4ff);
+  outline-offset: 2px;
+}
