@@ -6,6 +6,7 @@ import { animationManager, AnimationUtils } from './animations'
 import { initializeTrackEditor, isEditorActive } from './track-editor-ui'
 import { setupEditorCanvas, drawEditorOverlay } from './track-editor-canvas'
 import { initializeStandaloneTrackEditor } from './track-editor-integration/standalone-integration'
+import { initializeDropdownMenu } from './dropdown-menu'
 import { chooseAIMove } from './ai'
 import { initializeRacingLineUI, isRacingLineVisible, handleRacingLineKeyboardShortcut } from './racing-line-ui'
 
@@ -50,7 +51,6 @@ const ctx = canvas.getContext('2d')!
 const statusEl = document.getElementById('status')!
 
 // Configuration modal elements
-const configBtn = document.getElementById('configBtn') as HTMLButtonElement
 const configModal = document.getElementById('configModal') as HTMLDivElement
 const closeConfigBtn = document.getElementById('closeConfigBtn') as HTMLButtonElement
 
@@ -93,6 +93,9 @@ initializeTrackEditor()
 
 // Initialize standalone track editor integration
 initializeStandaloneTrackEditor()
+
+// Initialize dropdown menu system
+initializeDropdownMenu()
 
 // Initialize track editor canvas handlers
 setupEditorCanvas(canvas)
@@ -655,12 +658,9 @@ function openConfigModal() {
 function closeConfigModal() {
   configModal.classList.remove('show')
   configModal.setAttribute('aria-hidden', 'true')
-  // Return focus to hamburger button
-  configBtn.focus()
 }
 
-// Modal event listeners
-configBtn.addEventListener('click', openConfigModal)
+// Modal event listeners - handled by dropdown menu now
 closeConfigBtn.addEventListener('click', closeConfigModal)
 
 // Close modal when clicking outside content

@@ -125,58 +125,10 @@ function wireModalEvents(modal: HTMLElement): void {
  * Set up track editor toggle in the main UI
  */
 function setupTrackEditorToggle(): void {
-  // Add track editor button to the config modal
-  addTrackEditorButtonToConfig();
-  
   // Add track editor shortcut (T key)
   setupTrackEditorKeyboard();
 }
 
-/**
- * Add track editor button to configuration modal
- */
-function addTrackEditorButtonToConfig(): void {
-  const configModal = document.getElementById('configModal');
-  if (!configModal) {
-    console.warn('❌ Config modal not found - cannot add track editor button');
-    return;
-  }
-  
-  // Find a good place to add the track editor button
-  let insertPoint = configModal.querySelector('.config-actions');
-  if (!insertPoint) {
-    // If no config-actions section, add to the end of modal content
-    insertPoint = configModal.querySelector('.config-content') || configModal;
-  }
-  
-  const editorSection = document.createElement('div');
-  editorSection.className = 'config-section track-editor-section';
-  editorSection.innerHTML = `
-    <h3>🎯 Track Editor</h3>
-    <p>Create and edit custom racing tracks with the professional track editor.</p>
-    <div class="config-buttons">
-      <button id="openTrackEditor" class="btn btn-primary">
-        🏁 Open Track Editor
-      </button>
-    </div>
-  `;
-  
-  insertPoint.appendChild(editorSection);
-  
-  // Wire up the button
-  const openBtn = editorSection.querySelector('#openTrackEditor');
-  openBtn?.addEventListener('click', () => {
-    showTrackEditor();
-    // Close config modal
-    const modal = document.getElementById('configModal');
-    if (modal) {
-      modal.classList.remove('show');
-      modal.setAttribute('aria-hidden', 'true');
-    }
-  });
-  
-  console.log('🔗 Track editor button added to config modal');
-}
 
 /**
  * Set up track editor keyboard shortcut

@@ -37,13 +37,25 @@
             <span class="btn-icon">🔄</span>
             New Game
           </button>
-          <button id="configBtn" title="Game Settings" class="btn-config" aria-label="Open game settings">
-            <span class="hamburger-icon">
-              <span class="hamburger-line"></span>
-              <span class="hamburger-line"></span>
-              <span class="hamburger-line"></span>
-            </span>
-          </button>
+          <div class="dropdown-menu-container">
+            <button id="menuBtn" title="Menu" class="btn-menu" aria-label="Open menu" aria-expanded="false" aria-haspopup="menu">
+              <span class="hamburger-icon">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+              </span>
+            </button>
+            <div id="dropdownMenu" class="dropdown-menu" role="menu" aria-hidden="true">
+              <button id="gameSettingsBtn" class="menu-item" role="menuitem" tabindex="-1">
+                <span class="menu-icon">⚙️</span>
+                <span class="menu-text">Game Settings</span>
+              </button>
+              <button id="trackEditorBtn" class="menu-item" role="menuitem" tabindex="-1">
+                <span class="menu-icon">🏁</span>
+                <span class="menu-text">Track Editor</span>
+              </button>
+            </div>
+          </div>
         </nav>
       </header>
       
