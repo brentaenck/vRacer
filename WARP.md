@@ -74,7 +74,7 @@ npm install    # Install dependencies
 
 **`src/main.ts`** - UI and event handling
 - Canvas click handling for move selection
-- Keyboard shortcuts (R-reset, G-grid, C-candidates, H-help)
+- Keyboard shortcuts (R-reset, G-grid, C-candidates, H-help, L-racing line)
 - DOM integration and game loop management
 - HUD update coordination with game state
 
@@ -161,6 +161,12 @@ type GameState = {
 - ✅ Complete removal of engine sounds and audio dependencies
 - ✅ 23% bundle size reduction (33.75kB → 25.90kB JS)
 - ✅ Cleaner, more focused codebase
+
+**Track Editor Code Cleanup** - **DONE!**
+- ✅ Removed duplicate track editor implementations
+- ✅ Single unified track editor via dropdown menu
+- ✅ Eliminated ~1000+ lines of deprecated code
+- ✅ Cleaner architecture with clear separation of concerns
 
 ## 🗺️ NEXT DEVELOPMENT PHASES
 
@@ -296,7 +302,8 @@ npm run release-check   # Validates release readiness
 - Core functionality remains working
 - New features work when enabled
 - Mouse movement selection works
-- Keyboard shortcuts (R, G, C, H) work
+- Keyboard shortcuts (R, G, C, H, L, T) work
+- Track editor accessible via dropdown menu
 - Debug info appears when `debugMode: true`
 - Game state persists correctly through moves
 
@@ -358,6 +365,12 @@ if (isFeatureEnabled('advancedDamage')) {
 2. Test collision detection with new geometry
 3. Ensure start/finish line positioning works
 4. Validate path legality functions
+
+### Accessing Track Editor
+The unified track editor is accessible via:
+1. **Dropdown menu** → Click hamburger menu (☰) in header → "Track Editor"
+2. **Keyboard shortcut** → Press `T` key when not in input fields
+3. **Standalone mode** → Direct access via `track-editor/index.html`
 
 ### Debug Features
 Enable `debugMode: true` in `src/features.ts` to get:

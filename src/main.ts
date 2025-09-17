@@ -3,8 +3,6 @@ import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled, toggleFeature } from './features'
 import { performanceTracker, PerformanceBenchmark } from './performance'
 import { animationManager, AnimationUtils } from './animations'
-import { initializeTrackEditor, isEditorActive } from './track-editor-ui'
-import { setupEditorCanvas, drawEditorOverlay } from './track-editor-canvas'
 import { initializeStandaloneTrackEditor } from './track-editor-integration/standalone-integration'
 import { initializeDropdownMenu } from './dropdown-menu'
 import { chooseAIMove } from './ai'
@@ -88,17 +86,11 @@ logEnabledFeatures()
 // Initialize dual styling system
 initializeDualStyling()
 
-// Initialize track editor UI system
-initializeTrackEditor()
-
 // Initialize standalone track editor integration
 initializeStandaloneTrackEditor()
 
 // Initialize dropdown menu system
 initializeDropdownMenu()
-
-// Initialize track editor canvas handlers
-setupEditorCanvas(canvas)
 
 // Initialize racing line UI system
 initializeRacingLineUI()
@@ -114,8 +106,7 @@ function checkAITurn() {
     aiTurnTimeout = null
   }
   
-  // Pause AI when track editor is active
-  if (isFeatureEnabled('trackEditor') && isEditorActive()) return
+  // AI continues normally - no track editor pause needed
   
   // Only handle AI turns in multi-car mode
   if (!isMultiCarGame(state)) return
@@ -152,11 +143,6 @@ function render() {
   }
   
   draw(ctx, state, canvas)
-  
-  // Draw track editor overlay if active
-  if (isFeatureEnabled('trackEditor') && isEditorActive()) {
-    drawEditorOverlay(ctx)
-  }
   
   // End frame tracking
   if (isFeatureEnabled('performanceMetrics')) {
@@ -196,10 +182,7 @@ function render() {
       statusEl.textContent = JSON.stringify(debugInfo, null, 2)
     }
   } else {
-    // Show track editor status if active
-    if (isFeatureEnabled('trackEditor') && isEditorActive()) {
-      statusEl.textContent = '🛠️ Track Editor Active - Game Paused'
-    } else if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+    if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car status
       const multiCarState = state as any
       const currentPlayer = multiCarState.players[multiCarState.currentPlayerIndex]
@@ -240,8 +223,6 @@ setTimeout(() => {
 // Mouse hover for improved controls
 if (isFeatureEnabled('improvedControls')) {
   canvas.addEventListener('mousemove', (e) => {
-    // Skip game mouse handling if track editor is active
-    if (isFeatureEnabled('trackEditor') && isEditorActive()) return
     
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car mode handling
@@ -301,8 +282,6 @@ if (isFeatureEnabled('improvedControls')) {
   })
   
   canvas.addEventListener('mouseleave', () => {
-    // Skip game mouse handling if track editor is active
-    if (isFeatureEnabled('trackEditor') && isEditorActive()) return
     
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car mode
@@ -323,8 +302,6 @@ if (isFeatureEnabled('improvedControls')) {
 }
 
 canvas.addEventListener('click', (e) => {
-  // Skip game click handling if track editor is active
-  if (isFeatureEnabled('trackEditor') && isEditorActive()) return
   
   if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
     // Multi-car mode handling
@@ -700,20 +677,16 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'd' || e.key === 'D') { debugToggle.checked = !debugToggle.checked; debugToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'l' || e.key === 'L') { handleRacingLineKeyboardShortcut() }
   
-  // Improved controls: Undo functionality (skip if track editor is active)
+  // Improved controls: Undo functionality
   if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {
-    if (isFeatureEnabled('trackEditor') && isEditorActive()) {
-      // Let track editor handle undo instead
-      return
-    }
     state = undoMove(state)
     render()
     e.preventDefault()
     return
   }
   
-  // Improved controls: Keyboard movement (skip if track editor is active)
-  if (isFeatureEnabled('improvedControls') && !(isFeatureEnabled('trackEditor') && isEditorActive())) {
+  // Improved controls: Keyboard movement
+  if (isFeatureEnabled('improvedControls')) {
     if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
       // Multi-car mode handling
       const multiCarState = state as any
@@ -750,10 +723,7 @@ window.addEventListener('keydown', (e) => {
             break
           case 'e':
           case 'E':
-            // Only handle diagonal movement if track editor is not active
-            if (!isEditorActive()) {
-              acc = { x: 1, y: -1 }
-            }
+            acc = { x: 1, y: -1 }
             break
           case 'z':
           case 'Z':
@@ -817,10 +787,7 @@ window.addEventListener('keydown', (e) => {
             break
           case 'e':
           case 'E':
-            // Only handle diagonal movement if track editor is not active
-            if (!isEditorActive()) {
-              acc = { x: 1, y: -1 }
-            }
+            acc = { x: 1, y: -1 }
             break
           case 'z':
           case 'Z':

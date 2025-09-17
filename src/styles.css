@@ -1548,7 +1548,6 @@
 }
 
 /* Config modal specific sections */
-.dual-style-enabled #trackEditorSection *,
 .dual-style-enabled .racing-line-controls,
 .dual-style-enabled .racing-line-status {
   color: var(--ui-text-primary) !important;
@@ -1586,14 +1585,6 @@
 /* Racing line section */
 .dual-style-enabled .config-section:has(h3:contains('Racing Line')) *,
 .dual-style-enabled .config-section h3[contains='Racing Line'] ~ * {
-  color: var(--ui-text-primary) !important;
-}
-
-/* Track editor section */
-.dual-style-enabled .config-section:has(h3:contains('Track Editor')) *,
-.dual-style-enabled #trackEditorSection h3,
-.dual-style-enabled #trackEditorSection div,
-.dual-style-enabled #trackEditorSection span {
   color: var(--ui-text-primary) !important;
 }
 
