@@ -191,7 +191,6 @@ const RacingLineEditor = {
         this.selectWaypoint(insertIndex);
         
         // Update everything
-        TrackEditor.incrementAutoSave();
         TrackEditor.updateStats();
         TrackEditor.updateOutput();
         TrackEditor.render();
@@ -219,7 +218,6 @@ const RacingLineEditor = {
             }
             
             // Update everything
-            TrackEditor.incrementAutoSave();
             TrackEditor.updateStats();
             TrackEditor.updateOutput();
             TrackEditor.render();
@@ -266,7 +264,6 @@ const RacingLineEditor = {
         this.selectWaypoint(this.selectedWaypoint + 1);
         
         // Update everything
-        TrackEditor.incrementAutoSave();
         TrackEditor.updateStats();
         TrackEditor.updateOutput();
         TrackEditor.render();
@@ -292,7 +289,6 @@ const RacingLineEditor = {
         const waypoint = this.getSelectedWaypoint();
         if (waypoint) {
             waypoint[property] = value;
-            TrackEditor.incrementAutoSave();
             TrackEditor.updateStats();
             TrackEditor.updateOutput();
             TrackEditor.render();
@@ -316,9 +312,6 @@ const RacingLineEditor = {
         this.isDraggingWaypoint = false;
         this.dragStartPos = null;
         TrackEditor.canvas.style.cursor = 'default';
-        
-        // Mark as changed for auto-save
-        TrackEditor.incrementAutoSave();
     },
     
     // Update waypoint position

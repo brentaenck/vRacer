@@ -103,6 +103,11 @@ const TrackEditor = {
         this.setupEventListeners();
         this.setupUI();
         
+        // Clear any existing auto-save data since we don't use it anymore
+        if (typeof FileManager !== 'undefined' && FileManager.clearAutoSave) {
+            FileManager.clearAutoSave();
+        }
+        
         // Initial render
         this.render();
         
@@ -219,9 +224,6 @@ const TrackEditor = {
             this.updateCanvasRect();
             this.render();
         });
-        
-        // Auto-save setup
-        this.setupAutoSave();
     },
     
     // Set up property input handlers
@@ -234,7 +236,6 @@ const TrackEditor = {
         if (trackName) {
             trackName.addEventListener('change', (e) => {
                 this.track.metadata.name = e.target.value;
-                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -242,7 +243,6 @@ const TrackEditor = {
         if (trackAuthor) {
             trackAuthor.addEventListener('change', (e) => {
                 this.track.metadata.author = e.target.value;
-                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -250,7 +250,6 @@ const TrackEditor = {
         if (trackDifficulty) {
             trackDifficulty.addEventListener('change', (e) => {
                 this.track.metadata.difficulty = e.target.value;
-                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -258,7 +257,6 @@ const TrackEditor = {
         if (trackDescription) {
             trackDescription.addEventListener('change', (e) => {
                 this.track.metadata.description = e.target.value;
-                this.incrementAutoSave();
                 this.updateOutput();
             });
         }
@@ -270,7 +268,6 @@ const TrackEditor = {
                 this.track.racingLine.direction = e.target.value;
                 this.updateStats();
                 this.render();
-                this.incrementAutoSave();
                 this.updateOutput();
                 this.updateStatus(`Racing direction changed to ${e.target.value}`);
             });
@@ -389,8 +386,6 @@ const TrackEditor = {
                 previewPoint: null
             };
             
-            // Track change for auto-save
-            this.incrementAutoSave();
             
             // Update everything
             this.updateStats();
@@ -448,8 +443,6 @@ const TrackEditor = {
                 previewPoint: null
             };
             
-            // Track change for auto-save
-            this.incrementAutoSave();
             
             
             // Update everything
@@ -505,8 +498,6 @@ const TrackEditor = {
                 if (!boundary.closed) {
                     boundary.closed = true;
                     
-                    // Track change for auto-save
-                    this.incrementAutoSave();
                     
                     this.updateStatus(`${this.boundaryType} boundary completed!`);
                     this.validateTrack();
@@ -521,8 +512,6 @@ const TrackEditor = {
         // Add point to boundary
         boundary.push({ x: pos.x, y: pos.y });
         
-        // Track change for auto-save
-        this.incrementAutoSave();
         
         this.updateStats();
         this.updateOutput();
@@ -561,8 +550,6 @@ const TrackEditor = {
                 delete boundary.closed;
             }
             
-            // Track change for auto-save
-            this.incrementAutoSave();
             
             // Update everything
             this.validateTrack();
@@ -687,8 +674,6 @@ const TrackEditor = {
     handleMouseUp(e) {
         if (this.mode === 'track') {
             if (this.isDragging && this.dragPointIndex !== -1) {
-                // Track change for auto-save
-                this.incrementAutoSave();
                 
                 // Finish dragging
                 this.isDragging = false;
@@ -699,8 +684,6 @@ const TrackEditor = {
             
             // Handle checkpoint dragging completion
             if (this.isDraggingCheckpoint && this.selectedCheckpointIndex !== null) {
-                // Track change for auto-save
-                this.incrementAutoSave();
                 
                 // Finish checkpoint dragging
                 this.isDraggingCheckpoint = false;
@@ -791,11 +774,6 @@ const TrackEditor = {
     // Import track from JSON file
     async importTrack() {
         try {
-            const hasUnsavedChanges = this.autoSaveActions > 0;
-            if (hasUnsavedChanges) {
-                const shouldContinue = confirm('You have unsaved changes. Import track anyway?');
-                if (!shouldContinue) return;
-            }
             
             this.updateStatus('Select JSON file to import...');
             const trackData = await FileManager.importTrack();
@@ -814,14 +792,8 @@ const TrackEditor = {
     },
     
     
-    // Create new track (with confirmation)
+    // Create new track
     newTrack() {
-        const hasUnsavedChanges = this.autoSaveActions > 0;
-        if (hasUnsavedChanges) {
-            const shouldContinue = confirm('You have unsaved changes. Create new track anyway?');
-            if (!shouldContinue) return;
-        }
-        
         this.loadBlankTemplate();
         this.updateStatus('New track created');
         // Note: loadBlankTemplate() already calls render()
@@ -1407,8 +1379,7 @@ const TrackEditor = {
         this.track.metadata.description = 'A basic oval racing circuit - fits within game canvas';
         this.updatePropertyInputs();
         
-        // Auto-save and refresh
-        this.incrementAutoSave();
+        // Refresh and validate
         this.validateTrack();
         this.updateStats();
         this.updateOutput();
@@ -1437,59 +1408,6 @@ const TrackEditor = {
         }
     },
     
-    // Setup auto-save functionality
-    setupAutoSave() {
-        // Auto-save every 30 seconds
-        setInterval(() => {
-            this.performAutoSave();
-        }, 30000);
-        
-        // Auto-save on significant actions
-        this.autoSaveActions = 0;
-        
-        // Check for existing auto-save on load
-        if (FileManager.hasAutoSave()) {
-            this.offerAutoSaveRestore();
-        }
-    },
-    
-    // Perform auto-save
-    performAutoSave() {
-        if (this.autoSaveActions > 0) {
-            // Store boundary closed states before auto-save
-            this.track.metadata.boundaries = {
-                outerClosed: !!this.track.track.outer.closed,
-                innerClosed: !!this.track.track.inner.closed
-            };
-            
-            FileManager.autoSave(this.track);
-            this.autoSaveActions = 0;
-            console.log('🔄 Track auto-saved');
-        }
-    },
-    
-    // Increment auto-save counter for significant actions
-    incrementAutoSave() {
-        this.autoSaveActions++;
-    },
-    
-    // Offer to restore auto-saved track
-    offerAutoSaveRestore() {
-        const autoSaveData = FileManager.loadAutoSave();
-        if (!autoSaveData) return;
-        
-        const autoSaveTime = new Date(autoSaveData.metadata.autoSaveTime).toLocaleString();
-        const shouldRestore = confirm(
-            `Found auto-saved track from ${autoSaveTime}.\n\nRestore auto-saved progress?`
-        );
-        
-        if (shouldRestore) {
-            this.loadTrackData(autoSaveData);
-            this.updateStatus('Restored auto-saved track');
-        } else {
-            FileManager.clearAutoSave();
-        }
-    },
     
     loadBlankTemplate() {
         // Clear everything
@@ -2521,7 +2439,6 @@ const TrackEditor = {
         }
         
         // Update everything
-        this.incrementAutoSave();
         this.updateStats();
         this.updateOutput();
         this.render();
