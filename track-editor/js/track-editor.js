@@ -734,73 +734,7 @@ const TrackEditor = {
         }
     },
     
-    // Show save dialog
-    showSaveDialog() {
-        const name = prompt('Enter track name:', this.track.metadata.name || 'Untitled Track');
-        if (name) {
-            this.saveTrack(name);
-        }
-    },
     
-    // Save track with given name
-    saveTrack(name) {
-        try {
-            this.track.metadata.name = name;
-            this.track.metadata.lastModified = new Date().toISOString();
-            
-            // Store boundary closed states in metadata (since JSON doesn't preserve array properties)
-            this.track.metadata.boundaries = {
-                outerClosed: !!this.track.track.outer.closed,
-                innerClosed: !!this.track.track.inner.closed
-            };
-            
-            FileManager.saveTrack(this.track, name);
-            this.updateStatus(`Track "${name}" saved successfully`);
-            this.autoSaveActions = 0; // Reset since we just saved
-        } catch (error) {
-            console.error('Save failed:', error);
-            this.updateStatus('Save failed: ' + error.message, 'error');
-        }
-    },
-    
-    // Show load dialog
-    showLoadDialog() {
-        const tracks = FileManager.listSavedTracks();
-        if (tracks.length === 0) {
-            alert('No saved tracks found.');
-            return;
-        }
-        
-        // Create simple dialog
-        let message = 'Select track to load:\n\n';
-        tracks.forEach((track, index) => {
-            const modified = new Date(track.modified).toLocaleDateString();
-            message += `${index + 1}. ${track.displayName} (${modified})\n`;
-        });
-        
-        const choice = prompt(message + '\nEnter number (1-' + tracks.length + '):', '1');
-        const trackIndex = parseInt(choice) - 1;
-        
-        if (trackIndex >= 0 && trackIndex < tracks.length) {
-            this.loadTrack(tracks[trackIndex].name);
-        }
-    },
-    
-    // Load track by name
-    loadTrack(name) {
-        try {
-            const trackData = FileManager.loadTrack(name);
-            if (trackData) {
-                this.loadTrackData(trackData);
-                this.updateStatus(`Track "${name}" loaded successfully`);
-            } else {
-                this.updateStatus('Track not found', 'error');
-            }
-        } catch (error) {
-            console.error('Load failed:', error);
-            this.updateStatus('Load failed: ' + error.message, 'error');
-        }
-    },
     
     // Load track data into editor
     loadTrackData(trackData) {
@@ -879,130 +813,6 @@ const TrackEditor = {
         }
     },
     
-    // Show manage tracks dialog
-    showManageTracksDialog() {
-        const tracks = FileManager.listSavedTracks();
-        
-        if (tracks.length === 0) {
-            alert('No saved tracks to manage.');
-            return;
-        }
-        
-        // Create dialog content
-        let message = 'Manage Saved Tracks:\n\n';
-        tracks.forEach((track, index) => {
-            const modified = new Date(track.modified).toLocaleDateString();
-            const size = track.pointCount + track.waypointCount;
-            message += `${index + 1}. "${track.displayName}" by ${track.author}\n`;
-            message += `   Modified: ${modified} | Points: ${size} | Difficulty: ${track.difficulty}\n\n`;
-        });
-        
-        message += 'Actions:\n';
-        message += 'D + number: Delete track (e.g., "D1")\n';
-        message += 'CLEAR ALL: Delete all saved tracks\n';
-        message += 'Press Cancel or Enter to close\n\n';
-        
-        const action = prompt(message + 'Enter action:', '');
-        
-        if (!action) return; // User cancelled
-        
-        this.processManageAction(action.trim().toUpperCase(), tracks);
-    },
-    
-    // Process manage tracks action
-    processManageAction(action, tracks) {
-        try {
-            if (action === 'CLEAR ALL') {
-                const confirm = prompt(
-                    `⚠️  WARNING: This will permanently delete ALL ${tracks.length} saved tracks!\n\n` +
-                    'Type "DELETE ALL" to confirm:', 
-                    ''
-                );
-                
-                if (confirm === 'DELETE ALL') {
-                    this.clearAllTracks(tracks);
-                } else {
-                    this.updateStatus('Clear all tracks cancelled');
-                }
-                
-            } else if (action.startsWith('D') && action.length > 1) {
-                const trackNumber = parseInt(action.substring(1));
-                
-                if (trackNumber >= 1 && trackNumber <= tracks.length) {
-                    this.deleteTrack(tracks[trackNumber - 1]);
-                } else {
-                    this.updateStatus('Invalid track number', 'error');
-                }
-                
-            } else if (action !== '') {
-                this.updateStatus('Unknown action. Use D1, D2, etc. or CLEAR ALL', 'error');
-            }
-            
-        } catch (error) {
-            console.error('Manage tracks error:', error);
-            this.updateStatus('Action failed: ' + error.message, 'error');
-        }
-    },
-    
-    // Delete single track
-    deleteTrack(track) {
-        const confirm = window.confirm(
-            `Delete track "${track.displayName}" by ${track.author}?\n\n` +
-            `Modified: ${new Date(track.modified).toLocaleString()}\n` +
-            `This action cannot be undone.`
-        );
-        
-        if (confirm) {
-            try {
-                const success = FileManager.deleteTrack(track.name);
-                if (success) {
-                    this.updateStatus(`Track "${track.displayName}" deleted successfully`);
-                } else {
-                    this.updateStatus('Failed to delete track', 'error');
-                }
-            } catch (error) {
-                console.error('Delete track error:', error);
-                this.updateStatus('Delete failed: ' + error.message, 'error');
-            }
-        } else {
-            this.updateStatus('Delete cancelled');
-        }
-    },
-    
-    // Clear all tracks
-    clearAllTracks(tracks) {
-        let deletedCount = 0;
-        let errors = [];
-        
-        for (const track of tracks) {
-            try {
-                const success = FileManager.deleteTrack(track.name);
-                if (success) {
-                    deletedCount++;
-                } else {
-                    errors.push(track.displayName);
-                }
-            } catch (error) {
-                errors.push(`${track.displayName} (${error.message})`);
-            }
-        }
-        
-        // Also clear auto-save
-        try {
-            FileManager.clearAutoSave();
-        } catch (error) {
-            console.warn('Failed to clear auto-save:', error);
-        }
-        
-        if (errors.length === 0) {
-            this.updateStatus(`Successfully deleted all ${deletedCount} tracks and cleared auto-save`);
-        } else {
-            this.updateStatus(
-                `Deleted ${deletedCount}/${tracks.length} tracks. Errors: ${errors.join(', ')}`, 
-                'error'
-            );
-        }
-    },
     
     // Create new track (with confirmation)
     newTrack() {
@@ -1022,14 +832,6 @@ const TrackEditor = {
         // File operations
         if (e.ctrlKey || e.metaKey) {
             switch (e.key) {
-                case 's':
-                    e.preventDefault();
-                    this.showSaveDialog();
-                    break;
-                case 'o':
-                    e.preventDefault();
-                    this.showLoadDialog();
-                    break;
                 case 'i':
                     e.preventDefault();
                     this.importTrack();
@@ -1041,10 +843,6 @@ const TrackEditor = {
                 case 'n':
                     e.preventDefault();
                     this.newTrack();
-                    break;
-                case 'm':
-                    e.preventDefault();
-                    this.showManageTracksDialog();
                     break;
             }
             return;
@@ -1620,18 +1418,6 @@ const TrackEditor = {
     
     // Setup file management event handlers
     setupFileManagement() {
-        // Save button
-        const saveBtn = document.getElementById('saveTrackBtn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.showSaveDialog());
-        }
-        
-        // Load button
-        const loadBtn = document.getElementById('loadTrackBtn');
-        if (loadBtn) {
-            loadBtn.addEventListener('click', () => this.showLoadDialog());
-        }
-        
         // Export button
         const exportBtn = document.getElementById('exportTrackBtn');
         if (exportBtn) {
@@ -1642,12 +1428,6 @@ const TrackEditor = {
         const importBtn = document.getElementById('importTrackBtn');
         if (importBtn) {
             importBtn.addEventListener('click', () => this.importTrack());
-        }
-        
-        // Manage Tracks button
-        const manageBtn = document.getElementById('manageTracksBtn');
-        if (manageBtn) {
-            manageBtn.addEventListener('click', () => this.showManageTracksDialog());
         }
         
         // New Track button
