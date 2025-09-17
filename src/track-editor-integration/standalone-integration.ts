@@ -6,6 +6,9 @@
  */
 
 import { isFeatureEnabled } from '../features';
+import { trackLoader } from '../track-loader';
+import { createDefaultGame } from '../game';
+import { updateTrackInfoDisplay } from '../dropdown-menu';
 
 /**
  * Initialize the standalone track editor integration
@@ -253,16 +256,42 @@ function exportGameTrack(): void {
 function importTrackData(trackData: any): void {
   console.log('🔄 Importing track data into main game:', trackData);
   
-  // This function would integrate with the main game's track loading system
-  // For now, we'll just log the track data
-  
-  // Show success message
-  const status = document.getElementById('status');
-  if (status) {
-    status.textContent = `✅ Track "${trackData.metadata?.name || 'Custom Track'}" imported successfully!`;
+  try {
+    // Load the custom track using the track loader
+    const gameTrack = trackLoader.loadCustomTrack(trackData);
+    
+    // Notify that a new track has been loaded - main.ts should listen for this
+    const trackLoadedEvent = new CustomEvent('trackLoaded', {
+      detail: {
+        trackData: gameTrack,
+        metadata: gameTrack.metadata
+      }
+    });
+    window.dispatchEvent(trackLoadedEvent);
+    
+    // Update track info display in dropdown menu
+    updateTrackInfoDisplay();
+    
+    // Show success message with track info
+    const status = document.getElementById('status');
+    if (status) {
+      const trackName = trackData.metadata?.name || 'Custom Track';
+      const trackAuthor = trackData.metadata?.author;
+      const authorText = trackAuthor ? ` by ${trackAuthor}` : '';
+      status.textContent = `✅ Track "${trackName}"${authorText} loaded! Press R to start a new race on this track.`;
+    }
+    
+    console.log('✅ Track import completed successfully');
+    
+  } catch (error) {
+    console.error('❌ Failed to import track:', error);
+    
+    // Show error message
+    const status = document.getElementById('status');
+    if (status) {
+      status.textContent = `❌ Failed to load track: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
   }
-  
-  console.log('✅ Track import completed');
 }
 
 /**
@@ -271,24 +300,36 @@ function importTrackData(trackData: any): void {
 function getCurrentGameTrack(): any {
   console.log('📋 Getting current game track data...');
   
-  // This would connect to the main game state to get the current track
-  // For now, return a placeholder
-  return {
-    metadata: {
-      name: 'Current Game Track',
-      author: 'vRacer Player',
-      description: 'Track exported from main game',
-      created: new Date().toISOString()
-    },
-    track: {
-      outer: [],
-      inner: [],
-      checkpoints: [],
-      startLine: { a: { x: 0, y: 0 }, b: { x: 0, y: 0 } }
-    },
-    racingLine: {
-      waypoints: [],
-      direction: 'counter-clockwise'
-    }
-  };
+  // Export current track data using track loader
+  const trackData = trackLoader.exportCurrentTrack();
+  
+  if (trackData) {
+    console.log('✅ Exported current game track:', trackData.metadata.name);
+    return trackData;
+  } else {
+    console.warn('⚠️ No track data available for export');
+    // Return a minimal default track as fallback
+    return {
+      metadata: {
+        name: 'Default Track',
+        author: 'vRacer Team',
+        description: 'Default racing track',
+        created: new Date().toISOString()
+      },
+      track: {
+        outer: [
+          { x: 2, y: 2 }, { x: 48, y: 2 }, { x: 48, y: 33 }, { x: 2, y: 33 }
+        ],
+        inner: [
+          { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
+        ],
+        checkpoints: [],
+        startLine: { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
+      },
+      racingLine: {
+        waypoints: [],
+        direction: 'counter-clockwise'
+      }
+    };
+  }
 }

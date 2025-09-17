@@ -6,6 +6,7 @@
  */
 
 import { showTrackEditor } from './track-editor-integration/standalone-integration';
+import { trackLoader } from './track-loader';
 
 /**
  * Initialize the dropdown menu system
@@ -17,8 +18,11 @@ export function initializeDropdownMenu(): void {
   const dropdownMenu = document.getElementById('dropdownMenu');
   const gameSettingsBtn = document.getElementById('gameSettingsBtn');
   const trackEditorBtn = document.getElementById('trackEditorBtn');
+  const loadTrackBtn = document.getElementById('loadTrackBtn');
+  const restoreDefaultTrackBtn = document.getElementById('restoreDefaultTrackBtn');
+  const currentTrackInfo = document.getElementById('currentTrackInfo');
   
-  if (!menuBtn || !dropdownMenu || !gameSettingsBtn || !trackEditorBtn) {
+  if (!menuBtn || !dropdownMenu || !gameSettingsBtn || !trackEditorBtn || !loadTrackBtn || !restoreDefaultTrackBtn) {
     console.error('❌ Dropdown menu elements not found');
     return;
   }
@@ -43,6 +47,18 @@ export function initializeDropdownMenu(): void {
     openTrackEditor();
   });
   
+  loadTrackBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    hideDropdownMenu();
+    loadTrackFromFile();
+  });
+  
+  restoreDefaultTrackBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    hideDropdownMenu();
+    restoreDefaultTrack();
+  });
+  
   // Close menu when clicking outside
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
@@ -60,6 +76,9 @@ export function initializeDropdownMenu(): void {
   
   // Set up keyboard navigation within menu
   setupMenuKeyboardNavigation();
+  
+  // Update track info display
+  updateTrackInfoDisplay();
   
   console.log('✅ Dropdown menu initialized');
 }
@@ -191,6 +210,74 @@ function openTrackEditor(): void {
 }
 
 /**
+ * Load track from JSON file
+ */
+function loadTrackFromFile(): void {
+  console.log('📁 Loading track from file...');
+  
+  // Create file input element
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  fileInput.style.display = 'none';
+  
+  fileInput.addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    
+    try {
+      const text = await file.text();
+      const trackData = JSON.parse(text);
+      
+      // Load the custom track
+      trackLoader.loadCustomTrack(trackData);
+      
+      // Update track info display
+      updateTrackInfoDisplay();
+      
+      // Show success message
+      const status = document.getElementById('status');
+      if (status) {
+        const trackName = trackData.metadata?.name || 'Custom Track';
+        status.textContent = `✅ Track "${trackName}" loaded! Press R to start a new race on this track.`;
+      }
+      
+      console.log('✅ Track loaded from file successfully');
+      
+    } catch (error) {
+      console.error('❌ Failed to load track from file:', error);
+      
+      const status = document.getElementById('status');
+      if (status) {
+        status.textContent = `❌ Failed to load track: ${error instanceof Error ? error.message : 'Invalid file format'}`;
+      }
+    } finally {
+      // Clean up file input
+      document.body.removeChild(fileInput);
+    }
+  });
+  
+  // Add to DOM and trigger file dialog
+  document.body.appendChild(fileInput);
+  fileInput.click();
+}
+
+/**
+ * Restore default track
+ */
+function restoreDefaultTrack(): void {
+  console.log('🔄 Restoring default track...');
+  
+  trackLoader.restoreDefaultTrack();
+  updateTrackInfoDisplay();
+  
+  const status = document.getElementById('status');
+  if (status) {
+    status.textContent = '✅ Default track restored! Press R to start a new race.';
+  }
+}
+
+/**
  * Check if dropdown menu is open
  */
 export function isDropdownMenuOpen(): boolean {
@@ -203,4 +290,21 @@ export function isDropdownMenuOpen(): boolean {
  */
 export function closeDropdownMenu(): void {
   hideDropdownMenu();
+}
+
+/**
+ * Update track info display (public function)
+ */
+export function updateTrackInfoDisplay(): void {
+  const currentTrackInfo = document.getElementById('currentTrackInfo');
+  if (!currentTrackInfo) return;
+  
+  const trackInfo = trackLoader.getCurrentTrackInfo();
+  const textElement = currentTrackInfo.querySelector('.menu-text');
+  
+  if (textElement) {
+    const authorText = trackInfo.author ? ` by ${trackInfo.author}` : '';
+    const customIndicator = trackInfo.isCustom ? ' 🏆' : '';
+    textElement.textContent = `Track: ${trackInfo.name}${authorText}${customIndicator}`;
+  }
 }

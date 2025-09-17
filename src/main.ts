@@ -7,6 +7,7 @@ import { initializeStandaloneTrackEditor } from './track-editor-integration/stan
 import { initializeDropdownMenu } from './dropdown-menu'
 import { chooseAIMove } from './ai'
 import { initializeRacingLineUI, isRacingLineVisible, handleRacingLineKeyboardShortcut } from './racing-line-ui'
+import { trackLoader } from './track-loader'
 
 /**
  * Initialize dual styling system based on feature flag
@@ -94,6 +95,13 @@ initializeDropdownMenu()
 
 // Initialize racing line UI system
 initializeRacingLineUI()
+
+// Listen for track loading events
+window.addEventListener('trackLoaded', (event: any) => {
+  console.log('🏁 Track loaded event received:', event.detail);
+  // Track has been loaded, but we need to manually start a new game to use it
+  // For now, just show a message - user will press R to start new race
+});
 
 
 // Check if it's an AI player's turn and schedule move

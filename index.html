@@ -19,7 +19,7 @@
         <div class="header-brand">
           <h1>
             🏁 vRacer
-            <span class="version">v4.1.0</span>
+            <span class="version">v4.4.0</span>
           </h1>
           <p class="tagline">Professional Vector Racing</p>
         </div>
@@ -50,10 +50,24 @@
                 <span class="menu-icon">⚙️</span>
                 <span class="menu-text">Game Settings</span>
               </button>
+              <hr class="menu-separator">
               <button id="trackEditorBtn" class="menu-item" role="menuitem" tabindex="-1">
                 <span class="menu-icon">🏁</span>
                 <span class="menu-text">Track Editor</span>
               </button>
+              <button id="loadTrackBtn" class="menu-item" role="menuitem" tabindex="-1">
+                <span class="menu-icon">📁</span>
+                <span class="menu-text">Load Track from File</span>
+              </button>
+              <button id="restoreDefaultTrackBtn" class="menu-item" role="menuitem" tabindex="-1">
+                <span class="menu-icon">🔄</span>
+                <span class="menu-text">Restore Default Track</span>
+              </button>
+              <hr class="menu-separator">
+              <div class="menu-info" id="currentTrackInfo">
+                <span class="menu-icon">📍</span>
+                <span class="menu-text">Track: Default vRacer Track</span>
+              </div>
             </div>
           </div>
         </nav>

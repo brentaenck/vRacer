@@ -1,10 +1,11 @@
-import { add, clamp, Segment, segmentInsidePolygon, segmentsIntersect, Vec } from './geometry'
+import { add, clamp, pointInPolygon, Segment, segmentInsidePolygon, segmentsIntersect, Vec } from './geometry'
 import { isFeatureEnabled } from './features'
 import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { hudManager, HUDData } from './hud'
 import { createTrackAnalysisWithCustomLine, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
 import { isRacingLineVisible } from './racing-line-ui'
+import { trackLoader } from './track-loader'
 
 // Utility to access CSS custom properties from canvas context
 function getCSSColor(varName: string): string {
@@ -228,6 +229,74 @@ export function createPlayer(id: string, name: string, color: string, isLocal = 
   }
 }
 
+// Generate start positions for cars based on track geometry
+function generateStartPositions(startLine: Segment, outer: Vec[], inner: Vec[], maxCars = 8): Vec[] {
+  // Calculate the center of the start line
+  const startCenterX = (startLine.a.x + startLine.b.x) / 2
+  const startCenterY = (startLine.a.y + startLine.b.y) / 2
+  
+  // Calculate the direction perpendicular to the start line (backward from the line)
+  const lineVecX = startLine.b.x - startLine.a.x
+  const lineVecY = startLine.b.y - startLine.a.y
+  const lineLength = Math.sqrt(lineVecX * lineVecX + lineVecY * lineVecY)
+  
+  // Normalized perpendicular vector (pointing "backward" from the start line)
+  const perpX = -lineVecY / lineLength
+  const perpY = lineVecX / lineLength
+  
+  // Generate positions in a grid pattern behind the start line
+  const positions: Vec[] = []
+  const carsPerRow = 3 // Maximum cars per row
+  const rowSpacing = 1.5 // Distance between rows
+  const carSpacing = 1.0 // Distance between cars in the same row
+  
+  for (let i = 0; i < maxCars; i++) {
+    const row = Math.floor(i / carsPerRow)
+    const col = i % carsPerRow
+    
+    // Calculate the offset from the center for this car
+    const backwardOffset = (row + 1) * rowSpacing
+    const sideOffset = (col - (carsPerRow - 1) / 2) * carSpacing
+    
+    // Calculate the position
+    const x = startCenterX + perpX * backwardOffset + (lineVecX / lineLength) * sideOffset
+    const y = startCenterY + perpY * backwardOffset + (lineVecY / lineLength) * sideOffset
+    
+    const position = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }
+    
+    // Validate that the position is on the track (between outer and inner boundaries)
+    if (isPositionOnTrack(position, outer, inner)) {
+      positions.push(position)
+    } else {
+      // Fallback: try closer to the start line
+      const fallbackX = startCenterX + perpX * (rowSpacing * 0.5)
+      const fallbackY = startCenterY + perpY * (rowSpacing * 0.5)
+      const fallback = { x: Math.round(fallbackX * 10) / 10, y: Math.round(fallbackY * 10) / 10 }
+      
+      if (isPositionOnTrack(fallback, outer, inner)) {
+        positions.push(fallback)
+      } else {
+        // Last resort: use start line center
+        positions.push({ x: startCenterX, y: startCenterY })
+      }
+    }
+  }
+  
+  console.log(`🎯 Generated ${positions.length} start positions for track:`, positions)
+  return positions
+}
+
+// Check if a position is on the track (inside outer boundary, outside inner boundary)
+function isPositionOnTrack(pos: Vec, outer: Vec[], inner: Vec[]): boolean {
+  // Position must be inside the outer boundary
+  const insideOuter = pointInPolygon(pos, outer)
+  
+  // Position must be outside the inner boundary (if inner boundary exists)
+  const outsideInner = inner.length === 0 || !pointInPolygon(pos, inner)
+  
+  return insideOuter && outsideInner
+}
+
 // Create multi-car game state
 export function createMultiCarGame(numPlayers = 2): GameState {
   if (!isFeatureEnabled('multiCarSupport')) {
@@ -235,32 +304,41 @@ export function createMultiCarGame(numPlayers = 2): GameState {
     return createLegacyGame()
   }
   
-  const grid = 20 // pixels per grid unit
-  // Simple rounded rectangle track
-  const outer: Vec[] = [
-    { x: 2, y: 2 }, { x: 48, y: 2 }, { x: 48, y: 33 }, { x: 2, y: 33 }
-  ]
-  const inner: Vec[] = [
-    { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
-  ]
-  // Walls: edges of inner and outer polygons
-  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] || poly[0]! }))
-  const walls = [...wallSegments(outer), ...wallSegments(inner)]
+  // Check if a custom track is loaded
+  const customTrack = trackLoader.getCurrentCustomTrack()
+  
+  let grid: number, outer: Vec[], inner: Vec[], walls: Segment[], start: Segment
+  
+  if (customTrack) {
+    // Use custom track data
+    grid = customTrack.grid
+    outer = [...customTrack.outer]
+    inner = [...customTrack.inner]
+    walls = [...customTrack.walls]
+    start = { ...customTrack.start }
+    console.log('🏁 Using custom track:', customTrack.metadata?.name)
+  } else {
+    // Use default track
+    grid = 20 // pixels per grid unit
+    // Simple rounded rectangle track
+    outer = [
+      { x: 2, y: 2 }, { x: 48, y: 2 }, { x: 48, y: 33 }, { x: 2, y: 33 }
+    ]
+    inner = [
+      { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
+    ]
+    // Walls: edges of inner and outer polygons
+    const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] || poly[0]! }))
+    walls = [...wallSegments(outer), ...wallSegments(inner)]
+    
+    // Start/finish line spans across the track width at the left side
+    start = { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
+  }
 
-  // Start/finish line spans across the track width at the left side
-  const start: Segment = { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
-
-  // Starting positions for multiple cars (staggered)
-  const startPositions: Vec[] = [
-    { x: 7, y: 20 },   // Player 1: center
-    { x: 5, y: 21 },   // Player 2: left & back
-    { x: 9, y: 21 },   // Player 3: right & back  
-    { x: 6, y: 22 },   // Player 4: left & further back
-    { x: 8, y: 22 },   // Player 5: right & further back
-    { x: 7, y: 23 },   // Player 6: center & way back
-    { x: 5, y: 23 },   // Player 7: left & way back
-    { x: 9, y: 23 },   // Player 8: right & way back
-  ]
+  // Generate starting positions based on track geometry
+  const startPositions: Vec[] = generateStartPositions(start, outer, inner, 8)
+  
+  console.log('🏎️ Generated start positions:', startPositions)
 
   // Create players and cars
   const players: Player[] = []
@@ -376,23 +454,40 @@ export function createMultiCarGameFromConfig(config: { players: Array<{ name: st
 
 // Legacy single-car game creation for backwards compatibility
 export function createLegacyGame(): LegacyGameState {
-  const grid = 20 // pixels per grid unit
-  // Simple rounded rectangle track
-  const outer: Vec[] = [
-    { x: 2, y: 2 }, { x: 48, y: 2 }, { x: 48, y: 33 }, { x: 2, y: 33 }
-  ]
-  const inner: Vec[] = [
-    { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
-  ]
-  // Walls: edges of inner and outer polygons
-  const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] || poly[0]! }))
-  const walls = [...wallSegments(outer), ...wallSegments(inner)]
+  // Check if a custom track is loaded
+  const customTrack = trackLoader.getCurrentCustomTrack()
+  
+  let grid: number, outer: Vec[], inner: Vec[], walls: Segment[], start: Segment
+  
+  if (customTrack) {
+    // Use custom track data
+    grid = customTrack.grid
+    outer = [...customTrack.outer]
+    inner = [...customTrack.inner]
+    walls = [...customTrack.walls]
+    start = { ...customTrack.start }
+    console.log('🏁 Using custom track in legacy mode:', customTrack.metadata?.name)
+  } else {
+    // Use default track
+    grid = 20 // pixels per grid unit
+    // Simple rounded rectangle track
+    outer = [
+      { x: 2, y: 2 }, { x: 48, y: 2 }, { x: 48, y: 33 }, { x: 2, y: 33 }
+    ]
+    inner = [
+      { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
+    ]
+    // Walls: edges of inner and outer polygons
+    const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ a: p, b: poly[(i + 1) % poly.length] || poly[0]! }))
+    walls = [...wallSegments(outer), ...wallSegments(inner)]
+    
+    // Start/finish line spans across the track width at the left side
+    start = { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
+  }
 
-  // Start/finish line spans across the track width at the left side
-  const start: Segment = { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
-
-  // Start the car below the finish line (higher y value = lower on screen)
-  const startCell = { x: 7, y: 20 }
+  // Generate starting position based on track geometry
+  const startPositions = generateStartPositions(start, outer, inner, 1)
+  const startCell = startPositions[0] || { x: 7, y: 20 } // fallback to default
 
   return {
     grid,

@@ -1582,26 +1582,40 @@ const TrackEditor = {
     },
     
     loadOvalTemplate() {
-        // Simple oval track
+        // Simple oval track - sized to fit within game canvas (1000x700 pixels, 50x35 grid units)
         this.track.track.outer = [
-            { x: 100, y: 100 },
-            { x: 400, y: 100 },
-            { x: 400, y: 300 },
-            { x: 100, y: 300 }
+            { x: 80, y: 80 },    // Grid unit 4,4 (within 0-50, 0-35 limits)
+            { x: 920, y: 80 },   // Grid unit 46,4
+            { x: 920, y: 620 },  // Grid unit 46,31
+            { x: 80, y: 620 }    // Grid unit 4,31
         ];
         this.track.track.outer.closed = true; // Mark as closed
         
         this.track.track.inner = [
-            { x: 150, y: 150 },
-            { x: 350, y: 150 },
-            { x: 350, y: 250 },
-            { x: 150, y: 250 }
+            { x: 280, y: 220 },  // Grid unit 14,11
+            { x: 720, y: 220 },  // Grid unit 36,11
+            { x: 720, y: 480 },  // Grid unit 36,24
+            { x: 280, y: 480 }   // Grid unit 14,24
         ];
         this.track.track.inner.closed = true; // Mark as closed
         
+        // Add start/finish line on the left side
+        this.track.track.startLine = {
+            a: { x: 80, y: 350 },   // Left edge, middle height (grid unit 4,17.5)
+            b: { x: 280, y: 350 }   // To inner boundary (grid unit 14,17.5)
+        };
+        
         this.track.metadata.name = 'Simple Oval';
-        this.track.metadata.description = 'A basic oval racing circuit';
+        this.track.metadata.description = 'A basic oval racing circuit - fits within game canvas';
         this.updatePropertyInputs();
+        
+        // Auto-save and refresh
+        this.incrementAutoSave();
+        this.validateTrack();
+        this.updateStats();
+        this.updateOutput();
+        this.render();
+        this.updateStatus('Loaded Simple Oval template');
     },
     
     // Setup file management event handlers
