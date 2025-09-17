@@ -111,22 +111,6 @@
   background: var(--bg-secondary, #1a1a2e);
 }
 
-/* Loading indicator for iframe */
-.track-editor-container::before {
-  content: 'Loading Track Editor...';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--text-secondary, #cccccc);
-  font-size: 1.2rem;
-  z-index: 1;
-  pointer-events: none;
-}
-
-#trackEditorFrame[src] + .track-editor-container::before {
-  display: none;
-}
 
 /* =============================================================================
    MODAL FOOTER
