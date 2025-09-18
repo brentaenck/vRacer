@@ -6,9 +6,6 @@
  */
 
 import { isFeatureEnabled } from '../features';
-import { trackLoader } from '../track-loader';
-import { createDefaultGame } from '../game';
-import { updateTrackInfoDisplay } from '../dropdown-menu';
 
 /**
  * Initialize the standalone track editor integration
@@ -69,12 +66,6 @@ function createTrackEditorModal(): HTMLElement {
       </div>
       
       <div class="track-editor-modal-footer">
-        <button id="importTrackToGame" class="btn btn-primary">
-          📥 Import Track to Game
-        </button>
-        <button id="exportGameTrack" class="btn btn-secondary">
-          📤 Export Current Game Track
-        </button>
         <button id="closeTrackEditor" class="btn btn-secondary">
           Close Editor
         </button>
@@ -102,12 +93,6 @@ function wireModalEvents(modal: HTMLElement): void {
     });
   });
   
-  // Track import/export events  
-  const importBtn = modal.querySelector('#importTrackToGame');
-  const exportBtn = modal.querySelector('#exportGameTrack');
-  
-  importBtn?.addEventListener('click', importTrackToGame);
-  exportBtn?.addEventListener('click', exportGameTrack);
   
   // Close on outside click
   modal.addEventListener('click', (e) => {
@@ -196,140 +181,3 @@ export function toggleTrackEditor(): void {
   }
 }
 
-/**
- * Import track from track editor to main game
- */
-function importTrackToGame(): void {
-  console.log('📥 Importing track from editor to game...');
-  
-  const iframe = document.getElementById('trackEditorFrame') as HTMLIFrameElement;
-  if (!iframe || !iframe.contentWindow) {
-    console.error('❌ Track editor iframe not accessible');
-    return;
-  }
-  
-  // Request track data from the track editor
-  iframe.contentWindow.postMessage({
-    type: 'EXPORT_TRACK_REQUEST'
-  }, '*');
-  
-  // Listen for response
-  const handleMessage = (event: MessageEvent) => {
-    if (event.data.type === 'EXPORT_TRACK_RESPONSE') {
-      const trackData = event.data.trackData;
-      
-      // Import track into main game
-      importTrackData(trackData);
-      
-      // Clean up listener
-      window.removeEventListener('message', handleMessage);
-      
-      // Close track editor
-      hideTrackEditor();
-    }
-  };
-  
-  window.addEventListener('message', handleMessage);
-}
-
-/**
- * Export current game track to track editor
- */
-function exportGameTrack(): void {
-  console.log('📤 Exporting current game track to editor...');
-  
-  // Get current game track (this would connect to the main game state)
-  const currentTrack = getCurrentGameTrack();
-  
-  const iframe = document.getElementById('trackEditorFrame') as HTMLIFrameElement;
-  if (iframe && iframe.contentWindow) {
-    iframe.contentWindow.postMessage({
-      type: 'IMPORT_TRACK_REQUEST',
-      trackData: currentTrack
-    }, '*');
-  }
-}
-
-/**
- * Import track data into the main game
- */
-function importTrackData(trackData: any): void {
-  console.log('🔄 Importing track data into main game:', trackData);
-  
-  try {
-    // Load the custom track using the track loader
-    const gameTrack = trackLoader.loadCustomTrack(trackData);
-    
-    // Notify that a new track has been loaded - main.ts should listen for this
-    const trackLoadedEvent = new CustomEvent('trackLoaded', {
-      detail: {
-        trackData: gameTrack,
-        metadata: gameTrack.metadata
-      }
-    });
-    window.dispatchEvent(trackLoadedEvent);
-    
-    // Update track info display in dropdown menu
-    updateTrackInfoDisplay();
-    
-    // Show success message with track info
-    const status = document.getElementById('status');
-    if (status) {
-      const trackName = trackData.metadata?.name || 'Custom Track';
-      const trackAuthor = trackData.metadata?.author;
-      const authorText = trackAuthor ? ` by ${trackAuthor}` : '';
-      status.textContent = `✅ Track "${trackName}"${authorText} loaded! Press R to start a new race on this track.`;
-    }
-    
-    console.log('✅ Track import completed successfully');
-    
-  } catch (error) {
-    console.error('❌ Failed to import track:', error);
-    
-    // Show error message
-    const status = document.getElementById('status');
-    if (status) {
-      status.textContent = `❌ Failed to load track: ${error instanceof Error ? error.message : 'Unknown error'}`;
-    }
-  }
-}
-
-/**
- * Get current game track data
- */
-function getCurrentGameTrack(): any {
-  console.log('📋 Getting current game track data...');
-  
-  // Export current track data using track loader
-  const trackData = trackLoader.exportCurrentTrack();
-  
-  if (trackData) {
-    console.log('✅ Exported current game track:', trackData.metadata.name);
-    return trackData;
-  } else {
-    console.warn('⚠️ No track data available for export');
-    // Return a minimal default track as fallback
-    return {
-      metadata: {
-        name: 'Default Track',
-        author: 'vRacer Team',
-        description: 'Default racing track',
-        created: new Date().toISOString()
-      },
-      track: {
-        outer: [
-          { x: 2, y: 2 }, { x: 48, y: 2 }, { x: 48, y: 33 }, { x: 2, y: 33 }
-        ],
-        inner: [
-          { x: 12, y: 10 }, { x: 38, y: 10 }, { x: 38, y: 25 }, { x: 12, y: 25 }
-        ],
-        checkpoints: [],
-        startLine: { a: { x: 2, y: 18 }, b: { x: 12, y: 18 } }
-      },
-      racingLine: {
-        waypoints: [],
-        direction: 'counter-clockwise'
-      }
-    };
-  }
-}
