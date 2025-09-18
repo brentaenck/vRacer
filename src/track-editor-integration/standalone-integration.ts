@@ -42,7 +42,7 @@ function setupTrackEditorModal(): void {
 function createTrackEditorModal(): HTMLElement {
   const modal = document.createElement('div');
   modal.id = 'trackEditorModal';
-  modal.className = 'track-editor-modal';
+  modal.className = 'track-editor-modal ui-zone';
   modal.style.display = 'none';
   
   modal.innerHTML = `

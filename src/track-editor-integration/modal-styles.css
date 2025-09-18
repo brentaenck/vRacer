@@ -38,7 +38,7 @@
    ============================================================================= */
 
 .track-editor-modal-content {
-  background: var(--bg-secondary, #1a1a2e);
+  background: var(--ui-bg-primary, #1a1a2e);
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   width: 95vw;
@@ -47,7 +47,8 @@
   max-height: 1200px;
   display: flex;
   flex-direction: column;
-  border: 2px solid var(--accent-primary, #00d4ff);
+  border: 2px solid var(--ui-accent, #00d4ff);
+  font-family: var(--ui-font-primary, 'Inter', sans-serif);
 }
 
 /* =============================================================================
@@ -55,27 +56,29 @@
    ============================================================================= */
 
 .track-editor-modal-header {
-  background: var(--bg-primary, #0f0f1e);
-  color: var(--text-primary, #ffffff);
+  background: var(--ui-bg-surface, #0f0f1e);
+  color: var(--ui-text-primary, #ffffff);
   padding: 1rem 2rem;
-  border-bottom: 2px solid var(--accent-primary, #00d4ff);
+  border-bottom: 2px solid var(--ui-accent, #00d4ff);
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-radius: 12px 12px 0 0;
+  font-family: var(--ui-font-primary, 'Inter', sans-serif);
 }
 
 .track-editor-modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--accent-primary, #00d4ff);
+  color: var(--ui-accent, #00d4ff);
+  font-family: var(--ui-font-heading, 'Inter', sans-serif);
 }
 
 .track-editor-modal-header .close-btn {
   background: none;
   border: none;
-  color: var(--text-secondary, #cccccc);
+  color: var(--ui-text-secondary, #cccccc);
   font-size: 2rem;
   cursor: pointer;
   padding: 0;
@@ -86,11 +89,12 @@
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s ease;
+  font-family: var(--ui-font-primary, 'Inter', sans-serif);
 }
 
 .track-editor-modal-header .close-btn:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary, #ffffff);
+  color: var(--ui-text-primary, #ffffff);
   transform: scale(1.1);
 }
 
@@ -117,7 +121,7 @@
    ============================================================================= */
 
 .track-editor-modal-footer {
-  background: var(--bg-primary, #0f0f1e);
+  background: var(--ui-bg-surface, #0f0f1e);
   padding: 1rem 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
@@ -125,6 +129,7 @@
   justify-content: flex-end;
   align-items: center;
   border-radius: 0 0 12px 12px;
+  font-family: var(--ui-font-primary, 'Inter', sans-serif);
 }
 
 .track-editor-modal-footer .btn {
@@ -139,28 +144,29 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  font-family: var(--ui-font-primary, 'Inter', sans-serif);
 }
 
 .track-editor-modal-footer .btn-primary {
-  background: var(--accent-primary, #00d4ff);
-  color: var(--bg-primary, #0f0f1e);
+  background: var(--ui-accent, #00d4ff);
+  color: var(--ui-bg-primary, #0f0f1e);
 }
 
 .track-editor-modal-footer .btn-primary:hover {
-  background: var(--accent-secondary, #00b4d8);
+  background: var(--ui-accent-hover, #00b4d8);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .track-editor-modal-footer .btn-secondary {
   background: transparent;
-  color: var(--text-primary, #ffffff);
-  border: 2px solid var(--text-secondary, #cccccc);
+  color: var(--ui-text-primary, #ffffff);
+  border: 2px solid var(--ui-text-secondary, #cccccc);
 }
 
 .track-editor-modal-footer .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: var(--text-primary, #ffffff);
+  border-color: var(--ui-text-primary, #ffffff);
   transform: translateY(-1px);
 }
 

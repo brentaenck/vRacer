@@ -216,6 +216,9 @@ const TrackEditor = {
         // File management buttons
         this.setupFileManagement();
         
+        // Code view buttons
+        this.setupCodeViewButtons();
+        
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
         
@@ -885,10 +888,22 @@ const TrackEditor = {
         const racingLineTools = document.getElementById('racingLineTools');
         const waypointEditor = document.getElementById('waypointEditor');
         
+        // Show/hide sidebar panels based on mode
+        const trackDesignPanel = document.getElementById('trackDesignPanel');
+        const racingLinePanel = document.getElementById('racingLinePanel');
+        const previewPanel = document.getElementById('previewPanel');
+        const trackDataPanel = document.getElementById('trackDataPanel');
+        
         if (mode === 'track') {
             if (trackTools) trackTools.style.display = 'block';
             if (racingLineTools) racingLineTools.style.display = 'none';
             if (waypointEditor) waypointEditor.style.display = 'none';
+            
+            // Show track design panel
+            if (trackDesignPanel) trackDesignPanel.style.display = 'block';
+            if (racingLinePanel) racingLinePanel.style.display = 'none';
+            if (previewPanel) previewPanel.style.display = 'none';
+            if (trackDataPanel) trackDataPanel.style.display = 'none';
             
             // Reset racing line editor state when leaving racing mode
             if (typeof RacingLineEditor !== 'undefined') {
@@ -900,11 +915,41 @@ const TrackEditor = {
             if (racingLineTools) racingLineTools.style.display = 'block';
             if (waypointEditor) waypointEditor.style.display = 'block';
             
+            // Show racing line panel
+            if (trackDesignPanel) trackDesignPanel.style.display = 'none';
+            if (racingLinePanel) racingLinePanel.style.display = 'block';
+            if (previewPanel) previewPanel.style.display = 'none';
+            if (trackDataPanel) trackDataPanel.style.display = 'none';
+            
             // Initialize racing line tools when entering racing mode
             if (typeof RacingLineEditor !== 'undefined') {
                 RacingLineEditor.setRacingLineTool('select');
                 RacingLineEditor.updateWaypointEditor();
             }
+        } else if (mode === 'track-data') {
+            // Hide all editing tools when in data view mode
+            if (trackTools) trackTools.style.display = 'none';
+            if (racingLineTools) racingLineTools.style.display = 'none';
+            if (waypointEditor) waypointEditor.style.display = 'none';
+            
+            // Show track data panel only
+            if (trackDesignPanel) trackDesignPanel.style.display = 'none';
+            if (racingLinePanel) racingLinePanel.style.display = 'none';
+            if (previewPanel) previewPanel.style.display = 'none';
+            if (trackDataPanel) trackDataPanel.style.display = 'block';
+            
+            // Show code view overlay in canvas area
+            const codeView = document.getElementById('codeView');
+            if (codeView) {
+                codeView.style.display = 'flex';
+                this.updateCodeView();
+            }
+        }
+        
+        // Show/hide code view overlay based on mode
+        const codeView = document.getElementById('codeView');
+        if (codeView && mode !== 'track-data') {
+            codeView.style.display = 'none';
         }
         
         this.render();
@@ -1029,7 +1074,101 @@ const TrackEditor = {
         return length;
     },
     
-    // Update output code
+    // Set up code view button handlers
+    setupCodeViewButtons() {
+        const copyBtn = document.getElementById('copyCodeBtn');
+        const downloadBtn = document.getElementById('downloadCodeBtn');
+        
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => this.copyTrackData());
+        }
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => this.downloadTrackData());
+        }
+    },
+    
+    // Update code view (canvas overlay)
+    updateCodeView() {
+        const codeViewOutput = document.getElementById('codeViewOutput');
+        if (!codeViewOutput) return;
+        
+        // Create enhanced export data with checkpoint metadata
+        const exportData = {
+            ...this.track,
+            // Ensure checkpoints have proper metadata structure
+            track: {
+                ...this.track.track,
+                checkpoints: this.track.track.checkpoints.length > 0 ? {
+                    description: 'Lap validation checkpoints - placed to detect proper racing progression',
+                    validationOrder: 'sequential',
+                    segments: this.track.track.checkpoints
+                } : []
+            },
+            racingLine: {
+                ...this.track.racingLine,
+                direction: this.track.racingLine.direction || 'counter-clockwise'
+            },
+            metadata: {
+                ...this.track.metadata,
+                racingDirection: this.track.racingLine.direction || 'counter-clockwise',
+                totalCheckpoints: this.track.track.checkpoints.length,
+                lastModified: new Date().toISOString()
+            }
+        };
+        
+        const jsonOutput = JSON.stringify(exportData, null, 2);
+        codeViewOutput.innerHTML = `<code>${this.escapeHtml(jsonOutput)}</code>`;
+    },
+    
+    // Copy track data to clipboard
+    copyTrackData() {
+        const codeViewOutput = document.getElementById('codeViewOutput');
+        if (!codeViewOutput) return;
+        
+        const text = codeViewOutput.textContent || codeViewOutput.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            this.updateStatus('Track data copied to clipboard!');
+            
+            // Visual feedback
+            const copyBtn = document.getElementById('copyCodeBtn');
+            if (copyBtn) {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            }
+        }).catch(err => {
+            console.error('Failed to copy track data:', err);
+            this.updateStatus('Failed to copy track data - see console');
+        });
+    },
+    
+    // Download track data as JSON file
+    downloadTrackData() {
+        const codeViewOutput = document.getElementById('codeViewOutput');
+        if (!codeViewOutput) return;
+        
+        const text = codeViewOutput.textContent || codeViewOutput.innerText;
+        const trackName = this.track.metadata.name || 'track';
+        const filename = `${trackName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+        
+        const blob = new Blob([text], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.updateStatus(`Track data downloaded as ${filename}`);
+    },
+    
+    // Update output code (sidebar panel)
     updateOutput() {
         const outputCode = document.getElementById('outputCode');
         if (!outputCode) return;
@@ -1060,6 +1199,11 @@ const TrackEditor = {
         
         const jsonOutput = JSON.stringify(exportData, null, 2);
         outputCode.innerHTML = `<code>${this.escapeHtml(jsonOutput)}</code>`;
+        
+        // Also update code view if it's visible
+        if (this.mode === 'track-data') {
+            this.updateCodeView();
+        }
     },
     
     // Update status message

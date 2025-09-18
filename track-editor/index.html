@@ -8,32 +8,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-left">
-                <h1>🏁 vRacer Track Editor</h1>
-                <span class="version">v1.0.0 Beta</span>
-            </div>
-            <div class="header-center">
-                <div class="mode-selector">
-                    <button id="trackMode" class="mode-btn active" data-mode="track">
-                        🗿 Track Design
-                    </button>
-                    <button id="racingLineMode" class="mode-btn" data-mode="racing">
-                        🏁 Racing Line
-                    </button>
-                    <button id="previewMode" class="mode-btn" data-mode="preview">
-                        👁️ Preview
-                    </button>
-                </div>
-            </div>
-            <div class="header-right">
-                <button id="newTrackBtn" class="btn btn-secondary">New Track</button>
-                <button id="importTrackBtn" class="btn btn-secondary">Import</button>
-                <button id="exportTrackBtn" class="btn btn-primary">Export</button>
-            </div>
-        </header>
-
         <!-- Main Content -->
         <div class="main-content">
             <!-- Left Sidebar - Tools & Options -->
@@ -127,6 +101,29 @@
 
             <!-- Canvas Area -->
             <main class="canvas-container">
+                <!-- Mode & File Toolbar -->
+                <div class="mode-toolbar">
+                    <div class="mode-selector">
+                        <button id="trackMode" class="mode-btn active" data-mode="track">
+                            🗿 Track Design
+                        </button>
+                        <button id="racingLineMode" class="mode-btn" data-mode="racing">
+                            🏁 Racing Line
+                        </button>
+                        <button id="previewMode" class="mode-btn" data-mode="preview">
+                            👁️ Preview
+                        </button>
+                        <button id="trackDataMode" class="mode-btn" data-mode="track-data">
+                            📄 Track Data
+                        </button>
+                    </div>
+                    <div class="file-actions">
+                        <button id="newTrackBtn" class="btn btn-secondary btn-small">New Track</button>
+                        <button id="importTrackBtn" class="btn btn-secondary btn-small">Import</button>
+                        <button id="exportTrackBtn" class="btn btn-primary btn-small">Export</button>
+                    </div>
+                </div>
+                
                 <div class="canvas-toolbar">
                     <div class="viewport-controls">
                         <button id="zoomIn" class="btn btn-small">🔍 +</button>
@@ -147,6 +144,20 @@
                 <canvas id="trackCanvas" width="1000" height="700"></canvas>
                     <div class="canvas-overlay" id="canvasOverlay">
                         <!-- Dynamic overlay content (tooltips, etc.) -->
+                    </div>
+                    
+                    <!-- Code View (Track Data Mode) -->
+                    <div id="codeView" class="code-view" style="display: none;">
+                        <div class="code-view-header">
+                            <h3>📄 Generated Track Data</h3>
+                            <div class="code-actions">
+                                <button id="copyCodeBtn" class="btn btn-small">📋 Copy</button>
+                                <button id="downloadCodeBtn" class="btn btn-small">💾 Download</button>
+                            </div>
+                        </div>
+                        <div class="code-view-content">
+                            <pre id="codeViewOutput" class="code-preview"><code>// Track data will be generated here...</code></pre>
+                        </div>
                     </div>
                 </div>
                 
@@ -310,18 +321,17 @@
                     <div id="validationWarnings" class="validation-warnings"></div>
                     <div id="validationMetrics" class="validation-metrics"></div>
                 </div>
+                
+                <!-- Track Data View -->
+                <div id="trackDataPanel" class="panel" style="display: none;">
+                    <h3>📄 Generated Track Data</h3>
+                    <div class="track-data-container">
+                        <pre id="outputCode" class="code-preview"><code>// Track data will be generated here...</code></pre>
+                    </div>
+                </div>
             </aside>
         </div>
 
-        <!-- Bottom Panel - Code Output -->
-        <section class="bottom-panel">
-            <div class="panel-header">
-                <h3>📄 Generated Track Data</h3>
-            </div>
-            <div class="code-container">
-                <pre id="outputCode" class="code-preview"><code>// Track data will be generated here...</code></pre>
-            </div>
-        </section>
     </div>
 
     <!-- Load JavaScript modules -->
