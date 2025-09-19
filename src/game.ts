@@ -4,7 +4,6 @@ import { performanceTracker } from './performance'
 import { animationManager, AnimationUtils } from './animations'
 import { hudManager, HUDData } from './hud'
 import { createTrackAnalysisWithCustomLine, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
-import { isRacingLineVisible } from './racing-line-ui'
 import { trackLoader } from './track-loader'
 
 // Utility to access CSS custom properties from canvas context
@@ -1564,7 +1563,10 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
 // Removed drawDirectionalArrows function - arrows were covered by checkpoint lines and not aesthetically pleasing
 
 function drawRacingLine(ctx: CanvasRenderingContext2D, state: GameState, g: number) {
-  if (!isRacingLineVisible()) return
+  // Racing lines are now part of track data loaded from track JSON files
+  // This function is kept for backward compatibility but racing lines 
+  // are rendered as part of track visualization when present in track data
+  return
   
   try {
     // Get track analysis with custom racing line if available

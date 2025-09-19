@@ -6,7 +6,6 @@ import { animationManager, AnimationUtils } from './animations'
 import { initializeStandaloneTrackEditor } from './track-editor-integration/standalone-integration'
 import { initializeDropdownMenu } from './dropdown-menu'
 import { chooseAIMove } from './ai'
-import { initializeRacingLineUI, isRacingLineVisible, handleRacingLineKeyboardShortcut } from './racing-line-ui'
 import { trackLoader } from './track-loader'
 import { lockBackground, unlockBackground } from './modal-utils'
 
@@ -94,8 +93,6 @@ initializeStandaloneTrackEditor()
 // Initialize dropdown menu system
 initializeDropdownMenu()
 
-// Initialize racing line UI system
-initializeRacingLineUI()
 
 // Listen for track loading events
 window.addEventListener('trackLoaded', (event: any) => {
@@ -698,7 +695,6 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'g' || e.key === 'G') { gridToggle.checked = !gridToggle.checked; gridToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'c' || e.key === 'C') { candToggle.checked = !candToggle.checked; candToggle.dispatchEvent(new Event('change')) }
   if (e.key === 'd' || e.key === 'D') { debugToggle.checked = !debugToggle.checked; debugToggle.dispatchEvent(new Event('change')) }
-  if (e.key === 'l' || e.key === 'L') { handleRacingLineKeyboardShortcut() }
   
   // Improved controls: Undo functionality
   if ((e.key === 'u' || e.key === 'U' || (e.ctrlKey && e.key === 'z')) && canUndo(state)) {
