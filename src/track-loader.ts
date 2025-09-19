@@ -114,39 +114,24 @@ export class TrackLoader {
     };
   }
   
-  /**
-   * Convert a single point from editor pixel coordinates to game grid coordinates
-   */
-  private convertPointToGrid(point: Vec, gridSize: number): Vec {
-    return {
-      x: Math.round((point.x / gridSize) * 10) / 10, // Convert pixels to grid units with 1 decimal precision
-      y: Math.round((point.y / gridSize) * 10) / 10
-    };
-  }
+  // NOTE: Coordinate conversion functions removed - track editor now uses same grid coordinate system as game
   
   /**
-   * Convert an array of points from editor pixel coordinates to game grid coordinates
+   * Process racing line waypoints from editor (already in grid coordinates)
    */
-  private convertCoordinatesToGrid(points: Vec[], gridSize: number): Vec[] {
-    return points.map(point => this.convertPointToGrid(point, gridSize));
-  }
-  
-  /**
-   * Convert racing line waypoints from editor pixel coordinates to game grid coordinates
-   */
-  private convertRacingLineToGrid(racingLineData: any, gridSize: number): RacingLinePoint[] | null {
+  private processRacingLineFromEditor(racingLineData: any): RacingLinePoint[] | null {
     try {
       if (!racingLineData.waypoints || !Array.isArray(racingLineData.waypoints)) {
         return null;
       }
       
-      const convertedWaypoints: RacingLinePoint[] = racingLineData.waypoints.map((waypoint: any, index: number) => {
+      const processedWaypoints: RacingLinePoint[] = racingLineData.waypoints.map((waypoint: any, index: number) => {
         if (!waypoint.pos || typeof waypoint.pos.x !== 'number' || typeof waypoint.pos.y !== 'number') {
           throw new Error(`Invalid waypoint ${index}: missing or invalid position`);
         }
         
         return {
-          pos: this.convertPointToGrid(waypoint.pos, gridSize),
+          pos: { ...waypoint.pos }, // Simple copy - already in grid units
           targetSpeed: waypoint.targetSpeed || 3,
           brakeZone: !!waypoint.brakeZone,
           cornerType: waypoint.cornerType || 'straight',
@@ -154,11 +139,11 @@ export class TrackLoader {
         };
       });
       
-      console.log('  ✅ Converted racing line waypoints (grid units):', convertedWaypoints.length);
-      return convertedWaypoints;
+      console.log('  ✅ Racing line waypoints ready (grid units):', processedWaypoints.length);
+      return processedWaypoints;
       
     } catch (error) {
-      console.error('❌ Failed to convert racing line:', error);
+      console.error('❌ Failed to process racing line:', error);
       return null;
     }
   }
@@ -210,17 +195,16 @@ export class TrackLoader {
     // Use standard grid size
     const grid = 20;
     
-    // Convert from editor pixel coordinates to game grid coordinates
-    // Track editor uses pixel coordinates, game uses grid units (pixels / grid)
-    console.log('🎯 Converting coordinates from editor to game format:');
-    console.log('  📐 Original outer boundary (pixels):', editorData.track.outer);
-    console.log('  📐 Original inner boundary (pixels):', editorData.track.inner);
+    // Track editor now uses same grid coordinate system as game (no conversion needed)
+    console.log('🎯 Using track editor data in unified coordinate system:');
+    console.log('  📐 Outer boundary (grid units):', editorData.track.outer);
+    console.log('  📐 Inner boundary (grid units):', editorData.track.inner);
     
-    const outer = this.convertCoordinatesToGrid(editorData.track.outer, grid);
-    const inner = this.convertCoordinatesToGrid(editorData.track.inner, grid);
+    // No coordinate conversion needed - both systems use grid units
+    const outer = [...editorData.track.outer]; // Simple copy
+    const inner = [...editorData.track.inner]; // Simple copy
     
-    console.log('  ✅ Converted outer boundary (grid units):', outer);
-    console.log('  ✅ Converted inner boundary (grid units):', inner);
+    console.log('  ✅ Track boundaries ready (grid units):', { outer: outer.length, inner: inner.length });
     
     // Generate walls from track boundaries
     const wallSegments = (poly: Vec[]) => poly.map((p, i) => ({ 
@@ -232,12 +216,12 @@ export class TrackLoader {
     // Use provided start line or generate a default one
     let start: Segment;
     if (editorData.track.startLine?.a && editorData.track.startLine?.b) {
-      console.log('  🏁 Converting start line from pixels:', editorData.track.startLine);
+      console.log('  🏁 Using start line from editor (grid units):', editorData.track.startLine);
       start = {
-        a: this.convertPointToGrid(editorData.track.startLine.a, grid),
-        b: this.convertPointToGrid(editorData.track.startLine.b, grid)
+        a: { ...editorData.track.startLine.a }, // Simple copy - already in grid units
+        b: { ...editorData.track.startLine.b }  // Simple copy - already in grid units
       };
-      console.log('  ✅ Converted start line to grid units:', start);
+      console.log('  ✅ Start line ready (grid units):', start);
     } else {
       // Generate start line on left side of track (default behavior)
       const minY = Math.min(...outer.map(p => p.y));
@@ -287,17 +271,17 @@ export class TrackLoader {
     // Process racing line data if present
     if (trackEditorData.racingLine?.waypoints && Array.isArray(trackEditorData.racingLine.waypoints)) {
       console.log('🏁 Processing racing line data from track...');
-      console.log('  📐 Original racing line waypoints (pixels):', trackEditorData.racingLine.waypoints.length);
+      console.log('  📐 Racing line waypoints (grid units):', trackEditorData.racingLine.waypoints.length);
       
-      // Convert racing line waypoints from pixels to grid coordinates (using game track's grid size)
-      const convertedRacingLine = this.convertRacingLineToGrid(trackEditorData.racingLine, gameTrack.grid);
+      // Process racing line waypoints (already in grid coordinates)
+      const processedRacingLine = this.processRacingLineFromEditor(trackEditorData.racingLine);
       
-      if (convertedRacingLine) {
-        // Set the converted racing line globally
-        setCustomRacingLine(convertedRacingLine);
-        console.log('✅ Custom racing line loaded:', convertedRacingLine.length, 'waypoints');
+      if (processedRacingLine) {
+        // Set the processed racing line globally
+        setCustomRacingLine(processedRacingLine);
+        console.log('✅ Custom racing line loaded:', processedRacingLine.length, 'waypoints');
       } else {
-        console.log('⚠️ Racing line conversion failed, using default racing line');
+        console.log('⚠️ Racing line processing failed, using default racing line');
       }
     } else {
       console.log('📍 No racing line data in track file, using default racing line');

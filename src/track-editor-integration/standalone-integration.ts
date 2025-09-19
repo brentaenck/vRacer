@@ -6,6 +6,7 @@
  */
 
 import { isFeatureEnabled } from '../features';
+import { lockBackground, unlockBackground } from '../modal-utils';
 
 /**
  * Initialize the standalone track editor integration
@@ -147,13 +148,16 @@ export function showTrackEditor(): void {
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
     
+    // Lock background interaction
+    lockBackground(modal);
+    
     // Focus the iframe for keyboard interaction
     const iframe = modal.querySelector('#trackEditorFrame') as HTMLIFrameElement;
     if (iframe) {
       iframe.focus();
     }
     
-    console.log('🎯 Track editor opened');
+    console.log('🎯 Track editor opened with background locked');
   }
 }
 
@@ -163,9 +167,12 @@ export function showTrackEditor(): void {
 export function hideTrackEditor(): void {
   const modal = document.getElementById('trackEditorModal');
   if (modal) {
+    // Unlock background interaction first
+    unlockBackground(modal);
+    
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
-    console.log('🔒 Track editor closed');
+    console.log('🔒 Track editor closed with background unlocked');
   }
 }
 

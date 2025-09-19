@@ -8,6 +8,7 @@ import { initializeDropdownMenu } from './dropdown-menu'
 import { chooseAIMove } from './ai'
 import { initializeRacingLineUI, isRacingLineVisible, handleRacingLineKeyboardShortcut } from './racing-line-ui'
 import { trackLoader } from './track-loader'
+import { lockBackground, unlockBackground } from './modal-utils'
 
 /**
  * Initialize dual styling system based on feature flag
@@ -362,10 +363,17 @@ function openNewGameModal() {
   
   newGameModal.classList.add('show')
   newGameModal.setAttribute('aria-hidden', 'false')
+  
+  // Lock background interaction
+  lockBackground(newGameModal)
+  
   setTimeout(() => startNewGameBtn.focus(), 50)
 }
 
 function closeNewGameModal() {
+  // Unlock background interaction first
+  unlockBackground(newGameModal)
+  
   newGameModal.classList.remove('show')
   newGameModal.setAttribute('aria-hidden', 'true')
 }
@@ -636,11 +644,18 @@ debugToggle.addEventListener('change', () => {
 function openConfigModal() {
   configModal.classList.add('show')
   configModal.setAttribute('aria-hidden', 'false')
+  
+  // Lock background interaction
+  lockBackground(configModal)
+  
   // Focus first interactive element in modal
   setTimeout(() => gridToggle.focus(), 100)
 }
 
 function closeConfigModal() {
+  // Unlock background interaction first
+  unlockBackground(configModal)
+  
   configModal.classList.remove('show')
   configModal.setAttribute('aria-hidden', 'true')
 }

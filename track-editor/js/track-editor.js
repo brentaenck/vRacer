@@ -58,7 +58,7 @@ const TrackEditor = {
         zoom: 1.0,
         offsetX: 0,
         offsetY: 0,
-        gridSize: 20,
+        gridSize: 20, // Grid size in pixels for rendering (CoordinateUtils.GRID_SIZE)
         showGrid: true,
         snapToGrid: true,
         showTrackBounds: true,
@@ -371,7 +371,7 @@ const TrackEditor = {
                 Math.pow(secondPoint.y - this.startFinishState.firstPoint.y, 2)
             );
             
-            if (distance < 10) {
+            if (distance < 0.5) { // 0.5 grid units = 10 pixels
                 this.updateStatus('Start/finish line too short - click farther away from first point');
                 return;
             }
@@ -421,7 +421,7 @@ const TrackEditor = {
                 Math.pow(secondPoint.y - this.checkpointState.firstPoint.y, 2)
             );
             
-            if (distance < 6) {
+            if (distance < 0.3) { // 0.3 grid units = 6 pixels
                 this.updateStatus('Checkpoint line too short - click farther away from first point');
                 return;
             }
@@ -495,7 +495,7 @@ const TrackEditor = {
                 Math.pow(pos.x - firstPoint.x, 2) + Math.pow(pos.y - firstPoint.y, 2)
             );
             
-            if (distance <= 10) {
+            if (distance <= 0.5) { // 0.5 grid units = 10 pixels
                 // Close the loop by adding a marker or flag
                 // We don't add the first point again, but we mark the boundary as closed
                 if (!boundary.closed) {
@@ -530,7 +530,7 @@ const TrackEditor = {
         // Find closest point within eraser range
         let closestIndex = -1;
         let closestDistance = Infinity;
-        const eraseRange = 8; // pixels
+        const eraseRange = 0.4; // 0.4 grid units = 8 pixels
         
         for (let i = 0; i < boundary.length; i++) {
             const point = boundary[i];
@@ -573,7 +573,7 @@ const TrackEditor = {
         // Find closest point within selection range
         let closestIndex = -1;
         let closestDistance = Infinity;
-        const selectRange = 10; // pixels
+        const selectRange = 0.5; // 0.5 grid units = 10 pixels
         
         for (let i = 0; i < boundary.length; i++) {
             const point = boundary[i];
@@ -667,7 +667,7 @@ const TrackEditor = {
         const mousePositionEl = document.getElementById('mousePosition');
         if (mousePositionEl) {
             const snappedPos = this.view.snapToGrid ? this.snapToGrid(worldPos) : worldPos;
-            mousePositionEl.textContent = `Mouse: (${snappedPos.x.toFixed(1)}, ${snappedPos.y.toFixed(1)})`;
+            mousePositionEl.textContent = `Grid: (${snappedPos.x.toFixed(1)}, ${snappedPos.y.toFixed(1)})`;
         }
         
         this.render();
@@ -1228,25 +1228,18 @@ const TrackEditor = {
     },
     
     screenToWorld(screenPos) {
-        return {
-            x: (screenPos.x - this.view.offsetX) / this.view.zoom,
-            y: (screenPos.y - this.view.offsetY) / this.view.zoom
-        };
+        // Convert screen coordinates to grid units using new coordinate system
+        return CoordinateUtils.screenToGrid(screenPos, this.view);
     },
     
     worldToScreen(worldPos) {
-        return {
-            x: worldPos.x * this.view.zoom + this.view.offsetX,
-            y: worldPos.y * this.view.zoom + this.view.offsetY
-        };
+        // Convert grid units to screen coordinates using new coordinate system
+        return CoordinateUtils.gridToScreen(worldPos, this.view);
     },
     
     snapToGrid(pos) {
-        const gridSize = this.view.gridSize;
-        return {
-            x: Math.round(pos.x / gridSize) * gridSize,
-            y: Math.round(pos.y / gridSize) * gridSize
-        };
+        // Snap position to grid units (pos is already in grid units)
+        return CoordinateUtils.snapToGridUnits(pos);
     },
     
     updateHover(worldPos) {
@@ -1268,7 +1261,7 @@ const TrackEditor = {
         // Only check hover for current boundary type when using eraser/move tools
         if (this.tool === 'eraser' || this.tool === 'move') {
             const boundary = this.boundaryType === 'outer' ? this.track.track.outer : this.track.track.inner;
-            const hoverRange = this.tool === 'eraser' ? 8 : 10;
+            const hoverRange = this.tool === 'eraser' ? 0.4 : 0.5; // Grid units (0.4 = 8px, 0.5 = 10px)
             
             for (let i = 0; i < boundary.length; i++) {
                 const point = boundary[i];
@@ -1297,7 +1290,7 @@ const TrackEditor = {
                     Math.pow(worldPos.x - point.x, 2) + Math.pow(worldPos.y - point.y, 2)
                 );
                 
-                if (distance <= 5) {
+                if (distance <= 0.25) { // 0.25 grid units = 5 pixels
                     this.hoveredPoint = { type: 'track', index: i, point };
                     this.canvas.style.cursor = 'pointer';
                     return;
@@ -1341,7 +1334,7 @@ const TrackEditor = {
         const distance = Math.sqrt(
             Math.pow(last.x - first.x, 2) + Math.pow(last.y - first.y, 2)
         );
-        return distance <= 10;
+        return distance <= 0.5; // 0.5 grid units = 10 pixels
     },
     
     // Update status message for loop closure feedback
@@ -1357,7 +1350,7 @@ const TrackEditor = {
             Math.pow(snappedPos.x - firstPoint.x, 2) + Math.pow(snappedPos.y - firstPoint.y, 2)
         );
         
-        if (distanceToFirst <= 10) {
+        if (distanceToFirst <= 0.5) { // 0.5 grid units = 10 pixels
             this.updateStatus(`Click to close ${this.boundaryType} boundary loop (${boundary.length} points)`);
         } else if (boundary.length >= 3) {
             this.updateStatus(`Drawing ${this.boundaryType} boundary - click near first point to close loop (${boundary.length} points)`);
@@ -1378,7 +1371,7 @@ const TrackEditor = {
                 Math.pow(snappedPos.y - this.startFinishState.firstPoint.y, 2)
             );
             
-            if (distance < 10) {
+            if (distance < 0.5) { // 0.5 grid units = 10 pixels
                 this.updateStatus(`Start/finish line too short (${distance.toFixed(1)} units) - move farther from first point`);
             } else {
                 this.updateStatus(`Click to complete start/finish line (${distance.toFixed(1)} units long)`);
@@ -1402,7 +1395,7 @@ const TrackEditor = {
                 Math.pow(snappedPos.y - this.checkpointState.firstPoint.y, 2)
             );
             
-            if (distance < 6) {
+            if (distance < 0.3) { // 0.3 grid units = 6 pixels
                 this.updateStatus(`Checkpoint line too short (${distance.toFixed(1)} units) - move farther from first point`);
             } else {
                 this.updateStatus(`Click to complete checkpoint (${distance.toFixed(1)} units long)`);
@@ -1445,12 +1438,20 @@ const TrackEditor = {
         const bounds = this.calculateBounds(allPoints);
         const padding = 50;
         
-        const zoomX = (this.canvas.width - padding * 2) / (bounds.maxX - bounds.minX);
-        const zoomY = (this.canvas.height - padding * 2) / (bounds.maxY - bounds.minY);
+        // Convert bounds from grid units to pixels for zoom calculation
+        const boundsPixels = {
+            minX: bounds.minX * CoordinateUtils.GRID_SIZE,
+            minY: bounds.minY * CoordinateUtils.GRID_SIZE,
+            maxX: bounds.maxX * CoordinateUtils.GRID_SIZE,
+            maxY: bounds.maxY * CoordinateUtils.GRID_SIZE
+        };
+        
+        const zoomX = (this.canvas.width - padding * 2) / (boundsPixels.maxX - boundsPixels.minX);
+        const zoomY = (this.canvas.height - padding * 2) / (boundsPixels.maxY - boundsPixels.minY);
         
         this.view.zoom = Math.min(zoomX, zoomY, 2.0);
-        this.view.offsetX = this.canvas.width / 2 - (bounds.minX + bounds.maxX) / 2 * this.view.zoom;
-        this.view.offsetY = this.canvas.height / 2 - (bounds.minY + bounds.maxY) / 2 * this.view.zoom;
+        this.view.offsetX = this.canvas.width / 2 - (boundsPixels.minX + boundsPixels.maxX) / 2 * this.view.zoom;
+        this.view.offsetY = this.canvas.height / 2 - (boundsPixels.minY + boundsPixels.maxY) / 2 * this.view.zoom;
         
         this.updateZoomDisplay();
         this.render();
@@ -1496,27 +1497,27 @@ const TrackEditor = {
     },
     
     loadOvalTemplate() {
-        // Simple oval track - sized to fit within game canvas (1000x700 pixels, 50x35 grid units)
+        // Simple oval track - coordinates in grid units (fits within game canvas 50x35 grid units)
         this.track.track.outer = [
-            { x: 80, y: 80 },    // Grid unit 4,4 (within 0-50, 0-35 limits)
-            { x: 920, y: 80 },   // Grid unit 46,4
-            { x: 920, y: 620 },  // Grid unit 46,31
-            { x: 80, y: 620 }    // Grid unit 4,31
+            { x: 4, y: 4 },      // Grid unit 4,4 (within 0-50, 0-35 limits)
+            { x: 46, y: 4 },     // Grid unit 46,4
+            { x: 46, y: 31 },    // Grid unit 46,31
+            { x: 4, y: 31 }      // Grid unit 4,31
         ];
         this.track.track.outer.closed = true; // Mark as closed
         
         this.track.track.inner = [
-            { x: 280, y: 220 },  // Grid unit 14,11
-            { x: 720, y: 220 },  // Grid unit 36,11
-            { x: 720, y: 480 },  // Grid unit 36,24
-            { x: 280, y: 480 }   // Grid unit 14,24
+            { x: 14, y: 11 },    // Grid unit 14,11
+            { x: 36, y: 11 },    // Grid unit 36,11
+            { x: 36, y: 24 },    // Grid unit 36,24
+            { x: 14, y: 24 }     // Grid unit 14,24
         ];
         this.track.track.inner.closed = true; // Mark as closed
         
-        // Add start/finish line on the left side
+        // Add start/finish line on the left side (grid units)
         this.track.track.startLine = {
-            a: { x: 80, y: 350 },   // Left edge, middle height (grid unit 4,17.5)
-            b: { x: 280, y: 350 }   // To inner boundary (grid unit 14,17.5)
+            a: { x: 4, y: 17.5 },    // Left edge, middle height
+            b: { x: 14, y: 17.5 }    // To inner boundary
         };
         
         this.track.metadata.name = 'Simple Oval';
@@ -1529,6 +1530,18 @@ const TrackEditor = {
         this.updateOutput();
         this.render();
         this.updateStatus('Loaded Simple Oval template');
+    },
+    
+    loadFigure8Template() {
+        // Figure-8 template - to be implemented
+        this.updateStatus('Figure-8 template not yet implemented - using blank template');
+        this.loadBlankTemplate();
+    },
+    
+    loadCircuitTemplate() {
+        // Circuit template - to be implemented
+        this.updateStatus('Circuit template not yet implemented - using blank template');
+        this.loadBlankTemplate();
     },
     
     // Setup file management event handlers
@@ -1603,7 +1616,7 @@ const TrackEditor = {
                 Math.pow(lastOuter.x - firstOuter.x, 2) + Math.pow(lastOuter.y - firstOuter.y, 2)
             );
             
-            if (outerDistance > 10) {
+            if (outerDistance > 0.5) { // 0.5 grid units = 10 pixels
                 warnings.push('Outer boundary is not closed - click near first point to close');
             }
         }
@@ -1749,8 +1762,12 @@ const TrackEditor = {
         if (this.track.track.startLine && this.track.track.startLine.a && this.track.track.startLine.b) {
             const line = this.track.track.startLine;
             
+            // Convert start/finish line endpoints from grid units to pixels
+            const pointAPixel = CoordinateUtils.gridToPixels(line.a);
+            const pointBPixel = CoordinateUtils.gridToPixels(line.b);
+            
             // Checkered flag pattern
-            this.renderCheckeredLine(line.a, line.b, '#000000', '#ffffff', 6);
+            this.renderCheckeredLine(pointAPixel, pointBPixel, '#000000', '#ffffff', 6);
             
             // Add "START" and "FINISH" text
             this.ctx.fillStyle = '#000000';
@@ -1758,12 +1775,12 @@ const TrackEditor = {
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
             
-            const midX = (line.a.x + line.b.x) / 2;
-            const midY = (line.a.y + line.b.y) / 2;
+            const midX = (pointAPixel.x + pointBPixel.x) / 2;
+            const midY = (pointAPixel.y + pointBPixel.y) / 2;
             
             // Calculate perpendicular offset for text
-            const dx = line.b.x - line.a.x;
-            const dy = line.b.y - line.a.y;
+            const dx = pointBPixel.x - pointAPixel.x;
+            const dy = pointBPixel.y - pointAPixel.y;
             const length = Math.sqrt(dx * dx + dy * dy);
             const perpX = -dy / length * 15 / this.view.zoom;
             const perpY = dx / length * 15 / this.view.zoom;
@@ -1780,14 +1797,20 @@ const TrackEditor = {
         // Render preview for start/finish line tool
         if (this.tool === 'startfinish' && this.startFinishState) {
             if (this.startFinishState.firstPoint) {
+                // Convert first point from grid units to pixels
+                const firstPointPixel = CoordinateUtils.gridToPixels(this.startFinishState.firstPoint);
+                
                 // Draw first point
                 this.ctx.fillStyle = '#ff0000';
                 this.ctx.beginPath();
-                this.ctx.arc(this.startFinishState.firstPoint.x, this.startFinishState.firstPoint.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.arc(firstPointPixel.x, firstPointPixel.y, 6 / this.view.zoom, 0, Math.PI * 2);
                 this.ctx.fill();
                 
                 // Draw preview line if placing
                 if (this.startFinishState.placing && this.startFinishState.previewPoint) {
+                    // Convert preview point from grid units to pixels
+                    const previewPointPixel = CoordinateUtils.gridToPixels(this.startFinishState.previewPoint);
+                    
                     const distance = Math.sqrt(
                         Math.pow(this.startFinishState.previewPoint.x - this.startFinishState.firstPoint.x, 2) +
                         Math.pow(this.startFinishState.previewPoint.y - this.startFinishState.firstPoint.y, 2)
@@ -1801,8 +1824,8 @@ const TrackEditor = {
                     this.ctx.setLineDash([8 / this.view.zoom, 4 / this.view.zoom]);
                     
                     this.ctx.beginPath();
-                    this.ctx.moveTo(this.startFinishState.firstPoint.x, this.startFinishState.firstPoint.y);
-                    this.ctx.lineTo(this.startFinishState.previewPoint.x, this.startFinishState.previewPoint.y);
+                    this.ctx.moveTo(firstPointPixel.x, firstPointPixel.y);
+                    this.ctx.lineTo(previewPointPixel.x, previewPointPixel.y);
                     this.ctx.stroke();
                     
                     this.ctx.setLineDash([]); // Reset dash pattern
@@ -1810,7 +1833,7 @@ const TrackEditor = {
                     // Draw second point preview
                     this.ctx.fillStyle = lineColor;
                     this.ctx.beginPath();
-                    this.ctx.arc(this.startFinishState.previewPoint.x, this.startFinishState.previewPoint.y, 4 / this.view.zoom, 0, Math.PI * 2);
+                    this.ctx.arc(previewPointPixel.x, previewPointPixel.y, 4 / this.view.zoom, 0, Math.PI * 2);
                     this.ctx.fill();
                 }
             }
@@ -2019,11 +2042,16 @@ const TrackEditor = {
         this.ctx.lineWidth = lineWidth / this.view.zoom;
         this.ctx.fillStyle = color + '44'; // Semi-transparent fill
         
+        // Convert first point from grid units to pixels for drawing
+        const firstPixel = CoordinateUtils.gridToPixels(points[0]);
+        
         this.ctx.beginPath();
-        this.ctx.moveTo(points[0].x, points[0].y);
+        this.ctx.moveTo(firstPixel.x, firstPixel.y);
         
         for (let i = 1; i < points.length; i++) {
-            this.ctx.lineTo(points[i].x, points[i].y);
+            // Convert each point from grid units to pixels
+            const pixelPoint = CoordinateUtils.gridToPixels(points[i]);
+            this.ctx.lineTo(pixelPoint.x, pixelPoint.y);
         }
         
         // Check if boundary is marked as closed or if points are close enough
@@ -2039,17 +2067,20 @@ const TrackEditor = {
         // Render points
         this.ctx.fillStyle = color;
         for (const point of points) {
+            // Convert point from grid units to pixels for drawing
+            const pixelPoint = CoordinateUtils.gridToPixels(point);
             this.ctx.beginPath();
-            this.ctx.arc(point.x, point.y, 3 / this.view.zoom, 0, Math.PI * 2);
+            this.ctx.arc(pixelPoint.x, pixelPoint.y, 3 / this.view.zoom, 0, Math.PI * 2);
             this.ctx.fill();
         }
         
         // If closed, highlight the first point differently
         if (isClosed && points.length > 0) {
+            const firstPixel = CoordinateUtils.gridToPixels(points[0]);
             this.ctx.strokeStyle = '#ffffff';
             this.ctx.lineWidth = 2 / this.view.zoom;
             this.ctx.beginPath();
-            this.ctx.arc(points[0].x, points[0].y, 5 / this.view.zoom, 0, Math.PI * 2);
+            this.ctx.arc(firstPixel.x, firstPixel.y, 5 / this.view.zoom, 0, Math.PI * 2);
             this.ctx.stroke();
         }
     },
@@ -2083,9 +2114,13 @@ const TrackEditor = {
             this.ctx.strokeStyle = lineColor;
             this.ctx.lineWidth = 3 / this.view.zoom; // Thicker for better visibility
             
+            // Convert waypoint positions from grid units to pixels
+            const currentPixel = CoordinateUtils.gridToPixels(current.pos);
+            const nextPixel = CoordinateUtils.gridToPixels(next.pos);
+            
             this.ctx.beginPath();
-            this.ctx.moveTo(current.pos.x, current.pos.y);
-            this.ctx.lineTo(next.pos.x, next.pos.y);
+            this.ctx.moveTo(currentPixel.x, currentPixel.y);
+            this.ctx.lineTo(nextPixel.x, nextPixel.y);
             this.ctx.stroke();
         }
         
@@ -2104,9 +2139,13 @@ const TrackEditor = {
             this.ctx.strokeStyle = lineColor;
             this.ctx.lineWidth = 3 / this.view.zoom;
             
+            // Convert waypoint positions from grid units to pixels
+            const lastPixel = CoordinateUtils.gridToPixels(last.pos);
+            const firstPixel = CoordinateUtils.gridToPixels(first.pos);
+            
             this.ctx.beginPath();
-            this.ctx.moveTo(last.pos.x, last.pos.y);
-            this.ctx.lineTo(first.pos.x, first.pos.y);
+            this.ctx.moveTo(lastPixel.x, lastPixel.y);
+            this.ctx.lineTo(firstPixel.x, firstPixel.y);
             this.ctx.stroke();
         }
     },
@@ -2144,6 +2183,9 @@ const TrackEditor = {
             
             const size = isSelected ? 8 : (isHovered ? 6 : 5);
             
+            // Convert waypoint position from grid units to pixels
+            const waypointPixel = CoordinateUtils.gridToPixels(waypoint.pos);
+            
             this.ctx.fillStyle = baseColor;
             
             // Draw waypoint shape
@@ -2151,29 +2193,29 @@ const TrackEditor = {
             
             switch (shape) {
                 case 'circle':
-                    this.ctx.arc(waypoint.pos.x, waypoint.pos.y, size / this.view.zoom, 0, Math.PI * 2);
+                    this.ctx.arc(waypointPixel.x, waypointPixel.y, size / this.view.zoom, 0, Math.PI * 2);
                     break;
                     
                 case 'triangle':
                     const triSize = size / this.view.zoom;
-                    this.ctx.moveTo(waypoint.pos.x, waypoint.pos.y - triSize);
-                    this.ctx.lineTo(waypoint.pos.x - triSize * 0.866, waypoint.pos.y + triSize * 0.5);
-                    this.ctx.lineTo(waypoint.pos.x + triSize * 0.866, waypoint.pos.y + triSize * 0.5);
+                    this.ctx.moveTo(waypointPixel.x, waypointPixel.y - triSize);
+                    this.ctx.lineTo(waypointPixel.x - triSize * 0.866, waypointPixel.y + triSize * 0.5);
+                    this.ctx.lineTo(waypointPixel.x + triSize * 0.866, waypointPixel.y + triSize * 0.5);
                     this.ctx.closePath();
                     break;
                     
                 case 'diamond':
                     const dimSize = size / this.view.zoom;
-                    this.ctx.moveTo(waypoint.pos.x, waypoint.pos.y - dimSize);
-                    this.ctx.lineTo(waypoint.pos.x + dimSize, waypoint.pos.y);
-                    this.ctx.lineTo(waypoint.pos.x, waypoint.pos.y + dimSize);
-                    this.ctx.lineTo(waypoint.pos.x - dimSize, waypoint.pos.y);
+                    this.ctx.moveTo(waypointPixel.x, waypointPixel.y - dimSize);
+                    this.ctx.lineTo(waypointPixel.x + dimSize, waypointPixel.y);
+                    this.ctx.lineTo(waypointPixel.x, waypointPixel.y + dimSize);
+                    this.ctx.lineTo(waypointPixel.x - dimSize, waypointPixel.y);
                     this.ctx.closePath();
                     break;
                     
                 case 'square':
                     const sqSize = size / this.view.zoom;
-                    this.ctx.rect(waypoint.pos.x - sqSize, waypoint.pos.y - sqSize, sqSize * 2, sqSize * 2);
+                    this.ctx.rect(waypointPixel.x - sqSize, waypointPixel.y - sqSize, sqSize * 2, sqSize * 2);
                     break;
             }
             
@@ -2203,7 +2245,7 @@ const TrackEditor = {
                 this.ctx.font = `${12 / this.view.zoom}px Arial`;
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
-                this.ctx.fillText(i.toString(), waypoint.pos.x, waypoint.pos.y - 15 / this.view.zoom);
+                this.ctx.fillText(i.toString(), waypointPixel.x, waypointPixel.y - 15 / this.view.zoom);
             }
         }
     },
@@ -2231,17 +2273,21 @@ const TrackEditor = {
                 lineWidth = 3.5;
             }
             
+            // Convert checkpoint segment from grid units to pixels
+            const segmentAPixel = CoordinateUtils.gridToPixels(segment.a);
+            const segmentBPixel = CoordinateUtils.gridToPixels(segment.b);
+            
             // Draw checkpoint line
             this.ctx.strokeStyle = lineColor;
             this.ctx.lineWidth = lineWidth / this.view.zoom;
             this.ctx.beginPath();
-            this.ctx.moveTo(segment.a.x, segment.a.y);
-            this.ctx.lineTo(segment.b.x, segment.b.y);
+            this.ctx.moveTo(segmentAPixel.x, segmentAPixel.y);
+            this.ctx.lineTo(segmentBPixel.x, segmentBPixel.y);
             this.ctx.stroke();
             
             // Draw checkpoint number
-            const midX = (segment.a.x + segment.b.x) / 2;
-            const midY = (segment.a.y + segment.b.y) / 2;
+            const midX = (segmentAPixel.x + segmentBPixel.x) / 2;
+            const midY = (segmentAPixel.y + segmentBPixel.y) / 2;
             
             this.ctx.fillStyle = lineColor;
             this.ctx.font = `${12 / this.view.zoom}px Arial`;
@@ -2256,7 +2302,7 @@ const TrackEditor = {
             this.ctx.lineWidth = isEndpointASelected ? 2 / this.view.zoom : 1 / this.view.zoom;
             
             this.ctx.beginPath();
-            this.ctx.arc(segment.a.x, segment.a.y, isEndpointASelected ? 5 / this.view.zoom : 3 / this.view.zoom, 0, Math.PI * 2);
+            this.ctx.arc(segmentAPixel.x, segmentAPixel.y, isEndpointASelected ? 5 / this.view.zoom : 3 / this.view.zoom, 0, Math.PI * 2);
             this.ctx.fill();
             if (isEndpointASelected) {
                 this.ctx.stroke();
@@ -2269,7 +2315,7 @@ const TrackEditor = {
             this.ctx.lineWidth = isEndpointBSelected ? 2 / this.view.zoom : 1 / this.view.zoom;
             
             this.ctx.beginPath();
-            this.ctx.arc(segment.b.x, segment.b.y, isEndpointBSelected ? 5 / this.view.zoom : 3 / this.view.zoom, 0, Math.PI * 2);
+            this.ctx.arc(segmentBPixel.x, segmentBPixel.y, isEndpointBSelected ? 5 / this.view.zoom : 3 / this.view.zoom, 0, Math.PI * 2);
             this.ctx.fill();
             if (isEndpointBSelected) {
                 this.ctx.stroke();
@@ -2285,12 +2331,12 @@ const TrackEditor = {
                 this.ctx.textBaseline = 'middle';
                 
                 // Label A endpoint
-                this.ctx.strokeText('A', segment.a.x, segment.a.y - 12 / this.view.zoom);
-                this.ctx.fillText('A', segment.a.x, segment.a.y - 12 / this.view.zoom);
+                this.ctx.strokeText('A', segmentAPixel.x, segmentAPixel.y - 12 / this.view.zoom);
+                this.ctx.fillText('A', segmentAPixel.x, segmentAPixel.y - 12 / this.view.zoom);
                 
                 // Label B endpoint
-                this.ctx.strokeText('B', segment.b.x, segment.b.y - 12 / this.view.zoom);
-                this.ctx.fillText('B', segment.b.x, segment.b.y - 12 / this.view.zoom);
+                this.ctx.strokeText('B', segmentBPixel.x, segmentBPixel.y - 12 / this.view.zoom);
+                this.ctx.fillText('B', segmentBPixel.x, segmentBPixel.y - 12 / this.view.zoom);
             }
         });
     },
@@ -2312,8 +2358,12 @@ const TrackEditor = {
             const current = waypoints[i];
             const next = waypoints[(i + 1) % waypoints.length];
             
-            const dx = next.pos.x - current.pos.x;
-            const dy = next.pos.y - current.pos.y;
+            // Convert waypoint positions from grid units to pixels
+            const currentPixel = CoordinateUtils.gridToPixels(current.pos);
+            const nextPixel = CoordinateUtils.gridToPixels(next.pos);
+            
+            const dx = nextPixel.x - currentPixel.x;
+            const dy = nextPixel.y - currentPixel.y;
             const length = Math.sqrt(dx * dx + dy * dy);
             
             if (length > 20 / this.view.zoom) { // Only draw if segment is long enough
@@ -2321,8 +2371,8 @@ const TrackEditor = {
                 const unitY = dy / length;
                 
                 // Position arrow at 60% along the segment
-                const arrowX = current.pos.x + dx * 0.6;
-                const arrowY = current.pos.y + dy * 0.6;
+                const arrowX = currentPixel.x + dx * 0.6;
+                const arrowY = currentPixel.y + dy * 0.6;
                 
                 const arrowSize = 8 / this.view.zoom;
                 
@@ -2349,13 +2399,16 @@ const TrackEditor = {
         if (this.hoveredPoint) {
             const point = this.hoveredPoint.point;
             
+            // Convert hovered point from grid units to pixels
+            const pointPixel = CoordinateUtils.gridToPixels(point);
+            
             if (this.hoveredPoint.tool === 'eraser') {
                 // Red highlight for eraser
                 this.ctx.strokeStyle = '#ef4444';
                 this.ctx.fillStyle = '#ef444444';
                 this.ctx.lineWidth = 2 / this.view.zoom;
                 this.ctx.beginPath();
-                this.ctx.arc(point.x, point.y, 8 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.arc(pointPixel.x, pointPixel.y, 8 / this.view.zoom, 0, Math.PI * 2);
                 this.ctx.fill();
                 this.ctx.stroke();
             } else if (this.hoveredPoint.tool === 'move') {
@@ -2364,7 +2417,7 @@ const TrackEditor = {
                 this.ctx.fillStyle = '#3b82f644';
                 this.ctx.lineWidth = 2 / this.view.zoom;
                 this.ctx.beginPath();
-                this.ctx.arc(point.x, point.y, 8 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.arc(pointPixel.x, pointPixel.y, 8 / this.view.zoom, 0, Math.PI * 2);
                 this.ctx.fill();
                 this.ctx.stroke();
             } else {
@@ -2372,7 +2425,7 @@ const TrackEditor = {
                 this.ctx.strokeStyle = '#ffffff';
                 this.ctx.lineWidth = 2 / this.view.zoom;
                 this.ctx.beginPath();
-                this.ctx.arc(point.x, point.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.arc(pointPixel.x, pointPixel.y, 6 / this.view.zoom, 0, Math.PI * 2);
                 this.ctx.stroke();
             }
         }
@@ -2383,12 +2436,13 @@ const TrackEditor = {
             
             for (const pointIndex of this.selectedPoints) {
                 if (boundary[pointIndex]) {
-                    const point = boundary[pointIndex];
+                    // Convert point from grid units to pixels
+                    const pixelPoint = CoordinateUtils.gridToPixels(boundary[pointIndex]);
                     this.ctx.strokeStyle = '#22c55e';
                     this.ctx.fillStyle = '#22c55e44';
                     this.ctx.lineWidth = 3 / this.view.zoom;
                     this.ctx.beginPath();
-                    this.ctx.arc(point.x, point.y, 10 / this.view.zoom, 0, Math.PI * 2);
+                    this.ctx.arc(pixelPoint.x, pixelPoint.y, 10 / this.view.zoom, 0, Math.PI * 2);
                     this.ctx.fill();
                     this.ctx.stroke();
                 }
@@ -2411,15 +2465,19 @@ const TrackEditor = {
                         Math.pow(snappedPos.x - firstPoint.x, 2) + Math.pow(snappedPos.y - firstPoint.y, 2)
                     );
                     
-                    if (distanceToFirst <= 10) {
+                    if (distanceToFirst <= 0.5) { // 0.5 grid units = 10 pixels
                         nearFirstPoint = true;
+                        
+                        // Convert points from grid units to pixels
+                        const firstPointPixel = CoordinateUtils.gridToPixels(firstPoint);
+                        const lastPointPixel = CoordinateUtils.gridToPixels(lastPoint);
                         
                         // Highlight first point for loop closure
                         this.ctx.strokeStyle = '#ffcc00';
                         this.ctx.fillStyle = '#ffcc0044';
                         this.ctx.lineWidth = 3 / this.view.zoom;
                         this.ctx.beginPath();
-                        this.ctx.arc(firstPoint.x, firstPoint.y, 8 / this.view.zoom, 0, Math.PI * 2);
+                        this.ctx.arc(firstPointPixel.x, firstPointPixel.y, 8 / this.view.zoom, 0, Math.PI * 2);
                         this.ctx.fill();
                         this.ctx.stroke();
                         
@@ -2428,28 +2486,32 @@ const TrackEditor = {
                         this.ctx.setLineDash([3, 3]);
                         this.ctx.lineWidth = 2 / this.view.zoom;
                         this.ctx.beginPath();
-                        this.ctx.moveTo(lastPoint.x, lastPoint.y);
-                        this.ctx.lineTo(firstPoint.x, firstPoint.y);
+                        this.ctx.moveTo(lastPointPixel.x, lastPointPixel.y);
+                        this.ctx.lineTo(firstPointPixel.x, firstPointPixel.y);
                         this.ctx.stroke();
                         this.ctx.setLineDash([]);
                     }
                 }
                 
                 if (!nearFirstPoint) {
+                    // Convert points from grid units to pixels
+                    const lastPointPixel = CoordinateUtils.gridToPixels(lastPoint);
+                    const snappedPosPixel = CoordinateUtils.gridToPixels(snappedPos);
+                    
                     // Normal preview line from last point to mouse
                     this.ctx.strokeStyle = '#ffffff66';
                     this.ctx.setLineDash([5, 5]);
                     this.ctx.lineWidth = 1 / this.view.zoom;
                     this.ctx.beginPath();
-                    this.ctx.moveTo(lastPoint.x, lastPoint.y);
-                    this.ctx.lineTo(snappedPos.x, snappedPos.y);
+                    this.ctx.moveTo(lastPointPixel.x, lastPointPixel.y);
+                    this.ctx.lineTo(snappedPosPixel.x, snappedPosPixel.y);
                     this.ctx.stroke();
                     this.ctx.setLineDash([]);
                     
                     // Preview point
                     this.ctx.fillStyle = '#ffffff88';
                     this.ctx.beginPath();
-                    this.ctx.arc(snappedPos.x, snappedPos.y, 3 / this.view.zoom, 0, Math.PI * 2);
+                    this.ctx.arc(snappedPosPixel.x, snappedPosPixel.y, 3 / this.view.zoom, 0, Math.PI * 2);
                     this.ctx.fill();
                 }
             }
@@ -2469,12 +2531,15 @@ const TrackEditor = {
             }
             
             if (!this.checkpointState.placing || !this.checkpointState.firstPoint) {
+                // Convert snapped position from grid units to pixels
+                const snappedPosPixel = CoordinateUtils.gridToPixels(snappedPos);
+                
                 // Preview first point
                 this.ctx.fillStyle = '#00ff00aa';
                 this.ctx.strokeStyle = '#00ff00';
                 this.ctx.lineWidth = 2 / this.view.zoom;
                 this.ctx.beginPath();
-                this.ctx.arc(snappedPos.x, snappedPos.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.arc(snappedPosPixel.x, snappedPosPixel.y, 6 / this.view.zoom, 0, Math.PI * 2);
                 this.ctx.fill();
                 this.ctx.stroke();
             } else {
@@ -2485,17 +2550,21 @@ const TrackEditor = {
                     Math.pow(snappedPos.y - firstPoint.y, 2)
                 );
                 
-                // Color based on length validity (minimum 6 pixels)
-                const isValidLength = length >= 6;
+                // Color based on length validity (minimum 0.3 grid units = 6 pixels)
+                const isValidLength = length >= 0.3;
                 const previewColor = isValidLength ? '#00ff00' : '#ff0000';
                 const previewColorAlpha = isValidLength ? '#00ff00aa' : '#ff0000aa';
+                
+                // Convert points from grid units to pixels
+                const firstPointPixel = CoordinateUtils.gridToPixels(firstPoint);
+                const snappedPosPixel = CoordinateUtils.gridToPixels(snappedPos);
                 
                 // Draw preview line
                 this.ctx.strokeStyle = previewColorAlpha;
                 this.ctx.lineWidth = 3 / this.view.zoom;
                 this.ctx.beginPath();
-                this.ctx.moveTo(firstPoint.x, firstPoint.y);
-                this.ctx.lineTo(snappedPos.x, snappedPos.y);
+                this.ctx.moveTo(firstPointPixel.x, firstPointPixel.y);
+                this.ctx.lineTo(snappedPosPixel.x, snappedPosPixel.y);
                 this.ctx.stroke();
                 
                 // Draw first point (already placed)
@@ -2503,7 +2572,7 @@ const TrackEditor = {
                 this.ctx.strokeStyle = '#00ff00';
                 this.ctx.lineWidth = 2 / this.view.zoom;
                 this.ctx.beginPath();
-                this.ctx.arc(firstPoint.x, firstPoint.y, 6 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.arc(firstPointPixel.x, firstPointPixel.y, 6 / this.view.zoom, 0, Math.PI * 2);
                 this.ctx.fill();
                 this.ctx.stroke();
                 
@@ -2512,19 +2581,19 @@ const TrackEditor = {
                 this.ctx.strokeStyle = previewColor;
                 this.ctx.lineWidth = 2 / this.view.zoom;
                 this.ctx.beginPath();
-                this.ctx.arc(snappedPos.x, snappedPos.y, 4 / this.view.zoom, 0, Math.PI * 2);
+                this.ctx.arc(snappedPosPixel.x, snappedPosPixel.y, 4 / this.view.zoom, 0, Math.PI * 2);
                 this.ctx.fill();
                 this.ctx.stroke();
                 
-                // Show length indicator
+                // Show length indicator (in grid units)
                 if (length > 0) {
-                    const midX = (firstPoint.x + snappedPos.x) / 2;
-                    const midY = (firstPoint.y + snappedPos.y) / 2;
+                    const midX = (firstPointPixel.x + snappedPosPixel.x) / 2;
+                    const midY = (firstPointPixel.y + snappedPosPixel.y) / 2;
                     
                     this.ctx.fillStyle = previewColor;
                     this.ctx.font = `${12 / this.view.zoom}px monospace`;
                     this.ctx.textAlign = 'center';
-                    this.ctx.fillText(`${length.toFixed(1)}px`, midX, midY - 10 / this.view.zoom);
+                    this.ctx.fillText(`${length.toFixed(1)}u`, midX, midY - 10 / this.view.zoom); // Show as grid units (u)
                 }
             }
         }
@@ -2532,7 +2601,7 @@ const TrackEditor = {
     
     // Checkpoint Utility Functions
     findCheckpointHit(pos) {
-        const hitRadius = 8; // pixels
+        const hitRadius = 0.4; // 0.4 grid units = 8 pixels
         
         for (let i = 0; i < this.track.track.checkpoints.length; i++) {
             const checkpoint = this.track.track.checkpoints[i];

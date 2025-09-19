@@ -166,6 +166,91 @@ const FileUtils = {
     }
 };
 
+// Coordinate system utilities (vRacer uses 20 pixels per grid unit)
+const CoordinateUtils = {
+    // Grid size in pixels (matches vRacer game)
+    GRID_SIZE: 20,
+    
+    // Convert grid units to pixels
+    gridToPixels(gridValue) {
+        if (typeof gridValue === 'number') {
+            return gridValue * this.GRID_SIZE;
+        } else if (gridValue && typeof gridValue === 'object') {
+            if (gridValue.x !== undefined && gridValue.y !== undefined) {
+                // Convert point object
+                return {
+                    x: gridValue.x * this.GRID_SIZE,
+                    y: gridValue.y * this.GRID_SIZE
+                };
+            }
+        }
+        return gridValue;
+    },
+    
+    // Convert pixels to grid units
+    pixelsToGrid(pixelValue) {
+        if (typeof pixelValue === 'number') {
+            return pixelValue / this.GRID_SIZE;
+        } else if (pixelValue && typeof pixelValue === 'object') {
+            if (pixelValue.x !== undefined && pixelValue.y !== undefined) {
+                // Convert point object
+                return {
+                    x: pixelValue.x / this.GRID_SIZE,
+                    y: pixelValue.y / this.GRID_SIZE
+                };
+            }
+        }
+        return pixelValue;
+    },
+    
+    // Convert array of points from grid to pixels
+    gridArrayToPixels(gridPoints) {
+        if (!Array.isArray(gridPoints)) return gridPoints;
+        return gridPoints.map(point => this.gridToPixels(point));
+    },
+    
+    // Convert array of points from pixels to grid
+    pixelArrayToGrid(pixelPoints) {
+        if (!Array.isArray(pixelPoints)) return pixelPoints;
+        return pixelPoints.map(point => this.pixelsToGrid(point));
+    },
+    
+    // Snap value to grid (in grid units)
+    snapToGridUnits(value) {
+        if (typeof value === 'number') {
+            return Math.round(value);
+        } else if (value && typeof value === 'object' && value.x !== undefined && value.y !== undefined) {
+            return {
+                x: Math.round(value.x),
+                y: Math.round(value.y)
+            };
+        }
+        return value;
+    },
+    
+    // Convert screen coordinates to grid units (for mouse input)
+    screenToGrid(screenPos, view) {
+        // First convert screen to world pixels
+        const worldPixels = {
+            x: (screenPos.x - view.offsetX) / view.zoom,
+            y: (screenPos.y - view.offsetY) / view.zoom
+        };
+        // Then convert to grid units
+        return this.pixelsToGrid(worldPixels);
+    },
+    
+    // Convert grid units to screen coordinates (for rendering)
+    gridToScreen(gridPos, view) {
+        // First convert grid to world pixels
+        const worldPixels = this.gridToPixels(gridPos);
+        // Then convert to screen coordinates
+        return {
+            x: worldPixels.x * view.zoom + view.offsetX,
+            y: worldPixels.y * view.zoom + view.offsetY
+        };
+    }
+};
+
 // Export utilities to global scope
 if (typeof window !== 'undefined') {
     window.MathUtils = MathUtils;
@@ -173,4 +258,5 @@ if (typeof window !== 'undefined') {
     window.EventUtils = EventUtils;
     window.StorageUtils = StorageUtils;
     window.FileUtils = FileUtils;
+    window.CoordinateUtils = CoordinateUtils;
 }
