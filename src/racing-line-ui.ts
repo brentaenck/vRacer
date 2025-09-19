@@ -129,15 +129,15 @@ function handleClearRacingLine(): void {
  * Handle opening racing line editor
  */
 function handleOpenRacingLineEditor(): void {
-  // Open racing line editor in new tab/window
-  const editorUrl = './racing-line-editor/'
+  // Open unified track editor in racing line mode in new tab/window
+  const editorUrl = './track-editor/'
   const editorWindow = window.open(editorUrl, '_blank', 'width=1400,height=900')
   
   if (editorWindow) {
-    showRacingLineMessage('Racing Line Editor opened in new window', 'info')
-    console.log('✏️ Racing Line Editor opened')
+    showRacingLineMessage('Track Editor opened in new window - switch to Racing mode to edit racing lines', 'info')
+    console.log('✏️ Unified Track Editor opened for racing line editing')
   } else {
-    showRacingLineMessage('Failed to open Racing Line Editor - check popup blocker', 'error')
+    showRacingLineMessage('Failed to open Track Editor - check popup blocker', 'error')
   }
 }
 
