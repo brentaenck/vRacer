@@ -6,6 +6,68 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [5.2.1] - 2025-09-21
+
+### 🔧 **PATCH: Automated Version Management System**
+
+#### 🐛 Fixed
+- **Version Display Synchronization**
+  - Fixed hardcoded version v4.4.0 in header display (now shows dynamic v5.2.1)
+  - Fixed outdated version v2.1.1 in footer display (now shows dynamic v5.2.1)
+  - Fixed track editor console log showing v1.0.0 Beta (now shows v5.2.1)
+  - Eliminated version drift between package.json and UI displays
+
+#### 🎯 Added
+- **Build-Time Version Injection**
+  - Added Vite configuration to inject `__APP_VERSION__` from package.json automatically
+  - Created `src/version.ts` module with TypeScript declarations for type safety
+  - Implemented dynamic version display in main.ts for header and footer elements
+  - Added version info logging for debugging and verification
+
+- **Automated Version Synchronization**
+  - Created `scripts/update-version.js` for consistent version management
+  - Added `npm run update-version` command for manual version sync
+  - Integrated automatic version sync into `npm run pre-release` workflow
+  - Added version sync to workflow help and documentation
+
+#### 🔧 Technical Implementation
+- **Single Source of Truth Architecture**
+  - package.json version → Vite build-time injection → Dynamic UI updates
+  - Eliminated need for manual version updates in multiple files
+  - Automatic propagation of version changes to all display locations
+  - Type-safe version access through dedicated TypeScript module
+
+- **Developer Experience Enhancement**
+  - Zero-maintenance version management once configured
+  - Seamless integration with existing build and release processes
+  - Comprehensive version logging for debugging and verification
+  - Automated version consistency validation during pre-release
+
+#### ✅ **Quality Assurance**
+- **Build Validation**
+  - TypeScript compilation with version injection passes
+  - Production build generates correct version displays
+  - Development server shows dynamic version updates
+  - All automated workflows validate successfully
+
+- **Version Consistency Testing**
+  - Verified header displays current package.json version
+  - Confirmed footer shows matching version information
+  - Validated track editor console log matches main app version
+  - Tested version sync script updates all hardcoded references
+
+#### 🔮 **Future Benefits**
+- **Maintenance Reduction**
+  - No more manual version updates across multiple files
+  - Automatic version consistency during all future releases
+  - Elimination of version drift between package.json and UI
+  - Streamlined release process with automated version management
+
+#### 🎯 **Migration Impact**
+- **For Users**: Immediate fix for incorrect version displays (no action required)
+- **For Developers**: Enhanced release workflow with automated version sync
+- **For Releases**: Version consistency guaranteed through build-time injection
+
 ## [5.2.0] - 2025-09-21
 
 ### 🎨 **MAJOR: Unified UI Styling Architecture**
