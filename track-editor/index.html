@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>vRacer Track & Racing Line Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Paper-based hand-drawn fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter:wght@400&family=Kalam:wght@300;400;700&family=Caveat:wght@400;500;600;700&family=Patrick+Hand:wght@400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/editor.css">
 </head>
-<body>
+<body class="dual-style-enabled">
     <div class="app-container">
         <!-- Main Content -->
         <div class="main-content">
             <!-- Left Sidebar - Tools & Options -->
-            <aside class="sidebar left-sidebar">
+            <aside class="sidebar left-sidebar ui-zone">
                 <!-- Track Design Tools -->
                 <div id="trackTools" class="panel">
                     <h3>🔨 Track Tools</h3>
@@ -102,7 +106,7 @@
             <!-- Canvas Area -->
             <main class="canvas-container">
                 <!-- Mode & File Toolbar -->
-                <div class="mode-toolbar">
+                <div class="mode-toolbar ui-zone">
                     <div class="mode-selector">
                         <button id="trackMode" class="mode-btn active" data-mode="track">
                             🗿 Track Design
@@ -124,7 +128,7 @@
                     </div>
                 </div>
                 
-                <div class="canvas-toolbar">
+                <div class="canvas-toolbar ui-zone">
                     <div class="viewport-controls">
                         <button id="zoomIn" class="btn btn-small">🔍 +</button>
                         <button id="zoomOut" class="btn btn-small">🔍 -</button>
@@ -140,8 +144,8 @@
                     </div>
                 </div>
                 
-                <div class="canvas-wrapper">
-                <canvas id="trackCanvas" width="1000" height="700"></canvas>
+                <div class="canvas-wrapper canvas-zone">
+                <canvas id="trackCanvas" class="canvas-zone" width="1000" height="700"></canvas>
                     <div class="canvas-overlay" id="canvasOverlay">
                         <!-- Dynamic overlay content (tooltips, etc.) -->
                     </div>
@@ -161,7 +165,7 @@
                     </div>
                 </div>
                 
-                <div class="status-bar">
+                <div class="status-bar ui-zone">
                     <span id="status">Ready - Select a tool to begin editing</span>
                     <div class="status-right">
                         <span id="selectedInfo">Nothing selected</span>
@@ -170,7 +174,7 @@
             </main>
 
             <!-- Right Sidebar - Properties & Validation -->
-            <aside class="sidebar right-sidebar">
+            <aside class="sidebar right-sidebar ui-zone">
                 <!-- Track Properties -->
                 <div class="panel">
                     <h3>📋 Track Properties</h3>
