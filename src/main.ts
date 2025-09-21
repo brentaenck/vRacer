@@ -8,6 +8,29 @@ import { initializeDropdownMenu } from './dropdown-menu'
 import { chooseAIMove } from './ai'
 import { trackLoader } from './track-loader'
 import { lockBackground, unlockBackground } from './modal-utils'
+import { getVersionString, getVersionInfo } from './version'
+
+/**
+ * Initialize version display throughout the app
+ */
+function initializeVersionDisplay() {
+  const appVersionEl = document.getElementById('appVersion')
+  const footerVersionEl = document.getElementById('footerVersion')
+  
+  const versionString = getVersionString()
+  
+  if (appVersionEl) {
+    appVersionEl.textContent = versionString
+  }
+  
+  if (footerVersionEl) {
+    footerVersionEl.textContent = `vRacer ${versionString}`
+  }
+  
+  // Log version info for debugging
+  const versionInfo = getVersionInfo()
+  console.log('🏁 vRacer Version Info:', versionInfo)
+}
 
 /**
  * Initialize dual styling system based on feature flag
@@ -83,6 +106,9 @@ const AI_MOVE_DELAY = 800 // milliseconds before AI makes move
 
 // Initialize feature flags and log enabled features
 logEnabledFeatures()
+
+// Initialize version display
+initializeVersionDisplay()
 
 // Initialize dual styling system
 initializeDualStyling()

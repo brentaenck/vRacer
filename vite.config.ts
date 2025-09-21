@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import { copyFileSync, existsSync, mkdirSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { glob } from 'glob'
 
@@ -43,6 +43,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true
   },
-  plugins: [copyTrackEditor()]
+  plugins: [copyTrackEditor()],
+  define: {
+    __APP_VERSION__: JSON.stringify(JSON.parse(readFileSync('package.json', 'utf-8')).version)
+  }
 })
 
