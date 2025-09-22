@@ -57,7 +57,7 @@ export const FEATURES: FeatureFlags = {
   // UI and UX improvements - polish features
   improvedControls: true,     // Keyboard support, better mouse handling
   soundEffects: false,        // Audio feedback - DISABLED
-  animations: true,           // Smooth movement, particle effects
+  animations: false,          // PHASE 1: Disabled for rendering simplification
   graphPaperGrid: true,       // Enhanced grid with coordinate indicators
   dualStyling: true,          // Modern UI with paper canvas - ENABLED for better UX
   
