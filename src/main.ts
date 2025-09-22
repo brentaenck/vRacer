@@ -227,16 +227,11 @@ function render() {
   }
 }
 
-// Animation loop for smooth rendering
-function animationLoop() {
-  render()
-  requestAnimationFrame(animationLoop)
-}
-
-// Start animation loop if animations are enabled
-if (isFeatureEnabled('animations')) {
-  animationLoop()
-}
+// REMOVED: Animation loop - now using event-driven rendering
+// Game renders only when needed:
+// - Player interactions (mouse, keyboard)
+// - Game state changes (new game, toggles)
+// - UI updates (hover effects, AI moves)
 
 // Initialize toggle states
 syncToggles()
