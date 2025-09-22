@@ -229,21 +229,24 @@ const CoordinateUtils = {
     },
     
     // Convert screen coordinates to grid units (for mouse input)
+    // FIXED: Match main game's coordinate system approach
     screenToGrid(screenPos, view) {
-        // First convert screen to world pixels
-        const worldPixels = {
-            x: (screenPos.x - view.offsetX) / view.zoom,
-            y: (screenPos.y - view.offsetY) / view.zoom
+        // Apply inverse of the canvas transformation to get world coordinates
+        const worldPixelsX = (screenPos.x - view.offsetX) / view.zoom;
+        const worldPixelsY = (screenPos.y - view.offsetY) / view.zoom;
+        
+        // Convert to grid units using same approach as main game
+        return {
+            x: worldPixelsX / this.GRID_SIZE,
+            y: worldPixelsY / this.GRID_SIZE
         };
-        // Then convert to grid units
-        return this.pixelsToGrid(worldPixels);
     },
     
     // Convert grid units to screen coordinates (for rendering)
     gridToScreen(gridPos, view) {
         // First convert grid to world pixels
         const worldPixels = this.gridToPixels(gridPos);
-        // Then convert to screen coordinates
+        // Then apply canvas transformation (zoom and offset)
         return {
             x: worldPixels.x * view.zoom + view.offsetX,
             y: worldPixels.y * view.zoom + view.offsetY

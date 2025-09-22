@@ -92,6 +92,10 @@ const TrackEditor = {
         // Get canvas and context
         this.canvas = document.getElementById('trackCanvas');
         this.ctx = this.canvas.getContext('2d');
+        
+        // Initialize canvas dimensions based on CSS size
+        this.initializeCanvasDimensions();
+        
         this.updateCanvasRect();
         
         // Initialize racing line editor
@@ -123,10 +127,19 @@ const TrackEditor = {
             });
         });
         
-        // Tool selection
-        document.querySelectorAll('.tool-btn').forEach(btn => {
+        // Tool selection (track tools only)
+        document.querySelectorAll('#trackTools .tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.setTool(e.target.dataset.tool);
+            });
+        });
+        
+        // Racing line tool selection (handled separately)
+        document.querySelectorAll('#racingLineTools .tool-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (typeof RacingLineEditor !== 'undefined') {
+                    RacingLineEditor.setRacingLineTool(e.target.dataset.tool);
+                }
             });
         });
         
@@ -224,9 +237,26 @@ const TrackEditor = {
         
         // Window resize
         window.addEventListener('resize', () => {
+            this.initializeCanvasDimensions();
             this.updateCanvasRect();
             this.render();
         });
+    },
+    
+    // Initialize canvas dimensions to match CSS size
+    initializeCanvasDimensions() {
+        const rect = this.canvas.getBoundingClientRect();
+        
+        // Set canvas dimensions to match actual display size
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+        
+        // FIXED: Initialize view to show coordinate origin (0,0) at top-left like main game
+        // This ensures the track editor coordinate system matches the main game
+        this.view.offsetX = 0;
+        this.view.offsetY = 0;
+        
+        console.log(`🎨 Canvas initialized: ${rect.width}x${rect.height}, coordinate system matches main game`);
     },
     
     // Set up property input handlers
@@ -307,6 +337,7 @@ const TrackEditor = {
     handleMouseDown(e) {
         const pos = this.getCanvasPosition(e);
         const worldPos = this.screenToWorld(pos);
+        
         
         this.dragStart = worldPos;
         
@@ -1014,7 +1045,8 @@ const TrackEditor = {
     
     // Update tool UI
     updateToolUI() {
-        document.querySelectorAll('.tool-btn').forEach(btn => {
+        // Only update track tools, not racing line tools
+        document.querySelectorAll('#trackTools .tool-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tool === this.tool);
         });
     },
@@ -1420,8 +1452,9 @@ const TrackEditor = {
     
     resetView() {
         this.view.zoom = 1.0;
-        this.view.offsetX = this.canvas.width / 2;
-        this.view.offsetY = this.canvas.height / 2;
+        // FIXED: Reset to show (0,0) at top-left corner like main game
+        this.view.offsetX = 0;
+        this.view.offsetY = 0;
         this.updateZoomDisplay();
         this.render();
     },
@@ -1567,23 +1600,79 @@ const TrackEditor = {
     
     
     loadBlankTemplate() {
-        // Clear everything
+        // FIXED: Completely clear ALL track elements
         this.track.track.outer = [];
         this.track.track.inner = [];
+        this.track.track.checkpoints = [];
+        this.track.track.walls = [];
+        
+        // Reset start/finish line to default empty state
+        this.track.track.startLine = { a: { x: 0, y: 0 }, b: { x: 0, y: 0 } };
+        
+        // Clear racing line
         this.track.racingLine.waypoints = [];
+        this.track.racingLine.direction = 'counter-clockwise';
+        this.track.racingLine.validated = false;
         
         // Reset closed flags
         delete this.track.track.outer.closed;
         delete this.track.track.inner.closed;
         
+        // Reset metadata
         this.track.metadata.name = 'New Track';
+        this.track.metadata.author = 'Anonymous';
         this.track.metadata.description = '';
+        this.track.metadata.difficulty = 'Medium';
+        this.track.metadata.created = new Date().toISOString();
+        
+        // Clear validation state
+        this.track.validation = {
+            trackValid: false,
+            racingLineValid: false,
+            errors: [],
+            warnings: [],
+            metrics: {
+                trackLength: 0,
+                avgWidth: 0,
+                complexity: 0
+            }
+        };
+        
+        // Reset editor state
+        this.selectedPoints = [];
+        this.selectedCheckpointIndex = null;
+        this.selectedCheckpointEndpoint = null;
+        this.hoveredPoint = null;
+        this.hoveredCheckpoint = null;
+        this.isDragging = false;
+        this.isDraggingCheckpoint = false;
+        this.dragPointIndex = -1;
+        
+        // Reset tool states
+        this.startFinishState = {
+            placing: false,
+            firstPoint: null,
+            previewPoint: null
+        };
+        
+        this.checkpointState = {
+            placing: false,
+            firstPoint: null,
+            previewPoint: null
+        };
+        
+        // Reset racing line editor state
+        if (typeof RacingLineEditor !== 'undefined') {
+            RacingLineEditor.selectWaypoint(null);
+        }
         
         this.updatePropertyInputs();
         this.updateStats();
         this.updateOutput();
         this.resetView();
         this.render();
+        
+        this.updateStatus('New blank track created - all elements cleared');
     },
     
     updatePropertyInputs() {
@@ -1977,8 +2066,8 @@ const TrackEditor = {
             this.renderCheckpoints();
         }
         
-        // Render direction arrows
-        if (this.view.showDirectionArrows && this.track.racingLine.waypoints.length > 1) {
+        // Render direction arrows (only in racing line mode, not in track design mode)
+        if (this.view.showDirectionArrows && this.track.racingLine.waypoints.length > 1 && this.mode !== 'track') {
             this.renderDirectionArrows();
         }
         
@@ -1998,6 +2087,7 @@ const TrackEditor = {
             maxX: (this.canvas.width - this.view.offsetX) / this.view.zoom,
             maxY: (this.canvas.height - this.view.offsetY) / this.view.zoom
         };
+        
         
         this.ctx.strokeStyle = '#333333';
         this.ctx.lineWidth = 0.5 / this.view.zoom;
@@ -2346,6 +2436,14 @@ const TrackEditor = {
         const waypoints = this.track.racingLine.waypoints;
         if (waypoints.length < 2) return;
         
+        // COORDINATE SYSTEM EXPLANATION:
+        // Track editor waypoints are inherently ordered in CLOCKWISE direction
+        // (waypoint[0] → waypoint[1] represents clockwise movement around track)
+        // However, vRacer game expects COUNTER-CLOCKWISE waypoint ordering.
+        // 
+        // When track direction is set to "counter-clockwise", we must reverse
+        // the arrow direction to visually show counter-clockwise movement,
+        // even though the waypoint indices progress clockwise.
         const direction = this.track.racingLine.direction || 'counter-clockwise';
         const arrowColor = direction === 'counter-clockwise' ? '#2196f3' : '#ff5722';
         
@@ -2358,37 +2456,68 @@ const TrackEditor = {
             const current = waypoints[i];
             const next = waypoints[(i + 1) % waypoints.length];
             
-            // Convert waypoint positions from grid units to pixels
-            const currentPixel = CoordinateUtils.gridToPixels(current.pos);
-            const nextPixel = CoordinateUtils.gridToPixels(next.pos);
+            // IMPORTANT: Track editor waypoints are ordered clockwise,
+            // but vRacer expects counter-clockwise. When direction setting
+            // is "counter-clockwise", we need to reverse the arrow direction
+            // to match the expected racing direction.
+            const shouldReverse = direction === 'counter-clockwise';
             
-            const dx = nextPixel.x - currentPixel.x;
-            const dy = nextPixel.y - currentPixel.y;
+            // If reversing, swap current and next to get opposite direction
+            const fromPoint = shouldReverse ? next : current;
+            const toPoint = shouldReverse ? current : next;
+            
+            // Convert waypoint positions from grid units to pixels
+            const fromPixel = CoordinateUtils.gridToPixels(fromPoint.pos);
+            const toPixel = CoordinateUtils.gridToPixels(toPoint.pos);
+            
+            // Calculate direction vector (corrected for waypoint ordering)
+            const dx = toPixel.x - fromPixel.x;
+            const dy = toPixel.y - fromPixel.y;
             const length = Math.sqrt(dx * dx + dy * dy);
             
             if (length > 20 / this.view.zoom) { // Only draw if segment is long enough
                 const unitX = dx / length;
                 const unitY = dy / length;
                 
-                // Position arrow at 60% along the segment
-                const arrowX = currentPixel.x + dx * 0.6;
-                const arrowY = currentPixel.y + dy * 0.6;
+                // Position arrow at 60% along the corrected segment
+                const arrowX = fromPixel.x + dx * 0.6;
+                const arrowY = fromPixel.y + dy * 0.6;
                 
-                const arrowSize = 8 / this.view.zoom;
+                // Make arrows larger and more visible (increased from 8 to 12)
+                const arrowSize = 12 / this.view.zoom;
                 
-                // Draw arrow triangle
+                // Draw arrow triangle pointing in direction of travel
+                // Create a proper arrow pointing from current toward next waypoint
                 this.ctx.beginPath();
-                this.ctx.moveTo(arrowX, arrowY);
+                
+                // Arrow tip (point of the triangle) - move further along the direction vector
+                const tipX = arrowX + arrowSize * unitX * 0.5;
+                const tipY = arrowY + arrowSize * unitY * 0.5;
+                this.ctx.moveTo(tipX, tipY);
+                
+                // Arrow base points (wings of the triangle) - behind the tip
+                const baseX = arrowX - arrowSize * unitX * 0.5;
+                const baseY = arrowY - arrowSize * unitY * 0.5;
+                
+                // Left wing of arrow (perpendicular to direction)
                 this.ctx.lineTo(
-                    arrowX - arrowSize * unitX - arrowSize * unitY * 0.5,
-                    arrowY - arrowSize * unitY + arrowSize * unitX * 0.5
+                    baseX - arrowSize * unitY * 0.4,
+                    baseY + arrowSize * unitX * 0.4
                 );
+                
+                // Right wing of arrow (perpendicular to direction)
                 this.ctx.lineTo(
-                    arrowX - arrowSize * unitX + arrowSize * unitY * 0.5,
-                    arrowY - arrowSize * unitY - arrowSize * unitX * 0.5
+                    baseX + arrowSize * unitY * 0.4,
+                    baseY - arrowSize * unitX * 0.4
                 );
+                
                 this.ctx.closePath();
                 this.ctx.fill();
+                
+                // Add subtle outline for better visibility
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 1 / this.view.zoom;
+                this.ctx.stroke();
             }
         }
     },

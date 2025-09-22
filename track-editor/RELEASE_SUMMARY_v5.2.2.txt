@@ -1,0 +1,27 @@
+vRacer Track Editor v5.2.2 - Minor Release
+
+CRITICAL FIXES:
+✅ Fixed coordinate system mismatch between track editor and main vRacer game
+✅ Fixed racing line tools functionality (select, add, delete)
+✅ Fixed "New Track" button not completely clearing all elements
+
+KEY IMPROVEMENTS:
+- Coordinate system now matches main game (top-left origin)
+- Racing line waypoint hit detection fixed (precise selection)
+- Racing line tools separated from track tools (no conflicts)
+- Tool UI states update correctly
+- Complete track clearing on "New Track"
+
+TECHNICAL CHANGES:
+- Updated CoordinateUtils.screenToGrid() and gridToScreen()
+- Separated event handling for track vs racing line tools  
+- Enhanced loadBlankTemplate() for complete state reset
+- Added updateRacingLineToolUI() for proper tool states
+
+COMPATIBILITY:
+- Full compatibility with main vRacer game coordinate system
+- Racing line waypoint structure matches game requirements
+- Exported tracks work seamlessly with main game
+
+This release resolves major usability issues and ensures seamless 
+compatibility between the track editor and main vRacer game.

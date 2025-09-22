@@ -25,13 +25,7 @@ const RacingLineEditor = {
         // Waypoint property editors
         this.setupWaypointPropertyEvents();
         
-        // Racing line tool selection
-        document.querySelectorAll('#racingLineTools .tool-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const tool = e.target.closest('.tool-btn').getAttribute('data-tool');
-                this.setRacingLineTool(tool);
-            });
-        });
+        // NOTE: Racing line tool selection is now handled by the main TrackEditor
         
         // Racing line display options
         const showRacingLine = document.getElementById('showRacingLine');
@@ -96,12 +90,7 @@ const RacingLineEditor = {
         this.editMode = tool;
         
         // Update tool button states
-        document.querySelectorAll('#racingLineTools .tool-btn').forEach(btn => {
-            btn.classList.remove('tool-active');
-            if (btn.getAttribute('data-tool') === tool) {
-                btn.classList.add('tool-active');
-            }
-        });
+        this.updateRacingLineToolUI();
         
         // Update cursor and status
         switch (tool) {
@@ -118,6 +107,13 @@ const RacingLineEditor = {
                 TrackEditor.updateStatus('Racing line delete mode - click waypoints to delete');
                 break;
         }
+    },
+    
+    // Update racing line tool UI
+    updateRacingLineToolUI() {
+        document.querySelectorAll('#racingLineTools .tool-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-tool') === this.editMode);
+        });
     },
     
     // Handle racing line mode interactions
@@ -341,7 +337,9 @@ const RacingLineEditor = {
     // Hit test waypoint at world position
     hitTestWaypoint(worldPos) {
         const waypoints = TrackEditor.track.racingLine.waypoints;
-        const hitRadius = 8; // pixels in world space
+        // FIXED: Hit radius should be in grid units, not pixels
+        // 0.4 grid units = 8 pixels (reasonable click target)
+        const hitRadius = 0.4; 
         
         for (let i = 0; i < waypoints.length; i++) {
             const waypoint = waypoints[i];
