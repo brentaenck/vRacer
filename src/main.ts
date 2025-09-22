@@ -1,7 +1,7 @@
 import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove, canUndo, getCurrentPlayer, getCurrentCar, isMultiCarGame, createMultiCarGameFromConfig } from './game'
 import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled, toggleFeature } from './features'
-import { performanceTracker, PerformanceBenchmark } from './performance'
+import { simplePerformanceTracker } from './simple-performance'
 import { animationManager, AnimationUtils } from './animations'
 import { initializeStandaloneTrackEditor } from './track-editor-integration/standalone-integration'
 import { initializeDropdownMenu } from './dropdown-menu'
@@ -164,12 +164,10 @@ function checkAITurn() {
 }
 
 function render() {
-  // Track frame performance if enabled
-  if (isFeatureEnabled('performanceMetrics')) {
-    performanceTracker.startFrame()
-  }
+  // Simple performance tracking for debug mode only
+  simplePerformanceTracker.startFrame()
   
-  // Update animations if enabled
+  // Update animations if enabled (currently disabled)
   if (isFeatureEnabled('animations')) {
     animationManager.update()
   }
@@ -177,9 +175,7 @@ function render() {
   draw(ctx, state, canvas)
   
   // End frame tracking
-  if (isFeatureEnabled('performanceMetrics')) {
-    performanceTracker.endFrame()
-  }
+  simplePerformanceTracker.endFrame()
   
   // Enhanced status display when debugMode is enabled
   if (isFeatureEnabled('debugMode')) {
@@ -862,41 +858,7 @@ function syncToggles() {
   debugToggle.checked = isFeatureEnabled('debugMode')
 }
 
-// Performance benchmark function for console access
-// Usage: runPerformanceBenchmark(5) to run a 5-second test
-async function runPerformanceBenchmark(durationSeconds: number = 5): Promise<any> {
-  console.log(`🚀 Starting ${durationSeconds}s performance benchmark...`)
-  
-  try {
-    const results = await PerformanceBenchmark.runBenchmark(durationSeconds, () => {
-      draw(ctx, state, canvas)
-    })
-    
-    const report = PerformanceBenchmark.generateReport(results)
-    console.log('\n' + report.join('\n'))
-    
-    // Compare with v3.1.1 baseline (assuming ~50fps baseline from previous performance improvements)
-    const comparison = PerformanceBenchmark.comparePerformance(50, results.avgFps)
-    console.log(`\n📈 Comparison vs baseline (50fps):`)  
-    console.log(`FPS Delta: ${comparison.deltaFps >= 0 ? '+' : ''}${comparison.deltaFps} (${comparison.deltaPercent >= 0 ? '+' : ''}${comparison.deltaPercent}%)`)
-    
-    if (comparison.improved) {
-      console.log(`✨ Performance improved!`)
-    } else if (comparison.maintained) {
-      console.log(`👍 Performance maintained within acceptable range`)
-    } else if (comparison.regressed && comparison.acceptable) {
-      console.log(`⚠️ Slight performance regression, but still acceptable`)
-    } else if (comparison.regressed && !comparison.acceptable) {
-      console.log(`❌ Performance regression detected - optimization needed`)
-    }
-    
-    return results
-  } catch (error) {
-    console.error('❌ Benchmark failed:', error)
-  }
-}
-
-// Make benchmark function available globally for console access
-;(window as any).runPerformanceBenchmark = runPerformanceBenchmark
+// REMOVED: Complex performance benchmark system
+// Simple debug-only performance tracking now handled by simplePerformanceTracker
 
 

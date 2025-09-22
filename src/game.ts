@@ -1,6 +1,6 @@
 import { add, clamp, pointInPolygon, Segment, segmentInsidePolygon, segmentsIntersect, Vec } from './geometry'
 import { isFeatureEnabled } from './features'
-import { performanceTracker } from './performance'
+import { simplePerformanceTracker } from './simple-performance'
 import { animationManager, AnimationUtils } from './animations'
 import { hudManager, HUDData } from './hud'
 import { createTrackAnalysisWithCustomLine, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
@@ -1187,8 +1187,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     const g = legacyState.grid
     const W = canvas.width, H = canvas.height
     
-    // Always track render performance (but only display when debugMode is enabled)
-    performanceTracker.startRender()
+    // Simple render tracking for debug mode only
+    simplePerformanceTracker.startRender()
     
     ctx.clearRect(0, 0, W, H)
 
@@ -1293,8 +1293,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       ctx.restore()
     }
 
-    // End render tracking for performance metrics
-    performanceTracker.endRender()
+    // End render tracking
+    simplePerformanceTracker.endRender()
     
     // Update DOM-based HUD instead of drawing on canvas
     const speed = Math.sqrt(legacyState.vel.x * legacyState.vel.x + legacyState.vel.y * legacyState.vel.y)
@@ -1311,7 +1311,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
         finished: legacyState.finished,
         gameFinished: false
       },
-      performanceMetrics: isFeatureEnabled('debugMode') ? performanceTracker.getSummary() : undefined
+      performanceMetrics: isFeatureEnabled('debugMode') ? simplePerformanceTracker.getSummary() : undefined
     }
     
     hudManager.update(hudData)
@@ -1321,8 +1321,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     const g = multiCarState.grid
     const W = canvas.width, H = canvas.height
     
-    // Always track render performance (but only display when debugMode is enabled)
-    performanceTracker.startRender()
+    // Simple render tracking for debug mode only
+    simplePerformanceTracker.startRender()
     
     ctx.clearRect(0, 0, W, H)
 
@@ -1467,8 +1467,8 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       ctx.restore()
     }
 
-    // End render tracking for performance metrics
-    performanceTracker.endRender()
+    // End render tracking
+    simplePerformanceTracker.endRender()
     
     // Update DOM-based HUD for multi-car mode
     const currentPlayer = getCurrentPlayer(multiCarState)
@@ -1536,7 +1536,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
           winnerTime
         },
         leaderboard: hudLeaderboard,
-        performanceMetrics: isFeatureEnabled('debugMode') ? performanceTracker.getSummary() : undefined
+        performanceMetrics: isFeatureEnabled('debugMode') ? simplePerformanceTracker.getSummary() : undefined
       }
     } else {
       // Fallback HUD data when no current player/car
@@ -1552,7 +1552,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
           finished: false,
           gameFinished: multiCarState.gameFinished
         },
-        performanceMetrics: isFeatureEnabled('debugMode') ? performanceTracker.getSummary() : undefined
+        performanceMetrics: isFeatureEnabled('debugMode') ? simplePerformanceTracker.getSummary() : undefined
       }
     }
     

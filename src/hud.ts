@@ -1,5 +1,5 @@
 import { isFeatureEnabled } from './features'
-import { performanceTracker } from './performance'
+// Performance tracking now handled by simple-performance.ts
 
 // Safari-compatible color resolution function
 function resolvePlayerColor(color: string): string {
