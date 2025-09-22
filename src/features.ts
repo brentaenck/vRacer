@@ -28,7 +28,7 @@ export interface FeatureFlags {
   // UI and UX improvements
   improvedControls: boolean;
   soundEffects: boolean;
-  animations: boolean;
+  // REMOVED: animations - eliminated animation system for simplified gameplay
   graphPaperGrid: boolean;
   dualStyling: boolean;          // Modern UI with paper canvas aesthetic
   
@@ -57,7 +57,7 @@ export const FEATURES: FeatureFlags = {
   // UI and UX improvements - polish features
   improvedControls: true,     // Keyboard support, better mouse handling
   soundEffects: false,        // Audio feedback - DISABLED
-  animations: false,          // PHASE 1: Disabled for rendering simplification
+  // REMOVED: animations flag - animation system eliminated
   graphPaperGrid: true,       // Enhanced grid with coordinate indicators
   dualStyling: true,          // Modern UI with paper canvas - ENABLED for better UX
   

@@ -2,7 +2,7 @@ import { applyMove, createDefaultGame, draw, screenToGrid, stepOptions, undoMove
 import { clamp, Vec } from './geometry'
 import { logEnabledFeatures, isFeatureEnabled, toggleFeature } from './features'
 import { simplePerformanceTracker } from './simple-performance'
-import { animationManager, AnimationUtils } from './animations'
+// REMOVED: Animation system no longer needed for turn-based game
 import { initializeStandaloneTrackEditor } from './track-editor-integration/standalone-integration'
 import { initializeDropdownMenu } from './dropdown-menu'
 import { chooseAIMove } from './ai'
@@ -167,10 +167,7 @@ function render() {
   // Simple performance tracking for debug mode only
   simplePerformanceTracker.startFrame()
   
-  // Update animations if enabled (currently disabled)
-  if (isFeatureEnabled('animations')) {
-    animationManager.update()
-  }
+  // REMOVED: Animation system eliminated - no longer needed
   
   draw(ctx, state, canvas)
   

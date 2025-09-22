@@ -1,7 +1,7 @@
 import { add, clamp, pointInPolygon, Segment, segmentInsidePolygon, segmentsIntersect, Vec } from './geometry'
 import { isFeatureEnabled } from './features'
 import { simplePerformanceTracker } from './simple-performance'
-import { animationManager, AnimationUtils } from './animations'
+// REMOVED: Animation system eliminated for simplified turn-based gameplay
 import { hudManager, HUDData } from './hud'
 import { createTrackAnalysisWithCustomLine, getExpectedRacingDirection, findNearestRacingLinePoint, determineCrossingDirection, type TrackAnalysis, type RacingLinePoint } from './track-analysis'
 import { trackLoader } from './track-loader'
@@ -883,10 +883,7 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     
     if (!legal) {
       crashed = true
-      // Create explosion particles when crashing (if animations enabled)
-      if (isFeatureEnabled('animations')) {
-        AnimationUtils.createExplosion(nextPos, '#f66', 8)
-      }
+      // REMOVED: Animation effects eliminated for simplified gameplay
     } else {
       if (crossedStart) {
         // Determine crossing direction based on car position relative to start line
@@ -904,15 +901,9 @@ export function applyMove(state: GameState, acc: Vec): GameState {
           if (currentLap >= legacyState.targetLaps) {
             finished = true
             console.log('🏆 Race finished!')
-            // Create celebration particles when finishing the race
-            if (isFeatureEnabled('animations')) {
-              AnimationUtils.createCelebration(nextPos, '#0f0', 12)
-            }
+            // REMOVED: Animation effects eliminated
           } else {
-            // Lap completed but race continues - smaller celebration
-            if (isFeatureEnabled('animations')) {
-              AnimationUtils.createCelebration(nextPos, '#4f4', 6)
-            }
+            // REMOVED: Animation effects eliminated
           }
         } else {
           lastCrossDirection = 'backward'
@@ -982,10 +973,7 @@ export function applyMove(state: GameState, acc: Vec): GameState {
     
     if (!legal) {
       crashed = true
-      // Create explosion particles when crashing
-      if (isFeatureEnabled('animations')) {
-        AnimationUtils.createExplosion(nextPos, currentCar.color, 8)
-      }
+      // REMOVED: Animation effects eliminated
     } else {
       // Update checkpoint progress during the move
       const checkpointUpdate = updateCheckpointProgress(currentCar, currentCar.pos, nextPos)
@@ -1002,9 +990,7 @@ export function applyMove(state: GameState, acc: Vec): GameState {
           vel = collisionResult.newVelocity || { x: 0, y: 0 }
           nextPos = { ...currentCar.pos } // Stay at current position
           
-          if (isFeatureEnabled('animations')) {
-            AnimationUtils.createExplosion(nextPos, currentCar.color, 6)
-          }
+          // REMOVED: Animation effects eliminated
         }
         // Future: handle other collision types like 'bounce' or 'crash'
       }
@@ -1033,14 +1019,9 @@ export function applyMove(state: GameState, acc: Vec): GameState {
               finishTime = Date.now() - multiCarState.raceStartTime
               console.log(`🏆 ${currentCar.name} finished the race! Time: ${(finishTime / 1000).toFixed(1)}s`)
               
-              if (isFeatureEnabled('animations')) {
-                AnimationUtils.createCelebration(nextPos, currentCar.color, 12)
-              }
+              // REMOVED: Animation effects eliminated
             } else {
-              // Lap completed but race continues
-              if (isFeatureEnabled('animations')) {
-                AnimationUtils.createCelebration(nextPos, currentCar.color, 6)
-              }
+              // REMOVED: Animation effects eliminated
             }
           } else {
             // Forward crossing but invalid lap (not all checkpoints passed in sequence)
@@ -1285,13 +1266,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     drawCarWithShadow(ctx, legacyState.pos, g, carColor, 6, true)
     ctx.restore()
     
-    // Particle layer with slight transparency
-    if (isFeatureEnabled('animations')) {
-      ctx.save()
-      ctx.globalAlpha = LayerManager.LAYER_OPACITY.PARTICLES
-      animationManager.renderParticles(ctx, g)
-      ctx.restore()
-    }
+    // REMOVED: Particle system eliminated - no longer needed for turn-based game
 
     // End render tracking
     simplePerformanceTracker.endRender()
@@ -1459,13 +1434,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.restore()
     
-    // Particle layer with slight transparency
-    if (isFeatureEnabled('animations')) {
-      ctx.save()
-      ctx.globalAlpha = LayerManager.LAYER_OPACITY.PARTICLES
-      animationManager.renderParticles(ctx, g)
-      ctx.restore()
-    }
+    // REMOVED: Particle system eliminated - no longer needed for turn-based game
 
     // End render tracking
     simplePerformanceTracker.endRender()
