@@ -4,55 +4,55 @@
  * This file contains feature flags for trunk-based development.
  * Enable/disable features here to control what's active in the game.
  * 
- * Phase 1 Cleanup Complete (2025-01-22):
+ * PHASE 1 CLEANUP COMPLETE (2025-01-22) - v6.0.1:
  * - REMOVED: improvedControls (enhanced keyboard/mouse controls now core functionality)
  * - REMOVED: multiCarSupport (multi-player racing now core architecture) 
  * - REMOVED: stopOnCrash (crash behavior always enabled)
  * - REMOVED: soundEffects (audio system completely removed)
  * 
+ * PHASE 2 CLEANUP COMPLETE (2025-01-22) - v6.0.2:
+ * - REMOVED: graphPaperGrid (dead code - coordinate labels controlled by showGrid state)
+ * - REMOVED: performanceMetrics (dead code - performance tracking controlled by debugMode)
+ * - REMOVED: carCollisions (car collision system now always enabled - 3+ months stable)
+ * 
  * Guidelines:
  * - Keep features disabled until they're ready for testing
  * - Use descriptive names and comments
  * - Remove flags once features are stable and always-on
+ * - Current flags focus on active development and experimental features
  */
 
 export interface FeatureFlags {
-  // Active Development Features
-  carCollisions: boolean;
-  trackEditor: boolean;
-  graphPaperGrid: boolean;
-  dualStyling: boolean;
-  aiPlayers: boolean;
-  performanceMetrics: boolean;
+  // Active Development Features (ready but may need refinement)
+  trackEditor: boolean;      // Visual track design interface
+  dualStyling: boolean;      // Modern UI with paper canvas aesthetic
+  aiPlayers: boolean;        // Computer-controlled racing opponents
   
-  // Experimental Features  
-  damageModel: boolean;
-  wallBounce: boolean;
-  trackSaveLoad: boolean;
-  customTrackFormats: boolean;
+  // Experimental Features (unstable, may change significantly)
+  damageModel: boolean;      // Alternative car damage system
+  wallBounce: boolean;       // Bounce physics instead of crash-stop
+  trackSaveLoad: boolean;    // Save/load custom tracks to files
+  customTrackFormats: boolean; // Advanced track file format support
   
-  // Development Tools
-  debugMode: boolean;
+  // Development Tools (for debugging and development)
+  debugMode: boolean;        // Debug overlays and console logging
 }
 
 // Current feature flag configuration
 export const FEATURES: FeatureFlags = {
-  // Active Development Features
-  carCollisions: true,        // ✅ Car-to-car collision detection enabled
-  trackEditor: true,          // ✅ Track editor for custom track creation
-  graphPaperGrid: true,       // ✅ Enhanced grid with coordinate indicators
+  // Active Development Features (enabled and ready for use)
+  trackEditor: true,          // ✅ Visual track design interface
   dualStyling: true,          // ✅ Modern UI with paper canvas aesthetic
-  aiPlayers: true,            // ✅ Computer-controlled cars
-  performanceMetrics: true,   // ✅ FPS counter, render time tracking
+  aiPlayers: true,            // ✅ Computer-controlled racing opponents
   
-  // Experimental Features
-  damageModel: false,         // 🧪 Alternative damage system
-  wallBounce: false,          // 🧪 Bounce instead of stopping on wall hit
-  trackSaveLoad: false,       // 🧪 Save/load custom tracks (depends on trackEditor)
-  customTrackFormats: false,  // 🧪 Advanced track file formats
+  // Experimental Features (disabled by default, may be unstable)
+  damageModel: false,         // 🧪 Alternative car damage system
+  wallBounce: false,          // 🧪 Bounce physics instead of crash-stop
+  trackSaveLoad: false,       // 🧪 Save/load custom tracks to files
+  customTrackFormats: false,  // 🧪 Advanced track file format support
   
-  // Development Tools
-  debugMode: false,           // 🔧 Show debug info (disabled by default)
+  // Development Tools (debugging and development aids)
+  debugMode: false,           // 🔧 Debug overlays and console logging (disabled by default)
 };
 
 // Runtime overrides for features that can be toggled dynamically

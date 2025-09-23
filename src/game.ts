@@ -733,9 +733,7 @@ function resetCheckpointProgress(): {
 
 // Car collision detection functions (carCollisions feature)
 function checkCarCollision(movingCar: Car, fromPos: Vec, toPos: Vec, otherCars: Car[]): Car | null {
-  if (!isFeatureEnabled('carCollisions')) {
-    return null // Collisions disabled
-  }
+  // Car collision detection always enabled
   
   const movingCarId = movingCar.id
   const movePath: Segment = { a: fromPos, b: toPos }
@@ -820,9 +818,7 @@ type CollisionResult = {
 }
 
 function handleCollision(movingCar: Car, collidedCar: Car): CollisionResult {
-  if (!isFeatureEnabled('carCollisions')) {
-    return { type: 'none' }
-  }
+  // Car collision handling always enabled
   
   // For now, implement simple "stop" collision - cars just stop when they hit
   // Future: could implement bounce physics, damage, different collision types
