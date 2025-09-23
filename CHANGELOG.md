@@ -6,6 +6,77 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [6.0.1] - 2025-01-22
+
+### 🧹 **PATCH: Phase 1 Feature Flag Cleanup - Code Architecture Simplification**
+
+#### 🗑️ Removed
+- **Legacy Feature Flags (Stable Core Functionality)**
+  - `improvedControls`: Enhanced keyboard/mouse controls now always enabled
+    - Removed all `isFeatureEnabled('improvedControls')` conditionals from main.ts, game.ts
+    - Enhanced controls (undo, hover, keyboard) now default behavior
+    - Eliminated ~8 conditional code paths
+  - `multiCarSupport`: Multi-player racing now core architecture
+    - Removed all `isFeatureEnabled('multiCarSupport')` conditionals from main.ts, game.ts
+    - Multi-car game state now standard for all games (including single player)
+    - Eliminated legacy single-car fallback code paths (~10 conditionals removed)
+  - `stopOnCrash`: Crash behavior (stop on collision) always enabled
+    - Removed flag definition from features.ts interface and values
+    - Crash handling now consistent without conditional logic
+  - `soundEffects`: Dead code from removed audio system
+    - Removed flag definition completely from features.ts
+    - Eliminated unused feature flag declaration
+
+#### 🔧 Improved
+- **Feature Flag Architecture**
+  - Reorganized `FeatureFlags` interface with clear categories:
+    - Active Development Features: 6 flags (carCollisions, trackEditor, etc.)
+    - Experimental Features: 4 flags (damageModel, wallBounce, etc.)
+    - Development Tools: 1 flag (debugMode)
+  - Added Phase 1 completion documentation in features.ts header
+  - Enhanced flag descriptions with emoji indicators (✅ enabled, 🧪 experimental, 🔧 tools)
+
+- **Code Simplification Benefits**
+  - **Reduced complexity**: Eliminated ~15-20 conditional code paths
+  - **Better performance**: Removed runtime checks for core features
+  - **Enhanced maintainability**: Cleaner separation of stable vs experimental features
+  - **Improved readability**: Focus on active development features only
+
+#### 🚀 Technical Changes
+- **Enhanced Controls Always Available**
+  - Keyboard movement (WASD, arrows, diagonals) always enabled
+  - Mouse hover effects and candidate preview always active
+  - Undo system (U/Ctrl+Z) with 10-move history always functional
+  - All enhanced controls integrated as core game functionality
+
+- **Multi-Car Architecture Standard**
+  - Single-player games now use multi-car architecture for consistency
+  - Removed legacy single-car GameState handling
+  - Simplified game creation logic in main.ts
+  - Enhanced compatibility with all game features
+
+- **Documentation Updates**
+  - Created comprehensive `FEATURE_FLAG_CLEANUP_PLAN.md` with phases 2-3 roadmap
+  - Updated feature flag categories and cleanup strategies
+  - Added implementation timeline and success metrics
+
+#### 📦 Bundle Impact
+- **JavaScript Bundle**: 73.85 kB (maintained - no regression)
+- **Code Quality**: ~15-20 conditional paths removed from codebase
+- **Performance**: Eliminated runtime feature checks for core functionality
+- **Maintainability**: Cleaner, more focused feature flag architecture
+
+#### ✅ Quality Assurance
+- **Full Backward Compatibility**: All existing functionality preserved
+- **Enhanced Default Experience**: Core features always available
+- **Build Validation**: TypeScript ✅, Production build ✅, Dev server ✅
+- **Zero Breaking Changes**: All user-facing features work identically
+
+#### 🔮 Next Steps
+- **Phase 2 Ready**: carCollisions, performanceMetrics, graphPaperGrid flags prepared for cleanup
+- **Phase 3 Planned**: trackEditor, dualStyling, aiPlayers evaluation scheduled
+- **Cleanup Roadmap**: Comprehensive plan documented for continued architecture improvement
+
 ## [6.0.0] - 2025-09-22
 
 ### 🚀 **MAJOR: Rendering System Simplification & Performance Revolution**

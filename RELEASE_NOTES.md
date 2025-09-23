@@ -2,6 +2,210 @@
 
 This document provides detailed release summaries with context, impact analysis, and development insights for each vRacer release. For technical changelogs, see [CHANGELOG.md](./CHANGELOG.md).
 
+## 🧹 v6.0.1 - Phase 1 Feature Flag Cleanup
+*Released: January 22, 2025*
+
+### **✅ Release Summary**
+
+**Release Type**: Patch release (6.0.0 → 6.0.1)  
+**Focus**: Feature flag architecture cleanup and code simplification  
+**Impact**: Reduced complexity, improved maintainability, enhanced default experience  
+
+### **🎯 What This Release Accomplishes**
+
+#### **1. Feature Flag Architecture Revolution: From Scaffolding to Core**
+
+**The Problem**: Feature Flags as Permanent Architecture
+- ❌ **Stable Features Behind Flags**: Core functionality still gated by feature flags after 6+ months
+- ❌ **Code Complexity**: ~15-20 conditional paths for basic features like enhanced controls
+- ❌ **Runtime Overhead**: Feature flag checks for core functionality on every interaction
+- ❌ **Developer Confusion**: Mixture of stable features and experimental features in same system
+- ❌ **Technical Debt**: Feature flags intended as temporary scaffolding became permanent
+
+**The Solution**: Phase 1 Cleanup - Core Features Always Enabled
+- ✅ **Enhanced Controls Always Available**: Keyboard, mouse, undo functionality now core
+- ✅ **Multi-Car Architecture Standard**: All games use multi-player architecture for consistency
+- ✅ **Simplified Code Paths**: Eliminated ~15-20 conditional checks throughout codebase
+- ✅ **Better Performance**: No runtime flag checks for basic functionality
+- ✅ **Cleaner Architecture**: Clear separation between stable, active development, and experimental features
+
+#### **2. Removed Legacy Feature Flags: Stable Core Functionality**
+
+**🗑️ `improvedControls` - Enhanced Input System (6+ Months Stable)**
+```typescript
+// BEFORE: Feature-flagged enhanced controls
+if (isFeatureEnabled('improvedControls')) {
+  canvas.addEventListener('mousemove', handleHover);
+  window.addEventListener('keydown', handleKeyboard);
+  // Undo, hover effects, diagonal movement
+}
+
+// AFTER: Always-available enhanced controls
+canvas.addEventListener('mousemove', handleHover);  // Always enabled
+window.addEventListener('keydown', handleKeyboard); // Always enabled
+// Undo (U/Ctrl+Z), hover effects, keyboard controls always work
+```
+
+**🗑️ `multiCarSupport` - Multi-Player Architecture (4+ Months Stable)**
+```typescript
+// BEFORE: Dual architecture complexity
+if (isFeatureEnabled('multiCarSupport')) {
+  return createMultiCarGame(players);
+} else {
+  return createLegacyGame(); // Fallback single-car system
+}
+
+// AFTER: Unified multi-car architecture
+return createMultiCarGame(players); // Always use consistent architecture
+// Single-player games use multi-car system with 1 player
+```
+
+**🗑️ `stopOnCrash` + `soundEffects` - Dead Code Elimination**
+- **stopOnCrash**: Always-enabled behavior, no alternative implementation needed
+- **soundEffects**: Complete audio system removal left orphaned feature flag
+
+#### **3. Organized Feature Flag Categories: Clear Purpose Hierarchy**
+
+**New Architecture**: Organized by Development Status
+```typescript
+export interface FeatureFlags {
+  // Active Development Features (6 flags)
+  carCollisions: boolean;      // ✅ Working collision system
+  trackEditor: boolean;        // ✅ Full-featured track editor
+  graphPaperGrid: boolean;     // ✅ Enhanced grid display
+  dualStyling: boolean;        // ✅ Modern UI + paper canvas
+  aiPlayers: boolean;          // ✅ Computer opponents
+  performanceMetrics: boolean; // ✅ Debug performance tracking
+  
+  // Experimental Features (4 flags)  
+  damageModel: boolean;        // 🧪 Alternative game mechanics
+  wallBounce: boolean;         // 🧪 Physics variations
+  trackSaveLoad: boolean;      // 🧪 File system integration
+  customTrackFormats: boolean; // 🧪 Advanced track features
+  
+  // Development Tools (1 flag)
+  debugMode: boolean;          // 🔧 Developer debugging
+}
+```
+
+**Benefits of New Organization**:
+- 🎯 **Clear Purpose**: Each category has distinct development status
+- 🚀 **Focused Development**: Active features vs experimental clearly separated
+- 🔧 **Better Maintenance**: Easy to identify candidates for next cleanup phase
+- 📊 **Progress Tracking**: Visual progress through development lifecycle
+
+### **🚀 Enhanced Default User Experience**
+
+#### **4. Core Features Always Available: No Configuration Required**
+
+**Enhanced Controls - Always Functional**:
+- ⌨️ **Full Keyboard Support**: WASD, arrows, Q/E/Z/X diagonal movement
+- 🖱️ **Advanced Mouse Controls**: Hover previews, candidate highlighting
+- ↩️ **Undo System**: U key or Ctrl+Z with 10-move history
+- 🎯 **Precision Input**: Coast control with Space/Enter for zero acceleration
+
+**Multi-Car Architecture Benefits**:
+- 🏁 **Consistent Experience**: Single-player uses same architecture as multiplayer
+- 🎮 **Feature Compatibility**: All game features work seamlessly
+- 🔄 **Future-Proof**: Easy to add multiplayer to any game configuration
+- 🛠️ **Simplified Codebase**: One game state system instead of two
+
+**Performance Improvements**:
+- ⚡ **No Runtime Checks**: Core features execute directly without flag evaluation
+- 💾 **Memory Efficiency**: Eliminated feature flag lookup overhead
+- 🎯 **Code Optimization**: Direct code paths for common operations
+
+### **🔧 Technical Architecture Improvements**
+
+#### **5. Code Complexity Reduction: Measurable Simplification**
+
+**Conditional Path Elimination**:
+```typescript
+// Examples of simplified code patterns:
+
+// Mouse Event Handling (Before → After)
+if (isFeatureEnabled('improvedControls')) {     // → Removed condition
+  if (isFeatureEnabled('multiCarSupport')) {    // → Simplified to ('cars' in state)
+    // Complex nested conditional logic
+  } else {
+    // Legacy fallback code path             // → Removed entirely
+  }
+}
+
+// Game State Management (Before → After)
+if (isFeatureEnabled('multiCarSupport')) {     // → Always true, condition removed
+  return applyMoveMultiCar(state, move);
+} else {
+  return applyMoveLegacy(state, move);          // → Function removed
+}
+```
+
+**Statistics**:
+- 📊 **Conditional Paths**: ~15-20 eliminated throughout codebase
+- 📝 **Code Clarity**: More direct, readable control flow
+- 🐛 **Bug Prevention**: Fewer code paths means fewer potential bugs
+- 🧪 **Testing**: Fewer combinations of feature states to test
+
+#### **6. Documentation and Planning: Structured Cleanup Strategy**
+
+**Created FEATURE_FLAG_CLEANUP_PLAN.md**:
+- 📋 **Complete Audit**: All 15 feature flags categorized by stability and usage
+- 📅 **Phased Approach**: 3-phase cleanup plan with timelines
+- 📊 **Success Metrics**: Bundle size, complexity, and performance targets
+- 🔄 **Risk Assessment**: Mitigation strategies for each cleanup phase
+
+**Phase Planning**:
+- ✅ **Phase 1 Complete**: Core functionality flags removed (4 flags)
+- 📋 **Phase 2 Ready**: Stable features scheduled for Q2 2025 (3 flags)
+- 🔮 **Phase 3 Planned**: Newer features evaluation for Q3 2025 (3 flags)
+
+### **📊 Impact Analysis: Measurable Improvements**
+
+#### **7. Performance and Quality Metrics**
+
+**Bundle Size**: Maintained Excellence
+```
+JavaScript Bundle:  73.85 kB (no regression)
+Feature Flags:      15 → 11 (27% reduction)
+Conditional Paths:  ~15-20 eliminated
+Runtime Checks:     Eliminated for core features
+```
+
+**Code Quality Improvements**:
+- 🧹 **Cleaner Architecture**: Focused feature flag system
+- 📖 **Better Readability**: Direct code paths for common operations
+- 🔧 **Easier Maintenance**: Fewer complex conditional branches
+- 🎯 **Clear Intent**: Stable features work without configuration
+
+**Developer Experience**:
+- ⚡ **Faster Onboarding**: New developers see only active development flags
+- 🔍 **Easier Debugging**: Fewer code paths to trace through
+- 📚 **Clearer Documentation**: Feature status immediately obvious
+- 🚀 **Better Development Flow**: Focus on experimental features only
+
+### **🔮 Future Architecture Benefits**
+
+#### **8. Foundation for Continued Improvement**
+
+**Phase 2 Preparation** (carCollisions, performanceMetrics, graphPaperGrid):
+- 🎯 **Clear Candidates**: 3+ months stable, proven functionality
+- 📋 **Documented Process**: Cleanup methodology established
+- ⚙️ **Tooling Ready**: Scripts and processes for safe flag removal
+
+**Long-term Architecture Vision**:
+- 🔧 **Permanent Flags Only**: Development tools and experimental features
+- 🎯 **Rapid Iteration**: New features start flagged, graduate quickly to core
+- 📊 **Clear Lifecycle**: Flag creation → testing → stability → removal
+- 🚀 **Focused Development**: Engineering effort on active features only
+
+**Trunk-Based Development Excellence**:
+- 🌿 **Clean Main Branch**: Stable features integrated directly
+- 🚩 **Strategic Flagging**: Only genuine experiments and WIP features flagged
+- ⚡ **Rapid Integration**: Features move from experiment to core faster
+- 🔄 **Continuous Cleanup**: Regular flag removal prevents technical debt
+
+**This patch release represents a significant maturation in vRacer's feature flag strategy, moving from temporary scaffolding that became permanent to a clean, purpose-driven system focused on active development while ensuring core functionality is always available.**
+
 ## 🚀 v6.0.0 - Rendering System Revolution
 *Released: September 22, 2025*
 
