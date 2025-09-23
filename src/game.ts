@@ -296,12 +296,8 @@ function isPositionOnTrack(pos: Vec, outer: Vec[], inner: Vec[]): boolean {
   return insideOuter && outsideInner
 }
 
-// Create multi-car game state
+// Create multi-car game state (always enabled)
 export function createMultiCarGame(numPlayers = 2): GameState {
-  if (!isFeatureEnabled('multiCarSupport')) {
-    // Fall back to single-player mode
-    return createLegacyGame()
-  }
   
   // Check if a custom track is loaded
   const customTrack = trackLoader.getCurrentCustomTrack()
@@ -509,18 +505,14 @@ export function createLegacyGame(): LegacyGameState {
   }
 }
 
-// Main game creation function - chooses between multi-car and legacy based on feature flag
+// Main game creation function - always uses multi-car architecture
 export function createDefaultGame(): GameState {
-  if (isFeatureEnabled('multiCarSupport')) {
-    return createMultiCarGame(2) // Default to 2 players
-  } else {
-    return createLegacyGame() as any // Type cast for backwards compatibility
-  }
+  return createMultiCarGame(2) // Default to 2 players
 }
 
 // Multi-car aware step options - for the current player's car
 export function stepOptions(state: GameState): { acc: Vec; nextPos: Vec }[] {
-  if (isFeatureEnabled('multiCarSupport') && 'cars' in state) {
+  if ('cars' in state) {
     const currentCar = state.cars[state.currentPlayerIndex]
     if (!currentCar) return []
     
@@ -848,8 +840,8 @@ function handleCollision(movingCar: Car, collidedCar: Car): CollisionResult {
 }
 
 export function applyMove(state: GameState, acc: Vec): GameState {
-  // Multi-car support is disabled, so we can safely cast to legacy state
-  if (!isFeatureEnabled('multiCarSupport')) {
+  // Check if this is legacy single-car state (backward compatibility)
+  if (!('cars' in state)) {
     const legacyState = state as LegacyGameState
     
     if (legacyState.crashed || legacyState.finished) return legacyState
@@ -914,17 +906,15 @@ export function applyMove(state: GameState, acc: Vec): GameState {
 
     const trail = [...legacyState.trail, nextPos]
     
-    // Save previous state for undo (when improvedControls is enabled)
+    // Save previous state for undo (always enabled)
     let previousStates = legacyState.previousStates || []
-    if (isFeatureEnabled('improvedControls')) {
-      // Save current state before applying move (without circular reference)
-      const stateToSave = {
-        ...legacyState,
-        hoveredPosition: undefined,
-        previousStates: undefined
-      }
-      previousStates = [...previousStates, stateToSave].slice(-10) // Keep last 10 moves
+    // Save current state before applying move (without circular reference)
+    const stateToSave = {
+      ...legacyState,
+      hoveredPosition: undefined,
+      previousStates: undefined
     }
+    previousStates = [...previousStates, stateToSave].slice(-10) // Keep last 10 moves
 
     return { ...legacyState, pos: nextPos, vel, trail, crashed, finished, currentLap, lastCrossDirection, previousStates }
   } else {
@@ -1060,16 +1050,14 @@ export function applyMove(state: GameState, acc: Vec): GameState {
       lastValidCheckpoint: updatedLastValidCheckpoint
     }
     
-    // Save game state for undo (full game state)
+    // Save game state for undo (always enabled)
     let previousGameStates = multiCarState.previousGameStates || []
-    if (isFeatureEnabled('improvedControls')) {
-      const stateToSave = {
-        ...multiCarState,
-        hoveredPosition: undefined,
-        previousGameStates: undefined
-      }
-      previousGameStates = [...previousGameStates, stateToSave].slice(-10) // Keep last 10 moves
+    const stateToSave = {
+      ...multiCarState,
+      hoveredPosition: undefined,
+      previousGameStates: undefined
     }
+    previousGameStates = [...previousGameStates, stateToSave].slice(-10) // Keep last 10 moves
     
     // Update cars array
     const updatedCars = [...multiCarState.cars]
@@ -1109,11 +1097,11 @@ export function legalStepOptions(state: GameState): { acc: Vec; nextPos: Vec }[]
   })
 }
 
-// Undo function for improved controls
+// Undo function for enhanced controls (always enabled)
 export function undoMove(state: GameState): GameState {
-  if (!isFeatureEnabled('multiCarSupport')) {
+  if (!('cars' in state)) {
     const legacyState = state as LegacyGameState
-    if (!isFeatureEnabled('improvedControls') || !legacyState.previousStates || legacyState.previousStates.length === 0) {
+    if (!legacyState.previousStates || legacyState.previousStates.length === 0) {
       return legacyState
     }
     
@@ -1128,9 +1116,7 @@ export function undoMove(state: GameState): GameState {
   } else {
     // Multi-car undo implementation
     const multiCarState = state as MultiCarGameState
-    if (!isFeatureEnabled('improvedControls') || 
-        !multiCarState.previousGameStates || 
-        multiCarState.previousGameStates.length === 0) {
+    if (!multiCarState.previousGameStates || multiCarState.previousGameStates.length === 0) {
       return multiCarState
     }
     
@@ -1147,22 +1133,20 @@ export function undoMove(state: GameState): GameState {
 
 // Check if undo is available
 export function canUndo(state: GameState): boolean {
-  if (!isFeatureEnabled('multiCarSupport')) {
+  if (!('cars' in state)) {
     const legacyState = state as LegacyGameState
-    return isFeatureEnabled('improvedControls') && 
-           legacyState.previousStates !== undefined && 
+    return legacyState.previousStates !== undefined && 
            legacyState.previousStates.length > 0
   } else {
     // Multi-car canUndo implementation
     const multiCarState = state as MultiCarGameState
-    return isFeatureEnabled('improvedControls') && 
-           multiCarState.previousGameStates !== undefined && 
+    return multiCarState.previousGameStates !== undefined && 
            multiCarState.previousGameStates.length > 0
   }
 }
 
 export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HTMLCanvasElement) {
-  if (!isFeatureEnabled('multiCarSupport')) {
+  if (!('cars' in state)) {
     // Handle legacy single-car rendering
     const legacyState = state as LegacyGameState
     const g = legacyState.grid
@@ -1221,8 +1205,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       const opts = stepOptions(legacyState)
       for (const { nextPos } of opts) {
         const legal = pathLegal(legacyState.pos, nextPos, legacyState)
-        const isHovered = isFeatureEnabled('improvedControls') && 
-                         legacyState.hoveredPosition && 
+        const isHovered = legacyState.hoveredPosition && 
                          nextPos.x === legacyState.hoveredPosition.x && 
                          nextPos.y === legacyState.hoveredPosition.y
         
@@ -1234,7 +1217,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
           ctx.restore()
           
           // Draw preview trail line
-          if (legal && isFeatureEnabled('improvedControls')) {
+          if (legal) {
             ctx.save()
             ctx.strokeStyle = UNIFIED_COLORS.gameStates.hover
             ctx.lineWidth = 2
@@ -1368,8 +1351,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       const opts = stepOptions(multiCarState)
       for (const { nextPos } of opts) {
         const legal = pathLegal(currentCar.pos, nextPos, multiCarState)
-        const isHovered = isFeatureEnabled('improvedControls') && 
-                         multiCarState.hoveredPosition && 
+        const isHovered = multiCarState.hoveredPosition && 
                          nextPos.x === multiCarState.hoveredPosition.x && 
                          nextPos.y === multiCarState.hoveredPosition.y
         
@@ -1381,7 +1363,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
           ctx.restore()
           
           // Draw preview trail line
-          if (legal && isFeatureEnabled('improvedControls')) {
+          if (legal) {
             ctx.save()
             ctx.strokeStyle = currentCar.color
             ctx.lineWidth = 2

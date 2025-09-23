@@ -1,8 +1,14 @@
 /**
  * Feature Flags for vRacer
  * 
- * This file contains all feature flags for trunk-based development.
+ * This file contains feature flags for trunk-based development.
  * Enable/disable features here to control what's active in the game.
+ * 
+ * Phase 1 Cleanup Complete (2025-01-22):
+ * - REMOVED: improvedControls (enhanced keyboard/mouse controls now core functionality)
+ * - REMOVED: multiCarSupport (multi-player racing now core architecture) 
+ * - REMOVED: stopOnCrash (crash behavior always enabled)
+ * - REMOVED: soundEffects (audio system completely removed)
  * 
  * Guidelines:
  * - Keep features disabled until they're ready for testing
@@ -11,60 +17,42 @@
  */
 
 export interface FeatureFlags {
-  // Core game features
-  multiCarSupport: boolean;
+  // Active Development Features
   carCollisions: boolean;
+  trackEditor: boolean;
+  graphPaperGrid: boolean;
+  dualStyling: boolean;
+  aiPlayers: boolean;
+  performanceMetrics: boolean;
   
-  // Damage and physics
+  // Experimental Features  
   damageModel: boolean;
   wallBounce: boolean;
-  stopOnCrash: boolean;
-  
-  // Track features
-  trackEditor: boolean;
   trackSaveLoad: boolean;
   customTrackFormats: boolean;
   
-  // UI and UX improvements
-  improvedControls: boolean;
-  soundEffects: boolean;
-  // REMOVED: animations - eliminated animation system for simplified gameplay
-  graphPaperGrid: boolean;
-  dualStyling: boolean;          // Modern UI with paper canvas aesthetic
-  
-  // Development and debugging
+  // Development Tools
   debugMode: boolean;
-  performanceMetrics: boolean;
-  aiPlayers: boolean;
 }
 
 // Current feature flag configuration
 export const FEATURES: FeatureFlags = {
-  // Core game features - these are planned from README
-  multiCarSupport: true,      // ✅ Multi-player racing support enabled
+  // Active Development Features
   carCollisions: true,        // ✅ Car-to-car collision detection enabled
+  trackEditor: true,          // ✅ Track editor for custom track creation
+  graphPaperGrid: true,       // ✅ Enhanced grid with coordinate indicators
+  dualStyling: true,          // ✅ Modern UI with paper canvas aesthetic
+  aiPlayers: true,            // ✅ Computer-controlled cars
+  performanceMetrics: true,   // ✅ FPS counter, render time tracking
   
-  // Damage and physics - experimental features
-  damageModel: false,         // Alternative game modes
-  wallBounce: false,          // Instead of stopping on wall hit
-  stopOnCrash: true,          // Current behavior (always on for now)
+  // Experimental Features
+  damageModel: false,         // 🧪 Alternative damage system
+  wallBounce: false,          // 🧪 Bounce instead of stopping on wall hit
+  trackSaveLoad: false,       // 🧪 Save/load custom tracks (depends on trackEditor)
+  customTrackFormats: false,  // 🧪 Advanced track file formats
   
-  // Track features - content creation tools
-  trackEditor: true,          // 🚧 Track editor for custom track creation
-  trackSaveLoad: false,       // Depends on trackEditor
-  customTrackFormats: false,  // Advanced track features
-  
-  // UI and UX improvements - polish features
-  improvedControls: true,     // Keyboard support, better mouse handling
-  soundEffects: false,        // Audio feedback - DISABLED
-  // REMOVED: animations flag - animation system eliminated
-  graphPaperGrid: true,       // Enhanced grid with coordinate indicators
-  dualStyling: true,          // Modern UI with paper canvas - ENABLED for better UX
-  
-  // Development and debugging
-  debugMode: false,           // Show extra info for development (disabled by default)
-  performanceMetrics: true,   // FPS counter, render time
-  aiPlayers: true,            // Computer-controlled cars
+  // Development Tools
+  debugMode: false,           // 🔧 Show debug info (disabled by default)
 };
 
 // Runtime overrides for features that can be toggled dynamically
