@@ -2038,10 +2038,8 @@ const TrackEditor = {
         this.ctx.translate(this.view.offsetX, this.view.offsetY);
         this.ctx.scale(this.view.zoom, this.view.zoom);
         
-        // Render grid
-        if (this.view.showGrid) {
-            this.renderGrid();
-        }
+        // Note: Grid is now provided by CSS background on canvas element
+        // No longer need to render grid via canvas
         
         // Render track
         if (this.view.showTrackBounds) {
@@ -2078,42 +2076,8 @@ const TrackEditor = {
         this.ctx.restore();
     },
     
-    // Render grid
-    renderGrid() {
-        const gridSize = this.view.gridSize;
-        const bounds = {
-            minX: -this.view.offsetX / this.view.zoom,
-            minY: -this.view.offsetY / this.view.zoom,
-            maxX: (this.canvas.width - this.view.offsetX) / this.view.zoom,
-            maxY: (this.canvas.height - this.view.offsetY) / this.view.zoom
-        };
-        
-        
-        this.ctx.strokeStyle = '#333333';
-        this.ctx.lineWidth = 0.5 / this.view.zoom;
-        
-        // Vertical lines
-        const startX = Math.floor(bounds.minX / gridSize) * gridSize;
-        const endX = Math.ceil(bounds.maxX / gridSize) * gridSize;
-        
-        for (let x = startX; x <= endX; x += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, bounds.minY);
-            this.ctx.lineTo(x, bounds.maxY);
-            this.ctx.stroke();
-        }
-        
-        // Horizontal lines
-        const startY = Math.floor(bounds.minY / gridSize) * gridSize;
-        const endY = Math.ceil(bounds.maxY / gridSize) * gridSize;
-        
-        for (let y = startY; y <= endY; y += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(bounds.minX, y);
-            this.ctx.lineTo(bounds.maxX, y);
-            this.ctx.stroke();
-        }
-    },
+    // renderGrid() function removed - grid is now provided by CSS background
+    // This improves performance and ensures visual consistency with main game
     
     // Render track boundaries
     renderTrack() {

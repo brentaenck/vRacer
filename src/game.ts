@@ -1193,7 +1193,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       ctx.restore()
     }
 
-    // Game feedback layer (candidates and hover effects)
+    // Game feedback layer (candidates and hover effects) - Phase 2: Enhanced Visual Feedback
     if (legacyState.showCandidates && !legacyState.crashed && !legacyState.finished) {
       ctx.save()
       ctx.globalAlpha = LayerManager.LAYER_OPACITY.GAME_FEEDBACK
@@ -1201,36 +1201,17 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       const opts = stepOptions(legacyState)
       for (const { nextPos } of opts) {
         const legal = pathLegal(legacyState.pos, nextPos, legacyState)
-        const isHovered = legacyState.hoveredPosition && 
+        const isHovered = !!(legacyState.hoveredPosition && 
                          nextPos.x === legacyState.hoveredPosition.x && 
-                         nextPos.y === legacyState.hoveredPosition.y
+                         nextPos.y === legacyState.hoveredPosition.y)
         
-        if (isHovered) {
-          // Draw hover effects with layered transparency
-          ctx.save()
-          ctx.globalAlpha = 0.3
-          drawNode(ctx, nextPos, g, legal ? UNIFIED_COLORS.gameStates.legal : UNIFIED_COLORS.gameStates.illegal, 8)
-          ctx.restore()
-          
-          // Draw preview trail line
-          if (legal) {
-            ctx.save()
-            ctx.strokeStyle = UNIFIED_COLORS.gameStates.hover
-            ctx.lineWidth = 2
-            ctx.globalAlpha = 0.6
-            ctx.setLineDash([5, 5])
-            line(ctx, legacyState.pos.x * g, legacyState.pos.y * g, nextPos.x * g, nextPos.y * g)
-            ctx.restore()
-          }
+        // Draw enhanced move candidate with grid highlighting
+        drawEnhancedMoveCandidate(ctx, nextPos, g, legal, isHovered)
+        
+        // Draw enhanced hover trail for legal moves
+        if (isHovered && legal) {
+          drawEnhancedHoverTrail(ctx, legacyState.pos, nextPos, g, UNIFIED_COLORS.racingBlue)
         }
-        
-        // Draw normal candidate with proper layering
-        const radius = isHovered ? 6 : 4
-        const gameStates = UNIFIED_COLORS.gameStates
-        const color = legal ? 
-          (isHovered ? lightenColor(gameStates.legal, 0.2) : gameStates.legal) : 
-          (isHovered ? lightenColor(gameStates.illegal, 0.2) : gameStates.illegal)
-        drawNode(ctx, nextPos, g, color, radius)
       }
       
       ctx.restore()
@@ -1338,7 +1319,7 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
     
     ctx.restore()
 
-    // Game feedback layer (candidates and hover effects)
+    // Game feedback layer (candidates and hover effects) - Phase 2: Enhanced Visual Feedback
     const currentCar = multiCarState.cars[multiCarState.currentPlayerIndex]
     if (currentCar && multiCarState.showCandidates && !currentCar.crashed && !currentCar.finished && !multiCarState.gameFinished) {
       ctx.save()
@@ -1347,36 +1328,17 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       const opts = stepOptions(multiCarState)
       for (const { nextPos } of opts) {
         const legal = pathLegal(currentCar.pos, nextPos, multiCarState)
-        const isHovered = multiCarState.hoveredPosition && 
+        const isHovered = !!(multiCarState.hoveredPosition && 
                          nextPos.x === multiCarState.hoveredPosition.x && 
-                         nextPos.y === multiCarState.hoveredPosition.y
+                         nextPos.y === multiCarState.hoveredPosition.y)
         
-        if (isHovered) {
-          // Draw hover effects with layered transparency
-          ctx.save()
-          ctx.globalAlpha = 0.3
-          drawNode(ctx, nextPos, g, legal ? UNIFIED_COLORS.gameStates.legal : UNIFIED_COLORS.gameStates.illegal, 8)
-          ctx.restore()
-          
-          // Draw preview trail line
-          if (legal) {
-            ctx.save()
-            ctx.strokeStyle = currentCar.color
-            ctx.lineWidth = 2
-            ctx.globalAlpha = 0.6
-            ctx.setLineDash([5, 5])
-            line(ctx, currentCar.pos.x * g, currentCar.pos.y * g, nextPos.x * g, nextPos.y * g)
-            ctx.restore()
-          }
+        // Draw enhanced move candidate with grid highlighting
+        drawEnhancedMoveCandidate(ctx, nextPos, g, legal, isHovered)
+        
+        // Draw enhanced hover trail for legal moves using current player's color
+        if (isHovered && legal) {
+          drawEnhancedHoverTrail(ctx, currentCar.pos, nextPos, g, currentCar.color)
         }
-        
-        // Draw normal candidate with proper layering
-        const radius = isHovered ? 6 : 4
-        const gameStates = UNIFIED_COLORS.gameStates
-        const color = legal ? 
-          (isHovered ? lightenColor(gameStates.legal, 0.2) : gameStates.legal) : 
-          (isHovered ? lightenColor(gameStates.illegal, 0.2) : gameStates.illegal)
-        drawNode(ctx, nextPos, g, color, radius)
       }
       
       ctx.restore()
@@ -1872,6 +1834,100 @@ function drawNode(ctx: CanvasRenderingContext2D, p: Vec, g: number, color: strin
   ctx.beginPath()
   ctx.arc(p.x * g, p.y * g, r, 0, Math.PI * 2)
   ctx.fill()
+}
+
+// ========================================
+//   Phase 2: Enhanced Visual Feedback System
+// ========================================
+// Implementation of enhanced grid interaction feedback for improved user precision:
+// - Grid snap visual indicators for precise positioning
+// - Enhanced move candidate display with grid square highlighting  
+// - Improved hover trail preview with grid alignment
+// - Real-time cursor position tracking in HUD
+
+// Phase 2: Enhanced Visual Feedback - Grid snap indicator
+function drawGridSnapIndicator(ctx: CanvasRenderingContext2D, pos: Vec, g: number) {
+  const snapPos = {
+    x: Math.round(pos.x),
+    y: Math.round(pos.y)
+  }
+  
+  // Highlight grid intersection with subtle pulse effect
+  ctx.save()
+  ctx.globalAlpha = 0.4
+  ctx.fillStyle = UNIFIED_COLORS.gameStates.hover
+  ctx.beginPath()
+  ctx.arc(snapPos.x * g, snapPos.y * g, 3, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+}
+
+// Phase 2: Enhanced Visual Feedback - Enhanced move candidate with grid highlighting
+function drawEnhancedMoveCandidate(ctx: CanvasRenderingContext2D, pos: Vec, g: number, legal: boolean, hovered: boolean) {
+  const radius = hovered ? 6 : 4
+  const baseColor = legal ? UNIFIED_COLORS.gameStates.legal : UNIFIED_COLORS.gameStates.illegal
+  
+  // Grid-aligned highlight for legal moves
+  if (legal) {
+    ctx.save()
+    ctx.globalAlpha = 0.15
+    ctx.fillStyle = baseColor
+    const gridSize = g * 0.8 // Slightly smaller than full grid square
+    const centerX = pos.x * g
+    const centerY = pos.y * g
+    ctx.fillRect(
+      centerX - gridSize / 2, 
+      centerY - gridSize / 2, 
+      gridSize, 
+      gridSize
+    )
+    ctx.restore()
+  }
+  
+  // Enhanced candidate marker with subtle outline
+  const finalColor = legal ? 
+    (hovered ? lightenColor(baseColor, 0.2) : baseColor) : 
+    (hovered ? lightenColor(baseColor, 0.2) : baseColor)
+  
+  // Draw subtle outline for better visibility
+  if (hovered) {
+    ctx.save()
+    ctx.strokeStyle = UNIFIED_COLORS.paperBg
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.arc(pos.x * g, pos.y * g, radius + 1, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.restore()
+  }
+  
+  // Draw main candidate node
+  drawNode(ctx, pos, g, finalColor, radius)
+}
+
+// Phase 2: Enhanced Visual Feedback - Enhanced hover trail with grid alignment
+function drawEnhancedHoverTrail(ctx: CanvasRenderingContext2D, fromPos: Vec, toPos: Vec, g: number, color: string) {
+  ctx.save()
+  
+  // Grid-aligned trail with dashed line
+  ctx.strokeStyle = color
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.7
+  ctx.setLineDash([8, 4]) // Longer dashes for better visibility
+  ctx.lineCap = 'round'
+  
+  // Draw main trail line
+  ctx.beginPath()
+  ctx.moveTo(fromPos.x * g, fromPos.y * g)
+  ctx.lineTo(toPos.x * g, toPos.y * g)
+  ctx.stroke()
+  
+  // Add subtle glow effect for the trail
+  ctx.globalAlpha = 0.3
+  ctx.lineWidth = 4
+  ctx.setLineDash([]) // Solid for glow
+  ctx.stroke()
+  
+  ctx.restore()
 }
 
 function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
@@ -2384,52 +2440,122 @@ class LayerManager {
   }
 }
 
-// Draw coordinate labels for technical reference (no grid lines - CSS provides those)
+// ========================================
+//   Phase 3: Paper-Integrated Coordinate Labels
+// ========================================
+// Transform coordinate labels from digital overlay to integrated paper aesthetic
+// Features implemented:
+// - Hand-drawn typography using Kalam font from design system
+// - Subtle jitter and rotation for authentic hand-lettered appearance
+// - Warmer paper-based colors (pencilDark vs pencilMedium)
+// - Enhanced opacity for better integration (0.8 vs 0.7)
+// - Irregular hand-drawn origin marker with authentic character
+// - Paper-integrated styling that maintains technical precision
+
+// Draw coordinate labels with authentic paper-integrated styling
 function drawCoordinateLabels(ctx: CanvasRenderingContext2D, W: number, H: number, g: number) {
+  // Use new paper-integrated version
+  drawPaperCoordinateLabels(ctx, W, H, g)
+}
+
+// Phase 3: Paper-integrated coordinate labels with hand-drawn character
+function drawPaperCoordinateLabels(ctx: CanvasRenderingContext2D, W: number, H: number, g: number) {
   ctx.save()
   
   // Calculate grid boundaries based on game coordinate system
   const maxX = Math.floor(W / g)
   const maxY = Math.floor(H / g)
   
-  // Coordinate labels in graphite pencil style using CSS variables
-  ctx.fillStyle = PAPER_COLORS.pencilMedium // Medium pencil from CSS
-  ctx.font = '11px monospace'
-  ctx.globalAlpha = 0.7
+  // Use hand-drawn font from design system and warmer paper-based color
+  ctx.fillStyle = PAPER_COLORS.pencilDark // Warmer, darker pencil color
+  ctx.font = '11px Kalam, monospace' // Hand-drawn typography from design system
+  ctx.globalAlpha = 0.8 // Slightly more visible for better integration
   
-  // X-axis labels (top edge)
+  // X-axis labels (top edge) with subtle hand-drawn character
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
   for (let x = 0; x <= maxX; x += 5) { // Every 5 units to match major grid lines
     const xPixel = x * g
     if (xPixel <= W && x > 0) { // Skip origin (0,0) for cleanliness
-      ctx.fillText(x.toString(), xPixel, 4)
+      drawHandDrawnLabel(ctx, x.toString(), xPixel, 4)
     }
   }
   
-  // Y-axis labels (left edge)
+  // Y-axis labels (left edge) with subtle hand-drawn character
   ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
   for (let y = 0; y <= maxY; y += 5) { // Every 5 units to match major grid lines
     const yPixel = y * g
     if (yPixel <= H && y > 0) { // Skip origin (0,0) for cleanliness
-      ctx.fillText(y.toString(), 4, yPixel)
+      drawHandDrawnLabel(ctx, y.toString(), 4, yPixel)
     }
   }
   
-  // Origin marker (0,0) - small graphite dot using CSS color
-  ctx.fillStyle = PAPER_COLORS.pencilMedium
-  ctx.globalAlpha = 1.0
+  // Enhanced origin marker with hand-drawn aesthetics
+  drawPaperOriginMarker(ctx)
+  
+  ctx.restore()
+}
+
+// Phase 3: Hand-drawn label with subtle character
+function drawHandDrawnLabel(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
+  ctx.save()
+  
+  // Add subtle hand-drawn character
+  const jitterX = (Math.random() - 0.5) * 0.3
+  const jitterY = (Math.random() - 0.5) * 0.3
+  const rotation = (Math.random() - 0.5) * 0.02 // Very subtle rotation (~1 degree)
+  
+  ctx.translate(x + jitterX, y + jitterY)
+  ctx.rotate(rotation)
+  
+  ctx.fillText(text, 0, 0)
+  
+  ctx.restore()
+}
+
+// Phase 3: Enhanced origin marker with authentic hand-drawn character
+function drawPaperOriginMarker(ctx: CanvasRenderingContext2D) {
+  ctx.save()
+  
+  // Hand-drawn style irregular dot
+  ctx.fillStyle = PAPER_COLORS.pencilDark
+  ctx.globalAlpha = 0.9
+  
+  // Create slightly irregular circle for authentic hand-drawn feel
   ctx.beginPath()
-  ctx.arc(0, 0, 2, 0, Math.PI * 2)
+  const numPoints = 16
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2
+    const baseRadius = 2
+    const radiusVariation = (Math.random() - 0.5) * 0.4 // ±0.2 pixel variation
+    const radius = baseRadius + radiusVariation
+    const x = Math.cos(angle) * radius
+    const y = Math.sin(angle) * radius
+    
+    if (i === 0) {
+      ctx.moveTo(x, y)
+    } else {
+      ctx.lineTo(x, y)
+    }
+  }
+  ctx.closePath()
   ctx.fill()
   
-  // Origin label using CSS color
-  ctx.fillStyle = PAPER_COLORS.pencilMedium
-  ctx.font = '10px monospace'
+  // Hand-lettered origin label with paper integration
+  ctx.fillStyle = PAPER_COLORS.pencilDark
+  ctx.font = '9px Kalam, monospace' // Smaller hand-drawn font
   ctx.textAlign = 'left'
   ctx.textBaseline = 'top'
-  ctx.fillText('(0,0)', 4, 4)
+  
+  // Add subtle hand-drawn character to origin label
+  const jitterX = (Math.random() - 0.5) * 0.4
+  const jitterY = (Math.random() - 0.5) * 0.4
+  const rotation = (Math.random() - 0.5) * 0.03 // Slightly more rotation for the label
+  
+  ctx.translate(6 + jitterX, 6 + jitterY)
+  ctx.rotate(rotation)
+  ctx.fillText('(0,0)', 0, 0)
   
   ctx.restore()
 }

@@ -648,6 +648,21 @@ button:hover, .btn:hover {
   position: relative;
   display: block;
   cursor: crosshair;
+  /* Graph paper texture overlay - matches main game exactly */
+  /* Phase 1 Grid Unification: Replaced canvas-drawn gray grid with CSS background */
+  /* This ensures visual consistency with main game and improved performance */
+  background-image: 
+    /* Major grid lines every 100px (5 grid units) */
+    linear-gradient(var(--graph-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-major) 1px, transparent 1px),
+    /* Minor grid lines every 20px (1 grid unit) */
+    linear-gradient(var(--graph-blue) 0.5px, transparent 0.5px),
+    linear-gradient(90deg, var(--graph-blue) 0.5px, transparent 0.5px);
+  background-size: 
+    100px 100px,  /* Major vertical lines */
+    100px 100px,  /* Major horizontal lines */
+    20px 20px,    /* Minor vertical lines */
+    20px 20px;    /* Minor horizontal lines */
 }
 
 #trackCanvas:hover {

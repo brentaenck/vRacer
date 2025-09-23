@@ -47,6 +47,12 @@ export interface HUDData {
     speed?: number
   }
   
+  // Cursor information (Phase 2: Enhanced Visual Feedback)
+  cursorInfo?: {
+    gridPosition: { x: number, y: number }
+    isOverCandidate: boolean
+  }
+  
   // Game status
   gameStatus: {
     crashed: boolean
@@ -89,12 +95,12 @@ export class HUDManager {
   }
   
   update(data: HUDData) {
-    this.updatePlayerInfo(data.playerInfo, data.leaderboard)
+    this.updatePlayerInfo(data.playerInfo, data.leaderboard, data.cursorInfo)
     this.updateGameStatus(data.gameStatus, data.leaderboard)
     this.updatePerformanceMetrics(data.performanceMetrics)
   }
   
-  private updatePlayerInfo(playerInfo: HUDData['playerInfo'], leaderboard?: HUDData['leaderboard']) {
+  private updatePlayerInfo(playerInfo: HUDData['playerInfo'], leaderboard?: HUDData['leaderboard'], cursorInfo?: HUDData['cursorInfo']) {
     const lines: string[] = []
     
     // Add leaderboard title at the top if multiplayer
@@ -105,6 +111,13 @@ export class HUDManager {
     // Only show current player's turn indicator - detailed info is now in leaderboard
     if (playerInfo.playerName) {
       lines.push(`<div class="hud-line hud-player-name">${playerInfo.playerName}'s Turn</div>`)
+    }
+    
+    // Show cursor position (Phase 2: Enhanced Visual Feedback)
+    if (cursorInfo) {
+      const { x, y } = cursorInfo.gridPosition
+      const candidateIndicator = cursorInfo.isOverCandidate ? ' 🎯' : ''
+      lines.push(`<div class="hud-line">cursor: (${x.toFixed(1)}, ${y.toFixed(1)})${candidateIndicator}</div>`)
     }
     
     // Show speed only in debug mode

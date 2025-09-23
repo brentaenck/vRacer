@@ -6,6 +6,74 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [6.1.0] - 2025-01-23
+
+### 🎯 **MINOR: Enhanced Visual Feedback - HUD Cursor Tracking System**
+
+#### ✨ Added
+- **Real-Time Cursor Grid Position Display**
+  - HUD now shows live cursor position in grid coordinates
+  - Displays cursor location as player moves mouse over game area
+  - Grid position updates smoothly with mouse movement
+  - Maintains accuracy with screen-to-grid coordinate conversion
+
+- **Move Candidate Hover Detection**
+  - Visual indicator when cursor hovers over valid move positions
+  - "Over Candidate" status displayed in HUD during move selection
+  - Enhanced move selection with immediate visual feedback
+  - Improves player understanding of available moves
+
+#### 🔧 Improved
+- **HUD Data Preservation System**
+  - Fixed critical issue where leaderboard disappeared during cursor tracking
+  - Implemented comprehensive HUD data management via `getCompleteHudData()` helper
+  - All player cards and race information now preserved during mouse movements
+  - Leaderboard positions, lap times, and player status maintained consistently
+
+- **Asynchronous HUD Updates**
+  - Converted to proper ES6 async imports for TypeScript compliance
+  - Eliminated circular dependency issues through careful module loading
+  - Enhanced performance with optimized HUD update patterns
+  - Maintains all existing HUD functionality with improved architecture
+
+#### 🚀 Technical Changes
+- **Complete HUD Data Management**
+  - Added `getCompleteHudData()` function that mirrors main game rendering logic
+  - Preserves leaderboard with full player information (position, lap status, timing)
+  - Maintains winner information and game completion status
+  - Includes performance metrics when debug mode enabled
+
+- **Enhanced Event Handling**
+  - Updated `mousemove` handlers for both multi-car and legacy modes
+  - Improved `mouseleave` handler to preserve complete HUD state
+  - Optimized cursor tracking with reduced HUD update overhead
+  - Maintained backward compatibility with existing mouse interactions
+
+- **TypeScript Architecture Improvements**
+  - Converted `require()` statements to async ES6 imports
+  - Added proper type annotations for leaderboard data structures
+  - Enhanced type safety for cursor tracking functions
+  - Eliminated TypeScript compilation warnings
+
+#### 📦 Bundle Impact
+- **JavaScript Bundle**: 78.84 kB (maintained - no size regression)
+- **Code Quality**: Enhanced type safety and module structure
+- **Performance**: Optimized HUD updates with complete data preservation
+- **Architecture**: Cleaner separation of concerns for HUD management
+
+#### ✅ Quality Assurance
+- **Full Functionality Preserved**: All existing game features work identically
+- **Enhanced User Experience**: Real-time cursor feedback without information loss
+- **Build Validation**: TypeScript ✅, Production build ✅, Dev server ✅
+- **Leaderboard Integrity**: Player cards and race status always visible
+- **Zero Breaking Changes**: All user-facing features maintain full compatibility
+
+#### 🎮 User Experience Benefits
+- **Improved Move Selection**: Clear visual feedback for cursor position and valid moves
+- **Consistent Information Display**: Leaderboard and player data always visible
+- **Enhanced Racing Experience**: Better spatial awareness during multiplayer races
+- **Smoother Interactions**: Responsive cursor tracking without UI flicker
+
 ## [6.0.2] - 2025-01-22
 
 ### 🧹 **PATCH: Phase 2 Feature Flag Cleanup - Final Architecture Streamlining**

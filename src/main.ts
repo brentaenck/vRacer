@@ -240,6 +240,195 @@ setTimeout(() => {
   openNewGameModal()
 }, 100)
 
+// Phase 2: Enhanced Visual Feedback - Helper function for cursor tracking
+// Updates HUD with real-time cursor position and candidate hover status
+// IMPORTANT: Must preserve all existing HUD data (especially leaderboard)
+function updateHudWithCursorInfo(gridPos: Vec, isOverCandidate: boolean) {
+  // Only import hudManager when needed to avoid circular dependency
+  Promise.all([
+    import('./hud'),
+    getCompleteHudData()
+  ]).then(([{ hudManager }, completeHudData]) => {
+    // Add cursor info to the complete data
+    const hudDataWithCursor = {
+      ...completeHudData,
+      cursorInfo: {
+        gridPosition: { x: gridPos.x, y: gridPos.y },
+        isOverCandidate
+      }
+    }
+    
+    hudManager.update(hudDataWithCursor)
+  }).catch(console.error)
+}
+
+// Helper functions to get current HUD data
+function getCurrentPlayerHudInfo() {
+  if (isMultiCarGame(state)) {
+    const currentPlayer = getCurrentPlayer(state)
+    const currentCar = getCurrentCar(state)
+    if (!currentCar || !currentPlayer) {
+      return {
+        position: { x: 0, y: 0 },
+        velocity: { x: 0, y: 0 },
+        lap: 0,
+        targetLaps: 3
+      }
+    }
+    const speed = Math.sqrt(currentCar.vel.x * currentCar.vel.x + currentCar.vel.y * currentCar.vel.y)
+    return {
+      playerName: currentPlayer.name,
+      playerColor: currentPlayer.color,
+      position: currentCar.pos,
+      velocity: currentCar.vel,
+      lap: currentCar.currentLap,
+      targetLaps: state.targetLaps,
+      speed
+    }
+  } else {
+    const legacyState = state as any
+    const speed = Math.sqrt(legacyState.vel.x * legacyState.vel.x + legacyState.vel.y * legacyState.vel.y)
+    return {
+      position: legacyState.pos,
+      velocity: legacyState.vel,
+      lap: legacyState.currentLap || 0,
+      targetLaps: legacyState.targetLaps || 3,
+      speed
+    }
+  }
+}
+
+function getGameStatusInfo() {
+  if (isMultiCarGame(state)) {
+    const currentCar = getCurrentCar(state)
+    return {
+      crashed: currentCar?.crashed || false,
+      finished: currentCar?.finished || false,
+      gameFinished: state.gameFinished
+    }
+  } else {
+    const legacyState = state as any
+    return {
+      crashed: legacyState.crashed,
+      finished: legacyState.finished,
+      gameFinished: false
+    }
+  }
+}
+
+// Get complete HUD data including leaderboard (for cursor tracking without losing data)
+async function getCompleteHudData() {
+  if (isMultiCarGame(state)) {
+    // Multi-car mode - include full leaderboard
+    const currentPlayer = getCurrentPlayer(state)
+    const currentCar = getCurrentCar(state)
+    
+    if (!currentPlayer || !currentCar) {
+      // Fallback for edge cases
+      return {
+        playerInfo: {
+          position: { x: 0, y: 0 },
+          velocity: { x: 0, y: 0 },
+          lap: 0,
+          targetLaps: 3
+        },
+        gameStatus: {
+          crashed: false,
+          finished: false,
+          gameFinished: state.gameFinished
+        }
+      }
+    }
+    
+    // Import leaderboard function and build complete data (matches game.ts implementation)
+    const { getLeaderboard } = await import('./game')
+    const leaderboard = getLeaderboard(state)
+    const speed = Math.sqrt(currentCar.vel.x * currentCar.vel.x + currentCar.vel.y * currentCar.vel.y)
+    
+    // Build leaderboard data with expanded information (matches game.ts exactly)
+    const hudLeaderboard = leaderboard.map(({ car, player, position }: any) => {
+      // Main status (finish/crash/racing)
+      const status = car.finished ? 
+        `🏆 Finished` :
+        car.crashed ? '💥 Crashed' : 'Racing'
+      
+      // Lap information
+      const lapStatus = car.finished ?
+        `${(car.finishTime! / 1000).toFixed(1)}s` :
+        `Lap ${car.currentLap}/${state.targetLaps}`
+      
+      // Position and velocity information
+      const positionInfo = `pos=(${car.pos.x.toFixed(0)},${car.pos.y.toFixed(0)})`
+      const velocityInfo = `vel=(${car.vel.x},${car.vel.y})`
+      
+      return {
+        position,
+        playerName: player.name,
+        playerColor: player.color,
+        status,
+        lapStatus,
+        positionInfo,
+        velocityInfo,
+        isCurrentPlayer: player.id === currentPlayer.id
+      }
+    })
+    
+    // Determine winner info for game completion
+    const winner = leaderboard[0]
+    let winnerName: string | undefined
+    let winnerTime: number | undefined
+    
+    if (state.gameFinished && winner && winner.car.finished) {
+      winnerName = winner.player.name
+      winnerTime = winner.car.finishTime
+    }
+    
+    return {
+      playerInfo: {
+        playerName: currentPlayer.name,
+        playerColor: currentPlayer.color,
+        position: currentCar.pos,
+        velocity: currentCar.vel,
+        lap: currentCar.currentLap,
+        targetLaps: state.targetLaps,
+        speed: speed
+      },
+      gameStatus: {
+        crashed: currentCar.crashed,
+        finished: currentCar.finished,
+        finishTime: currentCar.finishTime,
+        gameFinished: state.gameFinished,
+        winnerName,
+        winnerTime
+      },
+      leaderboard: hudLeaderboard,
+      performanceMetrics: (await import('./features')).isFeatureEnabled('debugMode') ? 
+        (await import('./simple-performance')).simplePerformanceTracker.getSummary() : undefined
+    }
+  } else {
+    // Legacy mode - simpler HUD data
+    const legacyState = state as any
+    const speed = Math.sqrt(legacyState.vel.x * legacyState.vel.x + legacyState.vel.y * legacyState.vel.y)
+    
+    return {
+      playerInfo: {
+        position: legacyState.pos,
+        velocity: legacyState.vel,
+        lap: legacyState.currentLap || 0,
+        targetLaps: legacyState.targetLaps || 3,
+        speed: speed
+      },
+      gameStatus: {
+        crashed: legacyState.crashed,
+        finished: legacyState.finished,
+        gameFinished: false
+      },
+      performanceMetrics: (await import('./features')).isFeatureEnabled('debugMode') ? 
+        (await import('./simple-performance')).simplePerformanceTracker.getSummary() : undefined
+    }
+  }
+}
+
 // Mouse hover for enhanced controls (always enabled)
 canvas.addEventListener('mousemove', (e) => {
   
@@ -257,20 +446,28 @@ canvas.addEventListener('mousemove', (e) => {
     // Find if mouse is near a valid candidate position
     const opts = stepOptions(multiCarState)
     let hoveredPos: Vec | undefined = undefined
+    let isOverCandidate = false
     
     for (const { nextPos } of opts) {
       const dx = Math.abs(nextPos.x - gx)
       const dy = Math.abs(nextPos.y - gy)
       if (dx <= 0.5 && dy <= 0.5) {
         hoveredPos = nextPos
+        isOverCandidate = true
         break
       }
     }
     
-    if (hoveredPos?.x !== multiCarState.hoveredPosition?.x || hoveredPos?.y !== multiCarState.hoveredPosition?.y) {
+    // Store cursor info for HUD (Phase 2: Enhanced Visual Feedback)
+    const cursorChanged = hoveredPos?.x !== multiCarState.hoveredPosition?.x || hoveredPos?.y !== multiCarState.hoveredPosition?.y
+    
+    if (cursorChanged) {
       state = { ...multiCarState, hoveredPosition: hoveredPos }
       render()
     }
+    
+    // Always update HUD with cursor position
+    updateHudWithCursorInfo(p, isOverCandidate)
   } else {
     // Legacy mode handling
     const legacyState = state as any
@@ -283,12 +480,14 @@ canvas.addEventListener('mousemove', (e) => {
     // Find if mouse is near a valid candidate position
     const opts = stepOptions(legacyState)
     let hoveredPos: Vec | undefined = undefined
+    let isOverCandidate = false
     
     for (const { nextPos } of opts) {
       const dx = Math.abs(nextPos.x - gx)
       const dy = Math.abs(nextPos.y - gy)
       if (dx <= 0.5 && dy <= 0.5) {
         hoveredPos = nextPos
+        isOverCandidate = true
         break
       }
     }
@@ -297,6 +496,9 @@ canvas.addEventListener('mousemove', (e) => {
       state = { ...legacyState, hoveredPosition: hoveredPos }
       render()
     }
+    
+    // Always update HUD with cursor position
+    updateHudWithCursorInfo(p, isOverCandidate)
   }
 })
 
@@ -317,6 +519,19 @@ canvas.addEventListener('mouseleave', () => {
       render()
     }
   }
+  
+  // Clear cursor info from HUD (Phase 2: Enhanced Visual Feedback)
+  Promise.all([
+    import('./hud'),
+    getCompleteHudData()
+  ]).then(([{ hudManager }, completeHudData]) => {
+    // Clear cursor info from complete data
+    const hudDataWithoutCursor = {
+      ...completeHudData,
+      // cursorInfo intentionally omitted to clear it
+    }
+    hudManager.update(hudDataWithoutCursor)
+  }).catch(console.error)
 })
 
 canvas.addEventListener('click', (e) => {
