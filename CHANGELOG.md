@@ -6,6 +6,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [6.2.0] - 2025-01-24
+
+### 🎯 **MINOR: Enhanced Visual Precision - Grid Alignment & Canvas Scaling Improvements**
+
+#### 🔧 Fixed
+- **Grid Alignment System**
+  - Added systematic Y-axis alignment offsets (+0.5 units) throughout rendering system
+  - Fixed visual misalignment where game elements appeared between grid lines instead of centered on intersections
+  - Applied alignment corrections to all visual elements:
+    - Car positions and trail lines
+    - Move candidates and hover effects
+    - Racing lines and waypoint visualization
+    - AI targeting and debug visualization
+    - Node rendering and checkpoint lines
+
+- **Canvas Scaling Precision**
+  - Fixed `screenToGrid()` scaling mismatch between canvas internal dimensions and display dimensions
+  - Corrected mouse interaction accuracy for precise grid positioning
+  - Resolved coordinate conversion issues affecting click detection and hover effects
+
+#### ✨ Enhanced
+- **Visual User Experience**
+  - Updated canvas dimensions to 1376×969 for improved aspect ratio and display quality
+  - Added custom crosshair cursor for precise grid positioning feedback
+  - Reduced layer opacity temporarily for alignment testing and visual clarity
+  - Improved overall visual precision and grid intersection alignment
+
+#### 🚀 Technical Changes
+- **Rendering System Updates**
+  - Systematic application of Y-axis offset (`(pos.y + 0.5) * g`) to center elements on grid intersections
+  - Enhanced coordinate conversion with proper scaling factor handling
+  - Maintained backward compatibility while improving visual precision
+  - Added detailed code comments explaining alignment corrections
+
+#### 📦 Bundle Impact
+- **No Size Regression**: Bundle size maintained while improving visual quality
+- **Enhanced Precision**: Better coordinate handling without performance impact
+- **Visual Quality**: Significant improvement in element positioning accuracy
+
+#### ✅ Quality Assurance
+- **Grid Intersection Alignment**: All game elements now properly centered on grid lines
+- **Mouse Interaction Accuracy**: Improved click detection and hover precision
+- **Visual Consistency**: Systematic alignment across all rendering components
+- **Zero Functional Changes**: All game mechanics and features work identically
+
+#### 🎮 User Experience Benefits
+- **Better Visual Clarity**: Game elements properly aligned with underlying grid structure
+- **Improved Precision**: Enhanced spatial understanding for strategic move planning
+- **Professional Polish**: More refined visual presentation with proper geometric alignment
+- **Enhanced Cursor Feedback**: Custom crosshair cursor aids in precise positioning
+
 ## [6.1.0] - 2025-01-23
 
 ### 🎯 **MINOR: Enhanced Visual Feedback - HUD Cursor Tracking System**

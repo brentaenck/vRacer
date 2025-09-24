@@ -2,6 +2,65 @@
 
 This document provides detailed release summaries with context, impact analysis, and development insights for each vRacer release. For technical changelogs, see [CHANGELOG.md](./CHANGELOG.md).
 
+## 🎯 v6.2.0 - Enhanced Visual Precision: Grid Alignment & Canvas Scaling
+Released: January 24, 2025
+
+### ✅ Release Summary
+
+Release Type: Minor (6.1.0 → 6.2.0)
+Focus: Precise visual alignment across all rendering systems
+Impact: Game elements now center perfectly on grid intersections with accurate mouse interactions
+
+### 🎯 What This Release Accomplishes
+
+1) Grid Alignment Fixes - Precise Centering on Intersections
+- Problem: Visual elements appeared between grid lines instead of centered on intersections
+- Solution: Applied a consistent +0.5 unit Y-offset throughout rendering to align elements precisely
+- Scope: Cars, trails, candidates, hover effects, racing lines, waypoints, AI indicators, nodes, checkpoint lines
+
+2) Canvas Scaling Precision - Accurate Screen-to-Grid Mapping
+- Problem: Mismatch between canvas internal size and displayed size caused coordinate errors
+- Solution: Fixed screenToGrid() to use proper scale factors (scaleX, scaleY) based on canvas width/height vs bounding rect
+- Impact: Accurate mouse hover and click detection; crisp alignment with visual grid
+
+3) Visual Experience Enhancements
+- Updated canvas dimensions to 1376×969 for improved aspect ratio and display quality
+- Added custom crosshair cursor for precise grid positioning feedback
+- Temporarily reduced layer opacities to improve visual clarity during alignment validation
+
+### 🧠 Technical Details
+
+- Rendering Alignment Strategy
+  - Implemented yAligned = (y + 0.5) * g for all relevant drawing calls
+  - Centralized approach ensures consistent alignment across subsystems
+  - Preserved backward compatibility with no logic changes to physics or rules
+
+- Input Coordinate Correction
+  - screenToGrid(canvas, g, x, y) now uses:
+    - scaleX = canvas.width / rect.width
+    - scaleY = canvas.height / rect.height
+  - gx = (x - rect.left) * scaleX / g
+  - gy = (y - rect.top) * scaleY / g
+
+### 📊 Impact Analysis
+
+- Visual precision: Significantly improved centering on grid intersections
+- Mouse accuracy: Corrected hover and click targeting across all resolutions
+- Bundle impact: No notable size increase; performance unchanged
+
+### ✅ QA Checklist
+
+- Elements centered at grid intersections across all scenes
+- Accurate hover/click mapping after scaling fix
+- No regressions in movement validation or physics
+- Feature flags verified (alignment changes are unconditional visual fixes)
+
+### 🔭 Future Considerations
+
+- Consider parameterizing the 0.5 offset for potential different grid origins
+- Optionally restore layer opacities to prior values once validation is complete
+- Evaluate dynamic canvas sizing to maintain aspect ratio responsively
+
 ## 🎯 v6.1.0 - Enhanced Visual Feedback: HUD Cursor Tracking System
 *Released: January 23, 2025*
 

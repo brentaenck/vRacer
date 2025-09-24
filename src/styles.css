@@ -1889,6 +1889,8 @@ main {
     inset 0 0 20px rgba(0, 0, 0, 0.05); /* Inner paper shadow */
   transition: border-color var(--transition-normal);
   position: relative;
+  /* Custom crosshair cursor for precise grid positioning */
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><path d="M10,0 L10,8 M10,13 L10,21 M0,10 L8,10 M13,10 L21,10" stroke="%23000" stroke-width="1" fill="none"/><circle cx="10.5" cy="10.5" r="1" stroke="%23000" stroke-width="1" fill="none"/></svg>') 10 10, crosshair;
   /* Graph paper texture overlay */
   background-image: 
     /* Major grid lines every 100px */

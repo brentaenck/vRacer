@@ -1184,10 +1184,10 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       
       ctx.beginPath()
       const firstTrail = legacyState.trail[0]!
-      ctx.moveTo(firstTrail.x * g, firstTrail.y * g)
+      ctx.moveTo(firstTrail.x * g, (firstTrail.y + 0.5) * g)
       for (let i = 1; i < legacyState.trail.length; i++) {
         const p = legacyState.trail[i]!
-        ctx.lineTo(p.x * g, p.y * g)
+        ctx.lineTo(p.x * g, (p.y + 0.5) * g)
       }
       ctx.stroke()
       ctx.restore()
@@ -1306,10 +1306,10 @@ export function draw(ctx: CanvasRenderingContext2D, state: GameState, canvas: HT
       if (car.trail.length > 0) {
         ctx.beginPath()
         const t0 = car.trail[0]!
-        ctx.moveTo(t0.x * g, t0.y * g)
+        ctx.moveTo(t0.x * g, (t0.y + 0.5) * g)
         for (let j = 1; j < car.trail.length; j++) {
           const p = car.trail[j]!
-          ctx.lineTo(p.x * g, p.y * g)
+          ctx.lineTo(p.x * g, (p.y + 0.5) * g)
         }
         ctx.stroke()
       }
@@ -1832,7 +1832,7 @@ function drawPoly(ctx: CanvasRenderingContext2D, poly: Vec[], g: number, stroke:
 function drawNode(ctx: CanvasRenderingContext2D, p: Vec, g: number, color: string, r = 4) {
   ctx.fillStyle = color
   ctx.beginPath()
-  ctx.arc(p.x * g, p.y * g, r, 0, Math.PI * 2)
+  ctx.arc(p.x * g, (p.y + 0.5) * g, r, 0, Math.PI * 2)  // Apply Y-axis alignment offset
   ctx.fill()
 }
 
@@ -1857,7 +1857,7 @@ function drawGridSnapIndicator(ctx: CanvasRenderingContext2D, pos: Vec, g: numbe
   ctx.globalAlpha = 0.4
   ctx.fillStyle = UNIFIED_COLORS.gameStates.hover
   ctx.beginPath()
-  ctx.arc(snapPos.x * g, snapPos.y * g, 3, 0, Math.PI * 2)
+  ctx.arc(snapPos.x * g, (snapPos.y + 0.5) * g, 3, 0, Math.PI * 2)  // Apply Y-axis alignment offset
   ctx.fill()
   ctx.restore()
 }
@@ -1874,7 +1874,7 @@ function drawEnhancedMoveCandidate(ctx: CanvasRenderingContext2D, pos: Vec, g: n
     ctx.fillStyle = baseColor
     const gridSize = g * 0.8 // Slightly smaller than full grid square
     const centerX = pos.x * g
-    const centerY = pos.y * g
+    const centerY = (pos.y + 0.5) * g  // Apply Y-axis alignment offset
     ctx.fillRect(
       centerX - gridSize / 2, 
       centerY - gridSize / 2, 
@@ -1895,7 +1895,7 @@ function drawEnhancedMoveCandidate(ctx: CanvasRenderingContext2D, pos: Vec, g: n
     ctx.strokeStyle = UNIFIED_COLORS.paperBg
     ctx.lineWidth = 1
     ctx.beginPath()
-    ctx.arc(pos.x * g, pos.y * g, radius + 1, 0, Math.PI * 2)
+    ctx.arc(pos.x * g, (pos.y + 0.5) * g, radius + 1, 0, Math.PI * 2)  // Apply Y-axis alignment offset
     ctx.stroke()
     ctx.restore()
   }
@@ -1917,8 +1917,8 @@ function drawEnhancedHoverTrail(ctx: CanvasRenderingContext2D, fromPos: Vec, toP
   
   // Draw main trail line
   ctx.beginPath()
-  ctx.moveTo(fromPos.x * g, fromPos.y * g)
-  ctx.lineTo(toPos.x * g, toPos.y * g)
+  ctx.moveTo(fromPos.x * g, (fromPos.y + 0.5) * g)  // Apply Y-axis alignment offset
+  ctx.lineTo(toPos.x * g, (toPos.y + 0.5) * g)      // Apply Y-axis alignment offset
   ctx.stroke()
   
   // Add subtle glow effect for the trail
@@ -2339,10 +2339,11 @@ function drawCarWithShadow(ctx: CanvasRenderingContext2D, pos: Vec, g: number, c
     ctx.globalAlpha = 0.4
   }
   
-  // Draw the car
+  // Draw the car with Y-axis offset to align with grid lines
   ctx.fillStyle = color
   ctx.beginPath()
-  ctx.arc(pos.x * g, pos.y * g, radius, 0, Math.PI * 2)
+  // Add 0.5 unit offset to Y coordinate to center cars on grid intersections
+  ctx.arc(pos.x * g, (pos.y + 0.5) * g, radius, 0, Math.PI * 2)
   ctx.fill()
   
   ctx.restore()
@@ -2351,11 +2352,11 @@ function drawCarWithShadow(ctx: CanvasRenderingContext2D, pos: Vec, g: number, c
 // Refined layering system with optimized transparency hierarchy
 class LayerManager {
   static readonly LAYER_OPACITY = {
-    PAPER_BASE: 0.85,          // Foundation paper layer
-    PAPER_TEXTURE: 0.02,       // Subtle paper aging texture
-    TRACK_SURFACE: 0.3,        // Track fill surface
-    TRACK_SHADOWS: 0.3,        // Track boundary shadows
-    TRACK_TEXTURE: 0.015,      // Track surface paper texture
+    PAPER_BASE: 0.4,           // Foundation paper layer - REDUCED for testing grid alignment
+    PAPER_TEXTURE: 0.01,       // Subtle paper aging texture - REDUCED for testing
+    TRACK_SURFACE: 0.15,       // Track fill surface - REDUCED for testing grid alignment
+    TRACK_SHADOWS: 0.15,       // Track boundary shadows - REDUCED for testing
+    TRACK_TEXTURE: 0.005,      // Track surface paper texture - REDUCED for testing
     TRACK_BORDERS: 1.0,        // Track boundary lines
     GRID_LABELS: 0.7,          // Coordinate grid labels
     RACING_ELEMENTS: 0.7,      // Start/finish, arrows, racing line
@@ -2576,9 +2577,9 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
     if (!checkpoint) continue
     
     const x1 = checkpoint.a.x * g
-    const y1 = checkpoint.a.y * g
+    const y1 = (checkpoint.a.y + 0.5) * g  // Apply Y-axis alignment offset
     const x2 = checkpoint.b.x * g
-    const y2 = checkpoint.b.y * g
+    const y2 = (checkpoint.b.y + 0.5) * g  // Apply Y-axis alignment offset
     
     // Calculate perpendicular offset for double lines (2 pixels apart)
     const dx = x2 - x1
@@ -2633,7 +2634,7 @@ function drawCheckpointLines(ctx: CanvasRenderingContext2D, state: MultiCarGameS
       const normalizedX = dirX / dirLength
       const normalizedY = dirY / dirLength
       arrowX = innerX + normalizedX * 18
-      arrowY = innerY + normalizedY * 18
+      arrowY = (innerY / g + 0.5) * g + normalizedY * 18  // Apply Y-axis alignment offset
     }
     
     // Determine racing direction for arrow (counter-clockwise):
@@ -2700,9 +2701,9 @@ function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: 
     if (!point || !nextPoint) continue
     
     const x1 = point.pos.x * g
-    const y1 = point.pos.y * g
+    const y1 = (point.pos.y + 0.5) * g  // Apply Y-axis alignment offset
     const x2 = nextPoint.pos.x * g
-    const y2 = nextPoint.pos.y * g
+    const y2 = (nextPoint.pos.y + 0.5) * g  // Apply Y-axis alignment offset
     
     // Use refined pencil line for subtle hand-drawn character
     drawRefinedPencilLine(ctx, x1, y1, x2, y2, UNIFIED_COLORS.pencilMedium, 2)
@@ -2714,8 +2715,8 @@ function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: 
     const lastPoint = racingLine[racingLine.length - 1]
     if (firstPoint && lastPoint) {
       drawRefinedPencilLine(ctx, 
-        lastPoint.pos.x * g, lastPoint.pos.y * g,
-        firstPoint.pos.x * g, firstPoint.pos.y * g,
+        lastPoint.pos.x * g, (lastPoint.pos.y + 0.5) * g,  // Apply Y-axis alignment offset
+        firstPoint.pos.x * g, (firstPoint.pos.y + 0.5) * g,  // Apply Y-axis alignment offset
         UNIFIED_COLORS.pencilMedium, 2
       )
     }
@@ -2729,7 +2730,7 @@ function drawRacingLineVisualization(ctx: CanvasRenderingContext2D, racingLine: 
     const point = racingLine[i]
     if (!point) continue
     const x = point.pos.x * g
-    const y = point.pos.y * g
+    const y = (point.pos.y + 0.5) * g  // Apply Y-axis alignment offset
     
     // Color based on corner type using warm paper-integrated tones
     let color = UNIFIED_COLORS.pencilMedium // default warm gray
@@ -2792,7 +2793,7 @@ function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state:
     const point = racingLine[i]
     if (!point) continue
     const x = point.pos.x * g
-    const y = point.pos.y * g
+    const y = (point.pos.y + 0.5) * g  // Apply Y-axis alignment offset
     
     if (i === 0) {
       ctx.moveTo(x, y)
@@ -2804,7 +2805,7 @@ function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state:
   if (racingLine.length > 0) {
     const firstPoint = racingLine[0]
     if (firstPoint) {
-      ctx.lineTo(firstPoint.pos.x * g, firstPoint.pos.y * g)
+      ctx.lineTo(firstPoint.pos.x * g, (firstPoint.pos.y + 0.5) * g)  // Apply Y-axis alignment offset
     }
   }
   ctx.stroke()
@@ -2815,7 +2816,7 @@ function drawStaticRacingLineVisualization(ctx: CanvasRenderingContext2D, state:
   
   for (const point of racingLine) {
     const x = point.pos.x * g
-    const y = point.pos.y * g
+    const y = (point.pos.y + 0.5) * g  // Apply Y-axis alignment offset
     
     // Color based on corner type from track analysis (using warm tones)
     let color = PAPER_COLORS.pencilMedium // default warm gray
@@ -2856,9 +2857,9 @@ function drawAITargetVisualization(ctx: CanvasRenderingContext2D, car: any, play
     }
     
     const carX = car.pos.x * g
-    const carY = car.pos.y * g
+    const carY = (car.pos.y + 0.5) * g  // Apply Y-axis alignment offset
     const targetX = currentTarget.pos.x * g
-    const targetY = currentTarget.pos.y * g
+    const targetY = (currentTarget.pos.y + 0.5) * g  // Apply Y-axis alignment offset
     
     // Calculate distance to target
     const distance = Math.sqrt(
@@ -2937,7 +2938,7 @@ function drawSimplifiedAIVisualization(ctx: CanvasRenderingContext2D, car: any, 
   ctx.save()
   
   const carX = car.pos.x * g
-  const carY = car.pos.y * g
+  const carY = (car.pos.y + 0.5) * g  // Apply Y-axis alignment offset
   
   // Draw AI indicator - a simple ring around AI cars
   ctx.strokeStyle = player.color
@@ -2970,7 +2971,7 @@ function drawSimplifiedAIVisualization(ctx: CanvasRenderingContext2D, car: any, 
   const velMagnitude = Math.sqrt(car.vel.x * car.vel.x + car.vel.y * car.vel.y)
   if (velMagnitude > 0.1) {
     const velEndX = carX + car.vel.x * g * 1.5 // Scale for visibility
-    const velEndY = carY + car.vel.y * g * 1.5
+    const velEndY = carY + (car.vel.y * g * 1.5)  // Y velocity already aligned via carY
     
     ctx.strokeStyle = player.color
     ctx.lineWidth = 2
@@ -3201,8 +3202,11 @@ function lightenColor(color: string, amount: number): string {
 
 export function screenToGrid(canvas: HTMLCanvasElement, g: number, x: number, y: number): Vec {
   const rect = canvas.getBoundingClientRect()
-  const gx = (x - rect.left) / (rect.width) * canvas.width / g
-  const gy = (y - rect.top) / (rect.height) * canvas.height / g
+  // Fix scaling mismatch: properly handle canvas internal vs display dimensions
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+  const gx = (x - rect.left) * scaleX / g
+  const gy = (y - rect.top) * scaleY / g
   return { x: gx, y: gy }
 }
 
